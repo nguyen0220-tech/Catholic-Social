@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+  <link rel="manifest" href="icon/site.webmanifest">
+  <title>Welcome to Catholic Social</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: #f2f2f2;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #125ca1;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .switch-btn {
+      background: transparent;
+      color: #1976d2;
+      border: none;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    .switch-btn:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="authContainer">
+  <!-- Login Form -->
+  <div id="loginForm">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username" />
+    <input type="password" id="loginPassword" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <div id="loginError" class="error"></div>
+    <button class="switch-btn" id="showSignUp">Don't have an account? Sign Up</button>
+  </div>
+
+  <!-- Sign Up Form -->
+  <!-- Sign Up Form -->
+  <div id="signUpForm" style="display:none;">
+    <h2>Sign Up</h2>
+    <input type="text" id="signUpUsername" placeholder="Username" />
+    <span id="usernameError" class="error"></span>
+
+    <input type="password" id="signUpPassword" placeholder="Password" />
+    <span id="passwordError" class="error"></span>
+
+    <input type="text" id="firstName" placeholder="First Name" />
+    <span id="firstNameError" class="error"></span>
+
+    <input type="text" id="lastName" placeholder="Last Name" />
+    <span id="lastNameError" class="error"></span>
+
+    <input type="email" id="email" placeholder="Email" />
+    <span id="emailError" class="error"></span>
+
+    <input type="text" id="phone" placeholder="Phone (9-11 digits)" />
+    <span id="phoneError" class="error"></span>
+
+    <input type="date" id="birthDate" placeholder="Birth Date" />
+    <span id="birthDateError" class="error"></span>
+
+    <select id="sex">
+      <option value="UNKNOWN">Không rõ</option>
+      <option value="MALE">Male</option>
+      <option value="FEMALE">Female</option>
+    </select>
+    <span id="sexError" class="error"></span>
+
+    <button id="signUpBtn">Sign Up</button>
+    <div id="signUpError" class="error"></div>
+    <button class="switch-btn" id="showLogin">Already have an account? Login</button>
+    <button class="switch-btn" id="showFindUsername">Forgot Username?</button> <!-- <-- thêm -->
+
+  </div>
+
+</div>
+
+<!-- Find Username Form -->
+<div id="findUsernameForm" style="display:none;">
+  <h2>Find Username</h2>
+  <input type="text" id="findFirstName" placeholder="First Name" />
+  <span id="findFirstNameError" class="error"></span>
+
+  <input type="text" id="findLastName" placeholder="Last Name" />
+  <span id="findLastNameError" class="error"></span>
+
+  <input type="text" id="findPhone" placeholder="Phone (9-11 digits)" />
+  <span id="findPhoneError" class="error"></span>
+
+  <button id="findUsernameBtn">Find Username</button>
+  <div id="findUsernameError" class="error"></div>
+  <button class="switch-btn" id="showLoginFromFind">Back to Login</button>
+</div>
+
+
+<script src="auth.js"></script>
+</body>
+</html>

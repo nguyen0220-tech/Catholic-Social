@@ -1,0 +1,135 @@
+package com.catholic.ac.kr.catholicsocial.security;
+
+import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.security.tokencommon.JwtAuthFilter;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.Map;
+
+@Configuration
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+    private final UserRepository userRepository;
+    private final JwtAuthFilter jwtAuthFilter;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("user not found"));
+
+            if (!user.isEnabled()) {
+                throw new DisabledException("user is disabled");
+            }
+            return new CustomUseDetails(user);
+        };
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService());
+        /*
+        Spring chưa cung cấp constructor nhận cả UserDetailsService và PasswordEncoder
+         */
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers(
+                                        "/ws/**",
+                                        "/auth/**",
+                                        "user/find-username",
+                                        "/*.html", "/*.css", "/*.js",
+                                        "/*.png", "/*.jpg", "/*.svg",
+                                        "/icon/**", "/media/**")
+                                .permitAll()
+                                .anyRequest()
+                                .authenticated()
+                )
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(jsonAuthEntryPoint()));
+
+        return http.build();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint jsonAuthEntryPoint() {
+        return (request, response, authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(new ObjectMapper().writeValueAsString(
+                    Map.of("success", false, "message", "unauthorized")
+            ));
+        };
+    }
+}
+
+    /*
+    Khi người dùng truy cập /auth/login và nhập username/password,
+Spring Security:
+
+kiểm tra thông tin đăng nhập
+
+nếu đúng, tạo HTTP Session (chứa thông tin người dùng)
+
+gửi lại cookie JSESSIONID cho client.
+
+Các request tiếp theo client gửi kèm cookie này → server dựa vào session để xác thực người dùng.
+
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        http.csrf( csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/**").permitAll().anyRequest().authenticated())
+                .formLogin(form ->
+                        form.loginPage("/login")
+                                .permitAll()
+                )
+                .logout(logout ->logout.permitAll());
+
+        return http.build();
+    }
+
+     */

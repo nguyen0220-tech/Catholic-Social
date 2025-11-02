@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Xác thực người dùng</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+    }
+
+    .container {
+      max-width: 420px;
+      width: 90%;
+      margin: auto;
+      padding: 40px 30px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h1 {
+      margin-bottom: 16px;
+      font-size: 24px;
+    }
+
+    .success {
+      color: #2e7d32;
+    }
+
+    .error {
+      color: #c62828;
+    }
+
+    .icon {
+      font-size: 60px;
+      margin-bottom: 12px;
+      animation: pop 0.6s ease-in-out;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 12px 20px;
+      font-size: 15px;
+      background: #1976d2;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .btn:hover {
+      background: #1565c0;
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div id="status-icon" class="icon"></div>
+  <h1 id="status-title"></h1>
+  <p id="status-message"></p>
+  <a class="btn" href="/auth.html">🔑 Quay lại màn hình đăng nhập</a>
+</div>
+
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  const success = getQueryParam("success");
+  const iconEl = document.getElementById("status-icon");
+  const titleEl = document.getElementById("status-title");
+  const msgEl = document.getElementById("status-message");
+
+  if (success === "true") {
+    iconEl.textContent = "✅";
+    titleEl.textContent = "Xác thực thành công!";
+    titleEl.classList.add("success");
+    msgEl.textContent = "Cảm ơn bạn đã xác nhận tài khoản. Giờ bạn có thể đăng nhập.";
+  } else {
+    iconEl.textContent = "❌";
+    titleEl.textContent = "Xác thực thất bại!";
+    titleEl.classList.add("error");
+    msgEl.textContent = "Link xác thực không hợp lệ hoặc đã hết hạn.";
+  }
+</script>
+</body>
+</html>
