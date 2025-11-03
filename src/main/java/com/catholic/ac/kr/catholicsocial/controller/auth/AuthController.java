@@ -54,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request, httpServletRequest));
     }
 
-    @DeleteMapping
+    @PostMapping("logout")
     public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) {
         return ResponseEntity.ok(authService.logout(request));
     }

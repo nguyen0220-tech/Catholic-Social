@@ -1,5 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service.auth;
 
+import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.TokenResponseDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LoginRequest;
@@ -7,7 +8,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.LogoutRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.RefreshTokenRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.SignUpRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
-import com.catholic.ac.kr.catholicsocial.exception.ResourceNotFoudException;
+import com.catholic.ac.kr.catholicsocial.exception.ResourceNotFoundException;
 import com.catholic.ac.kr.catholicsocial.repository.RefreshTokenRepository;
 import com.catholic.ac.kr.catholicsocial.repository.RoleRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
@@ -18,6 +19,7 @@ import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenS
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -51,19 +53,22 @@ public class AuthService {
         Optional<User> user = userRepository.findByUsername(request.getUsername());
 
         if (user.isPresent()) {
-            return ApiResponse.error(request.getUsername() + " is already in use");
+            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
+                    request.getUsername() + " is already in use");
         }
 
         boolean phoneExists = userRepository.existsUserByPhone(request.getPhone());
 
         if (phoneExists) {
-            return ApiResponse.error(request.getPhone() + " already exists");
+            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
+                    request.getPhone() + " already exists");
         }
 
         boolean emailExists = userRepository.existsUserByEmail(request.getEmail());
 
         if (emailExists) {
-            return ApiResponse.error(request.getEmail() + " already exists");
+            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
+                    request.getEmail() + " already exists");
         }
 
         User newUser = new User();
@@ -71,7 +76,7 @@ public class AuthService {
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setRoles(Set.of(
                 roleRepository.findByName("ROLE_USER").orElseThrow(
-                        () -> new ResourceNotFoudException("role not exists"))));
+                        () -> new ResourceNotFoundException("role not exists"))));
 
         UserInfo info = new UserInfo();
         info.setFirstName(request.getFirstName());
@@ -86,7 +91,8 @@ public class AuthService {
 
         verificationTokenService.sendVerificationToken(newUser);
 
-        return ApiResponse.success(newUser.getUsername() + " sign up successful, please verify your email");
+        return ApiResponse.success(HttpStatus.CREATED.value(), HttpStatus.CREATED.getReasonPhrase(),
+                newUser.getUsername() + " sign up successful, please verify your email");
     }
 
     public boolean verifyUser(String token) {
@@ -113,12 +119,13 @@ public class AuthService {
 
         String deviceId = httpServletRequest.getHeader("deviceId");
         String userAgent = httpServletRequest.getHeader("user-agent");
-        String ipAddress = UUID.randomUUID().toString();
+        String ipAddress = httpServletRequest.getRemoteAddr();
 
         Optional<User> userOptional = userRepository.findByUsername(request.getUsername());
 
         if (userOptional.isEmpty()) {
-            return ApiResponse.error(request.getUsername() + " Tài khoản không tồn tại");
+            return ApiResponse.fail(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(),
+                    request.getUsername() + " Tài khoản không tồn tại");
         }
 
         User user = userOptional.get();
@@ -129,7 +136,7 @@ public class AuthService {
             if (System.currentTimeMillis() < lockTime) {
                 long remainingTime = loginFailTimes.get(user.getUsername()) - System.currentTimeMillis();
                 long remainingSeconds = remainingTime / 1000;
-                return ApiResponse.error(
+                return ApiResponse.fail(HttpStatus.LOCKED.value(), HttpStatus.LOCKED.getReasonPhrase(),
                         request.getUsername() + " bị khóa tạm thời, vui lòng thử lại sau " + remainingSeconds + "s");
             } else {
                 loginFailTimes.remove(user.getUsername());
@@ -171,10 +178,14 @@ public class AuthService {
             loginFailCounts.remove(request.getUsername());
             loginFailTimes.remove(user.getUsername());
 
-            return ApiResponse.success("Login success", tokenResponseDTO);
+            return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                    "Login success", tokenResponseDTO);
+
         } catch (Exception e) {
             if (e instanceof DisabledException || (e.getCause() instanceof DisabledException)) {
-                return ApiResponse.error(request.getUsername() + " chưa kích hoạt, vui lòng xác nhận qua email");
+                return ApiResponse.fail(HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(),
+                        request.getUsername() + " chưa kích hoạt, vui lòng xác nhận qua email");
+
             } else if (e instanceof BadCredentialsException || (e.getCause() instanceof BadCredentialsException)) {
                 int count = loginFailCounts.getOrDefault(request.getUsername(), 0) + 1;
                 loginFailCounts.put(request.getUsername(), count);
@@ -187,35 +198,37 @@ public class AuthService {
                     long remainingMillis = lockUntil - System.currentTimeMillis();
                     long remainingSeconds = remainingMillis / 1000;
 
-                    return ApiResponse.error(
+                    return ApiResponse.fail(HttpStatus.LOCKED.value(), HttpStatus.LOCKED.getReasonPhrase(),
                             request.getUsername() + " bị khóa tạm thời, vui lòng thử lại sau " + remainingSeconds + "s");
                 }
-                return ApiResponse.error("Mật khẩu đăng nhập sai " + count + "/5 lần");
+                return ApiResponse.fail(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                        "Mật khẩu đăng nhập sai " + count + "/5 lần");
             } else
-                return ApiResponse.error("Login failed");
+                return ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                        "Login failed");
         }
     }
 
     public ApiResponse<String> logout(LogoutRequest request) {
-        RefreshToken token = refreshTokenRepository.findByRefreshToken(request.getToken())
-                .orElseThrow(() -> new RuntimeException("token not found"));
+        RefreshToken token = EntityUtils.getOrThrow(refreshTokenRepository.findByRefreshToken(request.getToken()),"Token ");
 
         if (!refreshTokenUtil.isValid(token)) {
-            return ApiResponse.error("Login failed");
+            return ApiResponse.fail(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                    "Login failed");
         }
 
         refreshTokenUtil.revoke(token);
 
-        return ApiResponse.success("Logout success");
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(), "Logout success");
 
     }
 
     public ApiResponse<TokenResponseDTO> refreshToken(RefreshTokenRequest request) {
-        RefreshToken token = refreshTokenRepository.findByRefreshToken(request.getRefreshToken())
-                .orElseThrow(() -> new ResourceNotFoudException(" refresh token not exists"));
+        RefreshToken token = EntityUtils.getOrThrow(refreshTokenRepository.findByRefreshToken(request.getRefreshToken()), "Token ");
 
         if (!refreshTokenUtil.isValid(token)) {
-            return ApiResponse.error("Refresh token expired");
+            return ApiResponse.fail(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                    "Refresh token expired");
         }
 
         refreshTokenUtil.revoke(token);
@@ -242,7 +255,8 @@ public class AuthService {
         tokenResponseDTO.setRefreshToken(newRefreshToken.getRefreshToken());
         tokenResponseDTO.setUserId(user.getId());
 
-        return ApiResponse.success("Refresh token success", tokenResponseDTO);
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Refresh token success", tokenResponseDTO);
 
     }
 }

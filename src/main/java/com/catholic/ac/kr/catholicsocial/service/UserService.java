@@ -1,5 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
+import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
@@ -7,7 +8,6 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.UserRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.Role;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.entity.model.UserInfo;
-import com.catholic.ac.kr.catholicsocial.exception.ResourceNotFoudException;
 import com.catholic.ac.kr.catholicsocial.mapper.UserMapper;
 import com.catholic.ac.kr.catholicsocial.repository.RoleRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
@@ -19,11 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Set;
 
@@ -36,22 +36,22 @@ public class UserService {
     private final VerificationTokenService verificationTokenService;
     private final VerificationTokenRepository verificationTokenRepository;
 
-    public ApiResponse<Page<UserDTO>> getAllUsers(@RequestParam int page, @RequestParam int size) {
+    public ApiResponse<Page<UserDTO>> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("username").descending());
 
         Page<User> users = userRepository.findAll(pageable);
 
         Page<UserDTO> userDTOS = users.map(UserMapper::toUserDTO);
 
-        return ApiResponse.success("Get all users success", userDTOS);
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "All users", userDTOS);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserDTO> createdUser(UserRequest request) {
         User newUser = new User();
 
-        Role role = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new ResourceNotFoudException("Role Not Found"));
+        Role role = EntityUtils.getOrThrow(roleRepository.findByName("ROLE_USER"), "Role");
 
         newUser.setUsername(request.getUsername());
         newUser.setPassword(passwordEncoder.encode("123"));
@@ -70,33 +70,36 @@ public class UserService {
 
         userRepository.save(newUser);
 
-        return ApiResponse.success("User created successfully", UserMapper.toUserDTO(newUser));
+        return ApiResponse.success(HttpStatus.CREATED.value(), HttpStatus.CREATED.getReasonPhrase(),
+                "User created successfully", UserMapper.toUserDTO(newUser));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ApiResponse<String> deleteUser(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoudException("User not found"));
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
 
         userRepository.delete(user);
 
-        return ApiResponse.success("User deleted successfully");
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "User deleted successfully");
     }
 
     public ApiResponse<String> findUsernameForgot(FindUsernameRequest request) {
-        User user = userRepository.findByUserInfo_FirstNameAndLastNameAndPhone(
-                        request.getFirstName(), request.getLastName(), request.getPhone())
-                .orElseThrow(() -> new ResourceNotFoudException("User not found"));
+        User user = EntityUtils.getOrThrow(userRepository.findByUserInfo_FirstNameAndLastNameAndPhone(
+                        request.getFirstName(), request.getLastName(), request.getPhone()), "User");
 
         boolean isSendToken = verificationTokenRepository.existsByUser(user);
 
         if (isSendToken) {
-            return ApiResponse.error("Đã gửi email , vui lòng kiểm tra lại email");
+            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
+                    "Đã gửi email , vui lòng kiểm tra lại email");
         }
 
         verificationTokenService.sendUsernameForgot(user);
 
-        return ApiResponse.success("Find username successfully, verify your email");
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Find username successfully, verify your email");
     }
 //    public ApiResponse<String> forgotPassword(String email) {}
 }

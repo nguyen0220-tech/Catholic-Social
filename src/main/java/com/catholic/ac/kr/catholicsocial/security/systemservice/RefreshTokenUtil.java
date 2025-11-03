@@ -5,6 +5,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.RefreshToken;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +39,8 @@ public class RefreshTokenUtil {
 
         refreshTokenRepository.save(refreshToken);
 
-        return ApiResponse.success("Refresh token created",refreshToken);
+        return ApiResponse.success(HttpStatus.CREATED.value(), HttpStatus.CREATED.getReasonPhrase(),
+                "Refresh token created",refreshToken);
     }
 
     public String generateRefreshToken() {
