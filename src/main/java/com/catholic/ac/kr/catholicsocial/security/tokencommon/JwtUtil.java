@@ -65,6 +65,7 @@ public class JwtUtil {
         }
     }
 
+    /*
     public Authentication getAuthentication(String token) {
         String username = extractUsername(token);
 
@@ -72,5 +73,7 @@ public class JwtUtil {
 
         return new UsernamePasswordAuthenticationToken(username, null, useDetails.getAuthorities());
     }
+
+     */
 
 }

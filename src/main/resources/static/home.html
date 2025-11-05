@@ -10,5 +10,22 @@
 </head>
 <body>
 
+<nav>
+    <a href="profile.html"> Trang cá nhân</a>
+</nav>
+
+
+<script type="module" src="/auth-utils.js"></script>
+<script type="module" src="home.js"></script>
+<script>
+    let now = new Date();
+    let hour = now.getHours();
+
+    if (hour >= 12)
+        document.body.style.backgroundColor = "green"
+    else
+        document.body.style.backgroundColor = "blue"
+
+</script>
 </body>
 </html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title>Trang cá nhân</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Poppins", "Roboto", sans-serif;
+            background: linear-gradient(135deg, #c9d6ff, #e2e2e2);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-card {
+            background: #fff;
+            padding: 2.5rem 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 430px;
+            max-width: 90%;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #5d9bff;
+            display: inline-block;
+            padding-bottom: 6px;
+        }
+
+        .avatar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        #avatarPreview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #5d9bff;
+            object-fit: cover;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        #avatarPreview:hover {
+            transform: scale(1.05);
+        }
+
+        #uploadAvatarBtn {
+            background: #5d9bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #uploadAvatarBtn:hover {
+            background: #4b8ae7;
+        }
+
+        form {
+            text-align: left;
+        }
+
+        form label {
+            font-weight: 500;
+            color: #444;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        form input:focus, form select:focus {
+            border-color: #5d9bff;
+            box-shadow: 0 0 6px rgba(93,155,255,0.3);
+            outline: none;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 1.8rem;
+            background: linear-gradient(135deg, #5d9bff, #3b7cf5);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #4b8ae7, #2e6af2);
+        }
+
+        #messageBox {
+            margin-top: 1rem;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        #messageBox.success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        #messageBox.error {
+            color: #721c24;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+<div class="profile-card">
+
+    <div class="avatar-container">
+        <img id="avatarPreview" src="/icon/default-avatar.png" alt="Avatar">
+        <input type="file" id="avatarFile" accept="image/*" style="margin-top: 8px;">
+        <button type="button" id="uploadAvatarBtn">Tải ảnh đại diện</button>
+    </div>
+
+    <form id="profileForm">
+        <label for="lastName">Họ:</label>
+        <input type="text" id="lastName" required>
+
+        <label for="firstName">Tên:</label>
+        <input type="text" id="firstName" required>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+
+        <label for="phone">Số điện thoại:</label>
+        <input type="text" id="phone" required>
+
+        <label for="address">Địa chỉ:</label>
+        <input type="text" id="address">
+
+        <label for="birthDate">Ngày sinh:</label>
+        <input type="date" id="birthDate" required>
+
+        <label for="gender">Giới tính:</label>
+        <select id="gender" required>
+            <option value="MALE">Nam</option>
+            <option value="FEMALE">Nữ</option>
+            <option value="OTHER">Khác</option>
+        </select>
+
+        <button type="submit">💾 Cập nhật thông tin</button>
+    </form>
+
+    <div id="messageBox"></div>
+</div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="profile.js"></script>
+</body>
+</html>

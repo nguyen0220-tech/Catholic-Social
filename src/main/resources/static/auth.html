@@ -86,7 +86,6 @@
   </div>
 
   <!-- Sign Up Form -->
-  <!-- Sign Up Form -->
   <div id="signUpForm" style="display:none;">
     <h2>Sign Up</h2>
     <input type="text" id="signUpUsername" placeholder="Username" />
@@ -120,28 +119,52 @@
     <button id="signUpBtn">Sign Up</button>
     <div id="signUpError" class="error"></div>
     <button class="switch-btn" id="showLogin">Already have an account? Login</button>
-    <button class="switch-btn" id="showFindUsername">Forgot Username?</button> <!-- <-- thêm -->
+    <button class="switch-btn" id="showFindUsername">Forgot Username?</button>
+    <button class="switch-btn" id="showFindPassword">Forgot Password?</button>
 
   </div>
 
+  <!-- Find Username Form -->
+  <div id="findUsernameForm" style="display:none;">
+    <h2>Find Username</h2>
+    <input type="text" id="findFirstName" placeholder="First Name" />
+    <span id="findFirstNameError" class="error"></span>
+
+    <input type="text" id="findLastName" placeholder="Last Name" />
+    <span id="findLastNameError" class="error"></span>
+
+    <input type="text" id="findPhone" placeholder="Phone (9-11 digits)" />
+    <span id="findPhoneError" class="error"></span>
+
+    <button id="findUsernameBtn">Find Username</button>
+    <div id="findUsernameError" class="error"></div>
+    <button class="switch-btn" id="showLoginFromFind">Back to Login</button>
+  </div>
+
+  <!-- Find Password Form -->
+  <div id="findPasswordForm" style="display:none;">
+    <h2>Find Password</h2>
+
+    <input type="text" id="findPwUsername" placeholder="Username" />
+    <span id="findPwUsernameError" class="error"></span>
+
+    <input type="email" id="findPwEmail" placeholder="Email" />
+    <span id="findPwEmailError" class="error"></span>
+
+    <input type="text" id="findPwPhone" placeholder="Phone (9-11 digits)" />
+    <span id="findPwPhoneError" class="error"></span>
+
+    <button id="findPasswordBtn">Find Password</button>
+    <div id="findPasswordError" class="error"></div>
+
+    <button class="switch-btn" id="showLoginFromFindPw">Back to Login</button>
+  </div>
+
+
+
+
 </div>
 
-<!-- Find Username Form -->
-<div id="findUsernameForm" style="display:none;">
-  <h2>Find Username</h2>
-  <input type="text" id="findFirstName" placeholder="First Name" />
-  <span id="findFirstNameError" class="error"></span>
-
-  <input type="text" id="findLastName" placeholder="Last Name" />
-  <span id="findLastNameError" class="error"></span>
-
-  <input type="text" id="findPhone" placeholder="Phone (9-11 digits)" />
-  <span id="findPhoneError" class="error"></span>
-
-  <button id="findUsernameBtn">Find Username</button>
-  <div id="findUsernameError" class="error"></div>
-  <button class="switch-btn" id="showLoginFromFind">Back to Login</button>
-</div>
 
 
 <script src="auth.js"></script>

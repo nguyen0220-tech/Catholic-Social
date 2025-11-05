@@ -93,4 +93,36 @@ public class VerificationTokenService {
                 )
         );
     }
+
+    public void sendEmailFindPassword(User user) {
+        String token = createVerificationToken(user);
+
+        String verifyLink = baseUrl + "/user/verify-reset-password?token=" + token;
+
+        sendEmailService.sendEmail(
+                user.getUserInfo().getEmail(),
+                "Thông tin tài khoản của bạn tại Catholic Social",
+                """
+                        <div style="font-family:Arial, sans-serif; color:#333; padding:20px; background:#f7f7f7;">
+                            <div style="max-width:600px; margin:0 auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                                <h2 style="color:#2d89ef;">Xin chào %s %s!</h2>
+                                <p>Bạn đã yêu cầu tìm mật khẩu của mình tại <strong>Catholic Social</strong>.</p>
+                                <p>Để bảo mật, vui lòng nhấn vào nút bên dưới để xác nhận rằng đây là bạn:</p>
+                                <a href="%s"
+                                   style="display:inline-block; background-color:#2d89ef; color:#fff;
+                                          padding:10px 20px; border-radius:5px; text-decoration:none; font-weight:bold;">
+                                   Xác nhận tài khoản
+                                </a>
+                                <p style="margin-top:20px; font-size:12px; color:#777;">
+                                    Nếu bạn không yêu cầu thông tin này, vui lòng bỏ qua email này.
+                                </p>
+                            </div>
+                        </div>
+                        """.formatted(
+                        user.getUserInfo().getFirstName(),
+                        user.getUserInfo().getLastName(),
+                        verifyLink
+                )
+        );
+    }
 }

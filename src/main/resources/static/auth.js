@@ -1,4 +1,6 @@
-// --- SWITCH FORMS ---
+const URL_BASE = window.location.origin;
+
+// --- STCH FORMS ---
 const loginForm = document.getElementById("loginForm");
 const signUpForm = document.getElementById("signUpForm");
 
@@ -26,7 +28,7 @@ document.getElementById("loginBtn").addEventListener("click", async function () 
     }
 
     try {
-        const response = await fetch("http://localhost:8080/auth/login", {
+        const response = await fetch(`${URL_BASE}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
@@ -71,7 +73,7 @@ document.getElementById("signUpBtn").addEventListener("click", async function ()
     });
 
     try {
-        const response = await fetch("http://localhost:8080/auth/signup", {
+        const response = await fetch(`${URL_BASE}/auth/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestBody)
@@ -128,7 +130,6 @@ document.getElementById("findUsernameBtn").addEventListener("click", async funct
         phone: document.getElementById("findPhone").value.trim()
     };
 
-    // Xóa lỗi cũ
     ["findFirstName","findLastName","findPhone"].forEach(f => {
         const span = document.getElementById(f + "Error");
         if (span) span.textContent = "";
@@ -145,7 +146,7 @@ document.getElementById("findUsernameBtn").addEventListener("click", async funct
     }
 
     try {
-        const response = await fetch("http://localhost:8080/user/find-username", {
+        const response = await fetch(`${URL_BASE}/user/find-username`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestBody)
@@ -171,6 +172,74 @@ document.getElementById("findUsernameBtn").addEventListener("click", async funct
     } catch (err) {
         console.error("Find Username error:", err);
         document.getElementById("findUsernameError").textContent = "Lỗi kết nối đến server.";
+    }
+});
+
+const findPasswordForm = document.getElementById("findPasswordForm");
+
+// Hiển thị Find Password form
+document.getElementById("showFindPassword")?.addEventListener("click", () => {
+    loginForm.style.display = "none";
+    signUpForm.style.display = "none";
+    findUsernameForm.style.display = "none";
+    findPasswordForm.style.display = "block";
+});
+
+// Quay lại Login từ Find Password
+document.getElementById("showLoginFromFindPw")?.addEventListener("click", () => {
+    findPasswordForm.style.display = "none";
+    loginForm.style.display = "block";
+});
+
+document.getElementById("findPasswordBtn").addEventListener("click", async function () {
+    const requestBody = {
+        username: document.getElementById("findPwUsername").value.trim(),
+        email: document.getElementById("findPwEmail").value.trim(),
+        phone: document.getElementById("findPwPhone").value.trim()
+    };
+
+    // Xóa lỗi cũ
+    ["findPwUsername","findPwEmail","findPwPhone"].forEach(f => {
+        const span = document.getElementById(f + "Error");
+        if (span) span.textContent = "";
+    });
+    document.getElementById("findPasswordError").textContent = "";
+
+    // Kiểm tra rỗng phía client
+    for (const key in requestBody) {
+        if (!requestBody[key]) {
+            const span = document.getElementById("findPw" + key.charAt(0).toUpperCase() + key.slice(1) + "Error");
+            if (span) span.textContent = `Vui lòng nhập ${key}`;
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch(`${URL_BASE}/user/find-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert(result.message || "Mật khẩu mới đã được gửi đến email của bạn!");
+            findPasswordForm.style.display = "none";
+            loginForm.style.display = "block";
+        } else {
+            if (result.data) {
+                for (const field in result.data) {
+                    const span = document.getElementById("findPw" + field.charAt(0).toUpperCase() + field.slice(1) + "Error");
+                    if (span) span.textContent = result.data[field];
+                }
+            } else {
+                document.getElementById("findPasswordError").textContent = result.message || "Không thể tìm lại mật khẩu.";
+            }
+        }
+    } catch (err) {
+        console.error("Find Password error:", err);
+        document.getElementById("findPasswordError").textContent = "Lỗi kết nối đến server.";
     }
 });
 

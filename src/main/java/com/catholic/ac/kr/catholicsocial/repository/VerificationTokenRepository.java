@@ -19,4 +19,6 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
             WHERE t.user = :user
             """)
     boolean existsByUser(@Param("user") User user);
+
+    Optional<VerificationToken> findByUser(User user);
 }

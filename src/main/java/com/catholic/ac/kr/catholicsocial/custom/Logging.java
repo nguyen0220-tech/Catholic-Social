@@ -1,4 +1,4 @@
-package com.catholic.ac.kr.catholicsocial.log;
+package com.catholic.ac.kr.catholicsocial.custom;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;

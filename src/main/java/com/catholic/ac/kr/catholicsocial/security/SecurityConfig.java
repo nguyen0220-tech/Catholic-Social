@@ -76,7 +76,7 @@ public class SecurityConfig {
                         auth -> auth.requestMatchers(
                                         "/ws/**",
                                         "/auth/**",
-                                        "user/find-username",
+                                        "/user/find-username","/user/find-password","/user/reset-password","/user/verify-reset-password",
                                         "/*.html", "/*.css", "/*.js",
                                         "/*.png", "/*.jpg", "/*.svg",
                                         "/icon/**", "/media/**")

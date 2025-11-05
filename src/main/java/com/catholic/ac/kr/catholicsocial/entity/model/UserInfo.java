@@ -45,6 +45,8 @@ public class UserInfo {
     @Column(nullable = false)
     private Sex sex;
 
+    private String avatarUrl;
+
     private LocalDateTime createdAt;
 
     @PrePersist

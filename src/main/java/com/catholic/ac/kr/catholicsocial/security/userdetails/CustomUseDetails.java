@@ -1,6 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.security.userdetails;
 
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+@Getter
 public class CustomUseDetails implements UserDetails {
     private final User user;
 
