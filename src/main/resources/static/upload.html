@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title>Moments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f7f9fb;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        textarea, select, input[type="file"] {
+            width: 100%;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #preview img {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin: 5px;
+        }
+
+        .message {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* --- MOMENT LIST --- */
+        .moment {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        .moment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .moment-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #eee;
+        }
+
+        .moment-header-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .moment-user {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .moment-meta {
+            color: #777;
+            font-size: 13px;
+        }
+
+        .moment-content {
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+
+        .moment-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .moment-images img {
+            width: calc(33.33% - 8px);
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .moment-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .moment-btn {
+            background: #f2f2f2;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .moment-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .edit-btn {
+            color: #007bff;
+        }
+
+        .delete-btn {
+            color: #e74c3c;
+        }
+
+        #momentsList {
+            margin-top: 20px;
+        }
+    </style>
+
+</head>
+<body>
+
+<h2>Đăng bài viết</h2>
+
+<form id="momentForm">
+    <textarea id="content" name="content" rows="3" placeholder="Hôm nay bạn nghĩ gì?"></textarea>
+    <select id="share" name="share">
+        <option value="PUBLIC">Công khai</option>
+        <option value="FOLLOWER">Người theo dõi</option>
+        <option value="PRIVATE">Chỉ mình tôi</option>
+    </select>
+    <input type="file" id="files" name="files" multiple accept="image/*">
+    <div id="preview"></div>
+    <button type="submit">Đăng bài</button>
+</form>
+
+<div id="messageBox" class="message"></div>
+
+<h2>Bài viết của bạn</h2>
+<div id="momentsList"></div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="upload.js"></script>
+</body>
+</html>
