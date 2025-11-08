@@ -1,10 +1,13 @@
 package com.catholic.ac.kr.catholicsocial.repository;
 
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -45,4 +48,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("username") String username,
             @Param("email") String email,
             @Param("phone") String phone);
+
+    @Query("""
+            SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO(
+                        u.id,u.userInfo.firstName,u.userInfo.lastName,u.userInfo.avatarUrl)
+                        FROM User u
+                        WHERE u.id != :userId
+                                    AND CONCAT(u.userInfo.firstName,' ',u.userInfo.lastName) LIKE LOWER( CONCAT('%', :keyword,'%')) 
+                                    AND NOT EXISTS (
+                                                    SELECT 1
+                                                    FROM Follow f
+                                                    WHERE f.state = 'BLOCKED' AND (( f.follower.id = :userId AND f.user.id = u.id)
+                                                                                    OR (f.user.id = :userId AND f.follower.id = u.id))
+                                                    )
+            """)
+    List<UserFollowDTO> findUserFollowByUserId(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
 }

@@ -20,8 +20,16 @@ import java.util.List;
 public class MomentController {
     private final MomentService momentService;
 
-    @GetMapping
+    @GetMapping("all")
     public ResponseEntity<ApiResponse<List<MomentDTO>>> getAllMoments(
+            @AuthenticationPrincipal CustomUseDetails customUseDetails,
+            @RequestParam int page,
+            @RequestParam int size) {
+        return ResponseEntity.ok(momentService.getAllMoments(customUseDetails.getUser().getId(), page, size));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<MomentDTO>>> getAllMomentsByUserId(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {

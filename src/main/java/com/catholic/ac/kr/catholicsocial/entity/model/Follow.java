@@ -10,6 +10,10 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"follower_id", "user_id"})
+        })
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -21,12 +25,12 @@ public class Follow {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user; //Người được theo dõi
+    @JoinColumn(name = "follower_id")
+    private User follower; //Người theo dõi (user đang đăng nhập)
 
     @ManyToOne
-    @JoinColumn(name = "follower_id")
-    private User follower; //Người theo dõi
+    @JoinColumn(name = "user_id")
+    private User user; //Người được theo dõi
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -34,5 +38,15 @@ public class Follow {
 
     @Column(nullable = false)
     private LocalDateTime followedAt;
+
+    @PrePersist
+    protected void create() {
+        this.followedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void update() {
+        this.followedAt = LocalDateTime.now();
+    }
 
 }

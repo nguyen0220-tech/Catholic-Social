@@ -32,6 +32,16 @@ public class MomentService {
     private final UserRepository userRepository;
     private final UploadFileHandler uploadFileHandler;
 
+    public ApiResponse<List<MomentDTO>> getAllMoments(Long userId,int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        List<Moment> moments = momentRepository.findAllMomentFollowAndPublic(userId,pageable);
+
+        List<MomentDTO> momentDTOS = MomentMapper.toListDTO(moments);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Get all moments", momentDTOS);    }
+
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ApiResponse<List<MomentDTO>> getAllMomentsByUserId(Long userId, int page, int size) {
 

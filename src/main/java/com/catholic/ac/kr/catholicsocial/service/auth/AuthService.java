@@ -210,7 +210,7 @@ public class AuthService {
     }
 
     public ApiResponse<String> logout(LogoutRequest request) {
-        RefreshToken token = EntityUtils.getOrThrow(refreshTokenRepository.findByRefreshToken(request.getToken()),"Token ");
+        RefreshToken token = EntityUtils.getOrThrow(refreshTokenRepository.findByRefreshToken(request.getRefreshToken()),"Token ");
 
         if (!refreshTokenUtil.isValid(token)) {
             return ApiResponse.fail(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),

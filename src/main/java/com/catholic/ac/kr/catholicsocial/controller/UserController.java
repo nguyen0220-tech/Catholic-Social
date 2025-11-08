@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.controller;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ProfileDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("user")
@@ -85,4 +87,12 @@ public class UserController {
         return ResponseEntity.ok(userService.uploadAvatar(useDetails.getUser().getId(), file));
     }
 
+    @GetMapping("find-follow")
+    public ResponseEntity<ApiResponse<List<UserFollowDTO>>> getUserFollow(
+            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @RequestParam String keyword,
+            @RequestParam int page,
+            @RequestParam int size) {
+        return ResponseEntity.ok(userService.findUserFollow(useDetails.getUser().getId(),keyword, page, size));
+    }
 }

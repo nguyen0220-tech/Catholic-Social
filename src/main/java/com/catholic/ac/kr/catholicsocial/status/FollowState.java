@@ -4,4 +4,5 @@ public enum FollowState {
     PADDING,
     FOLLOWING,
     CANCELLED,
+    BLOCKED,
 }

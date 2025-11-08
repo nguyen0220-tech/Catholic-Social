@@ -4,6 +4,7 @@ import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ProfileDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest;
@@ -32,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -226,5 +228,14 @@ public class UserService {
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Update avatar success", avatarUrl);
+    }
+
+    public ApiResponse<List<UserFollowDTO>> findUserFollow(Long userId, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        List<UserFollowDTO> userFollowDTO = userRepository.findUserFollowByUserId(userId, keyword, pageable);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Find user follow success", userFollowDTO);
     }
 }

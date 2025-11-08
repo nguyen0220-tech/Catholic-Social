@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title>Follow</title>
+</head>
+<body>
+<h2 style="text-align:center;">Người theo dõi / Bị chặn</h2>
+
+<!-- 🔄 Chuyển tab -->
+<div style="text-align:center; margin-bottom:15px;">
+    <button id="tabFollowers"
+            style="padding:8px 12px; background-color:#007bff; color:white; border:none; border-radius:5px; cursor:pointer;">
+        Người theo dõi
+    </button>
+    <button id="tabBlocked"
+            style="padding:8px 12px; background-color:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">
+        Bị chặn
+    </button>
+</div>
+
+<!-- 🔍 Thanh tìm kiếm -->
+<div style="max-width: 400px; margin: 20px auto; display:flex; gap:10px;">
+    <input id="searchInput" type="text" placeholder="Tìm người dùng..."
+           style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;">
+    <button id="searchBtn"
+            style="padding:8px 12px; border:none; background-color:#007bff; color:white; border-radius:6px; cursor:pointer;">
+        Tìm
+    </button>
+</div>
+
+<!-- 📜 Danh sách -->
+<div id="followers-container" style="max-width: 400px; margin: auto;"></div>
+
+<div id="loading" style="text-align: center; display: none; margin: 20px;">
+    <span>Đang tải...</span>
+</div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="follow.js"></script>
+</body>
+</html>
