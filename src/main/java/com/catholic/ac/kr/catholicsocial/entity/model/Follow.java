@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -26,10 +28,12 @@ public class Follow {
 
     @ManyToOne
     @JoinColumn(name = "follower_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User follower; //Người theo dõi (user đang đăng nhập)
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user; //Người được theo dõi
 
     @Enumerated(EnumType.STRING)

@@ -1,0 +1,57 @@
+#type Query: Đây là nơi định nghĩa các hàm đọc dữ liệu (GET).
+
+#getComments → tên hàm truy vấn mà client sẽ gọi.
+#momentId: ID → tham số đầu vào (ID có thể null, vì không có dấu !)
+#page: Int! và size: Int! → bắt buộc (!)
+#: ApiResponseComment → kiểu dữ liệu trả về (do bạn định nghĩa bên dưới).
+type Query {
+    getComments(momentId: ID, page: Int!,size: Int!): ApiResponseComment
+}
+
+
+#type Mutation: Đây là nơi định nghĩa các hành động ghi dữ liệu (POST, PUT, DELETE).
+
+#createComment → tên hàm mutation.
+#momentId: ID! → bắt buộc truyền momentId.
+#request: CommentInput! → input là một object (cấu trúc comment nhập vào).
+#: ApiResponseString → kiểu dữ liệu trả về (ở đây là chuỗi báo kết quả).
+type Mutation {
+    createComment(momentId: ID!, request: CommentInput!): ApiResponseString
+}
+
+#input CommentInput: Đây là input type – giống như DTO cho request body trong REST.
+input CommentInput {
+    comment: String!
+}
+
+#type CommentDTO: Đây là kiểu dữ liệu đại diện cho 1 comment, dùng trong response.
+type CommentDTO {
+    id: ID!
+    user: UserDTO!
+    comment: String!
+    commentDate: String!
+}
+
+#type ApiResponseComment và type ApiResponseString: Đây là wrapper object, tương tự như ApiResponse<T> trong Java.
+type ApiResponseComment {
+    timestamp: String
+    status: Int
+    success: Boolean
+    code: String
+    message: String
+    data: [CommentDTO]
+}
+
+type ApiResponseString {
+    timestamp: String
+    status: Int
+    success: Boolean
+    code: String
+    message: String
+    data: String
+}
+
+type UserDTO{
+    userFullName: String
+    avatarUrl: String
+}

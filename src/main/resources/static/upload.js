@@ -64,6 +64,10 @@ let endReached = false;
 
 // --- Load danh sách moment (phân trang) ---
 async function loadMoments() {
+    if (!accessToken) {
+        alert("Vui lòng đăng nhập");
+        return window.location.href = "/auth.html";
+    }
     if (loading || endReached) return;
     loading = true;
 
@@ -95,51 +99,53 @@ async function loadMoments() {
     }
 }
 
-// --- Render danh sách moment ---
 function renderMoments(moments, append = false) {
     if (!append) momentsList.innerHTML = "";
 
     moments.forEach(moment => {
         const div = document.createElement("div");
         div.className = "moment";
+
+        const editedText = moment.edited ? `<span class="moment-edited">(Đã chỉnh sửa)</span>` : "";
+
         div.innerHTML = `
-      <div class="moment-header">
-        <img class="moment-avatar" src="${moment.userAvatar || '/icon/default-avatar.png'}" alt="avatar">
-        <div class="moment-header-info">
-          <span class="moment-user">${moment.userFullName}</span>
-          <div class="moment-meta">
-            <span class="moment-time">${new Date(moment.createdAt).toLocaleString()}</span>
-            ${moment.share ? `<span class="moment-share">· ${moment.share}</span>` : ""}
+          <div class="moment-header">
+            <img class="moment-avatar" src="${moment.userAvatar || '/icon/default-avatar.png'}" alt="avatar">
+            <div class="moment-header-info">
+              <span class="moment-user">${moment.userFullName}</span>
+              <div class="moment-meta">
+                <span class="moment-time">${new Date(moment.createdAt).toLocaleString()}</span>
+                ${moment.share ? `<span class="moment-share">· ${moment.share}</span>` : ""}
+                ${editedText} <!-- 👈 hiển thị nếu bài đã chỉnh sửa -->
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="moment-content">${moment.content || ""}</div>
+          <div class="moment-content">${moment.content || ""}</div>
 
-      <div class="moment-images">
-        ${moment.imageUrls.map(url => `<img src="${url}" alt="moment image">`).join("")}
-      </div>
+          <div class="moment-images">
+            ${moment.imageUrls.map(url => `<img src="${url}" alt="moment image">`).join("")}
+          </div>
+          
+          <div class="moment-comments" id="comments-${moment.id}">
+          <div class="comment-list"></div>
+          <div class="comment-form">
+            <input type="text" placeholder="Viết bình luận..." class="comment-input">
+            <button class="comment-send" data-moment-id="${moment.id}">Gửi</button>
+          </div>
+          </div>
 
-      <div class="moment-actions">
-        <button class="moment-btn edit-btn" data-id="${moment.id}" data-content="${moment.content}" data-share="${moment.share}">
-          ✏️
-        </button>
-        <button class="moment-btn delete-btn" data-id="${moment.id}">
-          🗑
-        </button>
-      </div>
-    `;
+          <div class="moment-actions">
+            <button class="moment-btn edit-btn" data-id="${moment.id}" data-content="${moment.content}" data-share="${moment.share}">
+              ✏️
+            </button>
+            <button class="moment-btn delete-btn" data-id="${moment.id}">
+              🗑
+            </button>
+          </div>
+        `;
         momentsList.appendChild(div);
-    });
-
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-        btn.addEventListener("click", () =>
-            showEditForm(btn.dataset.id, btn.dataset.content, btn.dataset.share)
-        );
-    });
-
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", () => deleteMoment(btn.dataset.id));
+        loadComments(moment.id);
     });
 }
 
@@ -158,47 +164,51 @@ window.addEventListener("scroll", () => {
 
 // --- Modal chỉnh sửa ---
 function showEditForm(momentId, oldContent, oldShare) {
-    let modal = document.getElementById("editModal");
-    if (!modal) {
-        modal = document.createElement("div");
-        modal.id = "editModal";
-        modal.className = "modal";
-        modal.innerHTML = `
-      <div class="modal-content">
-        <h3>Chỉnh sửa bài viết</h3>
-        <textarea id="editContent" rows="4"></textarea>
-        <select id="editShare">
-          <option value="PUBLIC">Công khai</option>
-          <option value="FOLLOWER">Người theo dõi</option>
-          <option value="PRIVATE">Chỉ mình tôi</option>
+    // Nếu form chỉnh sửa đã mở, xóa nó đi trước
+    const existingForm = document.querySelector(".edit-inline-form");
+    if (existingForm) existingForm.remove();
+
+    // Tìm phần tử moment đang được chỉnh sửa
+    const targetMoment = document.querySelector(`.moment-actions button[data-id="${momentId}"]`).closest(".moment");
+
+    // Tạo form chỉnh sửa inline
+    const editForm = document.createElement("div");
+    editForm.className = "edit-inline-form";
+    editForm.style.marginTop = "10px";
+    editForm.style.background = "#f8f9fa";
+    editForm.style.padding = "10px";
+    editForm.style.borderRadius = "8px";
+    editForm.innerHTML = `
+        <textarea id="editContent" rows="3" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;">${oldContent || ""}</textarea>
+        <select id="editShare" style="margin-top:8px;width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;">
+            <option value="PUBLIC" ${oldShare === "PUBLIC" ? "selected" : ""}>Công khai</option>
+            <option value="FOLLOWER" ${oldShare === "FOLLOWER" ? "selected" : ""}>Người theo dõi</option>
+            <option value="PRIVATE" ${oldShare === "PRIVATE" ? "selected" : ""}>Chỉ mình tôi</option>
         </select>
-        <div class="modal-actions">
-          <button id="saveEdit">Lưu</button>
-          <button id="cancelEdit">Hủy</button>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+            <button id="saveEdit" style="background:#007bff;color:#fff;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Lưu</button>
+            <button id="cancelEdit" style="background:#ccc;color:#333;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Hủy</button>
         </div>
-      </div>
     `;
-        document.body.appendChild(modal);
-    }
 
-    document.getElementById("editContent").value = oldContent || "";
-    document.getElementById("editShare").value = oldShare || "PUBLIC";
-    modal.style.display = "flex";
+    // Gắn form ngay sau moment đang chọn
+    targetMoment.appendChild(editForm);
 
-    document.getElementById("saveEdit").onclick = () => {
-        const newContent = document.getElementById("editContent").value.trim();
-        const newShare = document.getElementById("editShare").value;
+    // Gán sự kiện
+    editForm.querySelector("#saveEdit").onclick = () => {
+        const newContent = editForm.querySelector("#editContent").value.trim();
+        const newShare = editForm.querySelector("#editShare").value;
         if (!newContent) {
             alert("Nội dung không được để trống!");
             return;
         }
 
         updateMoment({ momentId: Number(momentId), content: newContent, share: newShare });
-        modal.style.display = "none";
+        editForm.remove();
     };
 
-    document.getElementById("cancelEdit").onclick = () => {
-        modal.style.display = "none";
+    editForm.querySelector("#cancelEdit").onclick = () => {
+        editForm.remove();
     };
 }
 
@@ -249,5 +259,100 @@ async function deleteMoment(momentId) {
         alert("Lỗi kết nối server!");
     }
 }
+
+momentsList.addEventListener("click", (e) => {
+    const editBtn = e.target.closest(".edit-btn");
+    const deleteBtn = e.target.closest(".delete-btn");
+
+    if (editBtn) {
+        showEditForm(editBtn.dataset.id, editBtn.dataset.content, editBtn.dataset.share);
+    }
+    if (deleteBtn) {
+        deleteMoment(deleteBtn.dataset.id);
+    }
+});
+
+//
+const GRAPHQL_URL = `${URL_BASE}/graphql`;
+async function graphqlRequest(query, variables = {}) {
+    const response = await fetch(GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query, variables })
+    });
+    return response.json();
+}
+
+async function loadComments(momentId) {
+    const query = `
+      query GetComments($momentId: ID, $page: Int!, $size: Int!) {
+        getComments(momentId: $momentId, page: $page, size: $size) {
+          success
+          data {
+            id
+            comment
+            commentDate
+            user {
+              userFullName
+              avatarUrl
+            }
+          }
+        }
+      }`;
+
+    const result = await graphqlRequest(query, { momentId, page: 0, size: 10 });
+    if (!result.data?.getComments?.success) return;
+
+    const comments = result.data.getComments.data;
+    const listDiv = document.querySelector(`#comments-${momentId} .comment-list`);
+    listDiv.innerHTML = comments.map(c => `
+      <div class="comment-item">
+        <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" class="comment-avatar">
+        <div class="comment-body">
+          <span class="comment-user">${c.user.userFullName}</span>
+          <p class="comment-text">${c.comment}</p>
+          <span class="comment-date">${new Date(c.commentDate).toLocaleString()}</span>
+        </div>
+      </div>
+    `).join("");
+}
+
+async function sendComment(momentId, commentText) {
+    const mutation = `
+      mutation CreateComment($momentId: ID!, $request: CommentInput!) {
+        createComment(momentId: $momentId, request: $request) {
+          success
+          message
+        }
+      }`;
+
+    const result = await graphqlRequest(mutation, {
+        momentId,
+        request: { comment: commentText }
+    });
+
+    const response = result.data?.createComment;
+    if (response?.success) {
+        await loadComments(momentId); // refresh
+    } else {
+        alert(response?.message || "Lỗi khi đăng bình luận");
+    }
+}
+
+momentsList.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("comment-send")) {
+        const momentId = e.target.dataset.momentId;
+        const input = e.target.closest(".comment-form").querySelector(".comment-input");
+        const commentText = input.value.trim();
+        if (!commentText) return;
+
+        await sendComment(momentId, commentText);
+        input.value = "";
+    }
+});
+
 
 loadMoments();

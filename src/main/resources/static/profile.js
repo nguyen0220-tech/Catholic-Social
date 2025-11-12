@@ -1,9 +1,14 @@
 const URL_BASE = window.location.origin;
+const accessToken = localStorage.getItem("accessToken");
 const messageBox = document.getElementById("messageBox");
 const avatarPreview = document.getElementById("avatarPreview");
 
 // === Load thông tin người dùng ===
 async function loadUserProfile() {
+    if (!accessToken) {
+        alert("Vui lòng đăng nhập");
+        return window.location.href = "/auth.html";
+    }
     try {
         const res = await fetch(`${URL_BASE}/user/profile`);
         const data = await res.json();
@@ -104,6 +109,19 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
         }
     } catch (err) {
         showMessage("Không thể kết nối tới server.", "error");
+    }
+});
+
+const toggleBtn = document.getElementById("toggleExtraBtn");
+const extraInfo = document.getElementById("extraInfo");
+
+toggleBtn.addEventListener("click", () => {
+    if (extraInfo.style.display === "none") {
+        extraInfo.style.display = "block";
+        toggleBtn.textContent = "Ẩn bớt thông tin";
+    } else {
+        extraInfo.style.display = "none";
+        toggleBtn.textContent = "Xem thêm thông tin";
     }
 });
 

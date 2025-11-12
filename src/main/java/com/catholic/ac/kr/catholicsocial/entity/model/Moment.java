@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +33,9 @@ public class Moment {
     @Enumerated(EnumType.STRING)
     private MomentShare share;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean edited;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -39,6 +44,7 @@ public class Moment {
     protected void create() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.edited = false;
     }
 
     public void setListImage(List<Image> images) {
@@ -51,5 +57,6 @@ public class Moment {
     @PreUpdate
     protected void update() {
         this.updatedAt = LocalDateTime.now();
+        this.edited = true;
     }
 }

@@ -19,9 +19,11 @@ public class SignUpRequest {
     @NotBlank(message = "password không được để trống")
     private String password;
 
+    @Pattern(regexp = "^[A-Za-z]{2,10}$", message = "Tên bao gồm chữ cái  phải có 2–10 chữ")
     @NotBlank(message = "first name không được để trống")
     private String firstName;
 
+    @Pattern(regexp = "^[A-Za-z]{2,10}$", message = "Tên bao gồm chữ cái  phải có 2–10 chữ")
     @NotBlank(message = "last không được để trống")
     private String lastName;
 

@@ -18,6 +18,7 @@ public class MomentMapper {
         momentDTO.setContent(moment.getContent());
         momentDTO.setImageUrls(moment.getImages().stream().map(Image::getImageUrl).collect(Collectors.toList()));
         momentDTO.setShare(String.valueOf(moment.getShare()));
+        momentDTO.setEdited(moment.isEdited());
         momentDTO.setCreatedAt(moment.getCreatedAt());
 
         return momentDTO;

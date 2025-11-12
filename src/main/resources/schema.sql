@@ -1,0 +1,9 @@
+-- ALTER TABLE moment
+-- DROP CONSTRAINT fk_moment_user;
+--
+-- -- 3. Thêm lại constraint với ON DELETE CASCADE
+-- ALTER TABLE moment
+--     ADD CONSTRAINT fk_moment_user
+--         FOREIGN KEY (user_id)
+--             REFERENCES users(id)
+--             ON DELETE CASCADE;

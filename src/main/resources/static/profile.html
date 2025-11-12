@@ -159,6 +159,7 @@
         <button type="button" id="uploadAvatarBtn">Tải ảnh đại diện</button>
     </div>
 
+    <!-- Bổ sung trong profile-card -->
     <form id="profileForm">
         <label for="lastName">Họ:</label>
         <input type="text" id="lastName" required>
@@ -172,21 +173,30 @@
         <label for="phone">Số điện thoại:</label>
         <input type="text" id="phone" required>
 
-        <label for="address">Địa chỉ:</label>
-        <input type="text" id="address">
+        <!-- Thông tin nâng cao mặc định ẩn -->
+        <div id="extraInfo" style="display:none;">
+            <label for="address">Địa chỉ:</label>
+            <input type="text" id="address">
 
-        <label for="birthDate">Ngày sinh:</label>
-        <input type="date" id="birthDate" required>
+            <label for="birthDate">Ngày sinh:</label>
+            <input type="date" id="birthDate">
 
-        <label for="gender">Giới tính:</label>
-        <select id="gender" required>
-            <option value="MALE">Nam</option>
-            <option value="FEMALE">Nữ</option>
-            <option value="UNKNOWN">Khác</option>
-        </select>
+            <label for="gender">Giới tính:</label>
+            <select id="gender">
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+                <option value="UNKNOWN">Khác</option>
+            </select>
+        </div>
 
-        <button type="submit">💾 Cập nhật thông tin</button>
+        <!-- Nút xem thêm / ẩn bớt -->
+        <button type="button" id="toggleExtraBtn" style="margin-top:10px;">
+            Xem thêm thông tin
+        </button>
+
+        <button type="submit" style="margin-top:15px;">💾 Cập nhật thông tin</button>
     </form>
+
 
     <div id="messageBox"></div>
 </div>

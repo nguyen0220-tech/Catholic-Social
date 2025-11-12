@@ -1,6 +1,5 @@
 package com.catholic.ac.kr.catholicsocial.entity.model;
 
-import com.catholic.ac.kr.catholicsocial.status.ImageType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,28 +8,38 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDateTime;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter @Setter
-public class Image {
+@Getter
+@Setter
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id",
+            foreignKey = @ForeignKey(name = "fk_comment_user"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "moment_id",nullable = false)
+    @JoinColumn(name = "moment_id",
+            foreignKey = @ForeignKey(name = "fk_comment_moment"))
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Moment moment;
 
     @Column(nullable = false)
-    private String imageUrl;
+    private String comment;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private ImageType type;
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void create() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

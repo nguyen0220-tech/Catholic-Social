@@ -13,6 +13,7 @@ public class MomentDTO {
     private String userAvatar;
     private String content;
     private List<String> imageUrls;
+    private boolean edited;
     private LocalDateTime createdAt;
     private String share;
 }

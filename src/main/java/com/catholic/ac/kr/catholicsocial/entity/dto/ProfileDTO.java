@@ -9,7 +9,9 @@ import java.time.LocalDate;
 
 @Getter @Setter
 public class ProfileDTO {
+    @Pattern(regexp = "^[A-Za-z]{2,10}$", message = "Tên bao gồm chữ cái  phải có 2–10 chữ")
     private String firstName;
+    @Pattern(regexp = "^[A-Za-z]{2,10}$", message = "Tên bao gồm chữ cái  phải có 2–10 chữ")
     private String lastName;
     @Email(message = "email không hợp lệ")
     private String email;

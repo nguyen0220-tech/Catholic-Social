@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,7 @@ public class RefreshToken {
     private Long id;
 
     @Column(nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private String refreshToken;
 
     @ManyToOne(fetch = FetchType.EAGER)

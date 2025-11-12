@@ -17,5 +17,6 @@ public class UserDTO {
     private Set<RoleDTO> roles;
     private LocalDate birthDate;
     private String sex;
+    private String avatarUrl;
 
 }

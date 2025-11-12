@@ -16,6 +16,11 @@ const tabBlocked = document.getElementById("tabBlocked");
 
 // --- API: Lấy danh sách người theo dõi ---
 async function fetchFollowers() {
+    if (!accessToken) {
+        alert("Vui lòng đăng nhập");
+        return window.location.href = "/auth.html";
+    }
+
     if (isLoading || isEnd) return;
     isLoading = true;
     loading.style.display = "block";

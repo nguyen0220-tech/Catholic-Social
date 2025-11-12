@@ -155,6 +155,57 @@
         #momentsList {
             margin-top: 20px;
         }
+
+        .edit-inline-form {
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .moment-edited {
+            color: #777;
+            font-size: 0.9em;
+            margin-left: 6px;
+            font-style: italic;
+        }
+
+        .moment-comments {
+            margin-top: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 8px;
+        }
+        .comment-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .comment-avatar {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+        }
+        .comment-form {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .comment-input {
+            flex: 1;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .comment-send {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
     </style>
 
 </head>
