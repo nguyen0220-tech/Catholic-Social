@@ -34,6 +34,13 @@ document.getElementById("loginBtn").addEventListener("click", async function () 
             body: JSON.stringify({ username, password })
         });
 
+        if (!response.ok) {
+            // Hiển thị thông báo từ server
+            const text = await response.text(); // vì server gửi "Too Many Requests"
+            loginError.textContent = text || `Lỗi ${response.status}`;
+            return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -65,12 +72,13 @@ document.getElementById("signUpBtn").addEventListener("click", async function ()
     };
 
     const fields = ["username","password","firstName","lastName","email","phone","birthDate","sex"];
-
-    // 1. Xóa các lỗi cũ
     fields.forEach(f => {
         const span = document.getElementById(f + "Error");
         if (span) span.textContent = "";
     });
+
+    const signUpError = document.getElementById("signUpError");
+    signUpError.textContent = "";
 
     try {
         const response = await fetch(`${URL_BASE}/auth/signup`, {
@@ -78,6 +86,13 @@ document.getElementById("signUpBtn").addEventListener("click", async function ()
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestBody)
         });
+
+        if (!response.ok) {
+            // Thông báo từ server nếu bị rate limit
+            const text = await response.text();
+            signUpError.textContent = text || `Lỗi ${response.status}`;
+            return;
+        }
 
         const result = await response.json();
 
@@ -87,21 +102,17 @@ document.getElementById("signUpBtn").addEventListener("click", async function ()
             loginForm.style.display = "block";
         } else {
             if (result.data) {
-                // Hiển thị lỗi từng field
                 for (const field in result.data) {
                     const span = document.getElementById(field + "Error");
                     if (span) span.textContent = result.data[field];
                 }
             } else {
-                // Nếu backend trả lỗi chung
-                const signUpError = document.getElementById("signUpError");
                 signUpError.textContent = result.message || "Sign up thất bại.";
             }
         }
 
     } catch (err) {
         console.error("Sign up error:", err);
-        const signUpError = document.getElementById("signUpError");
         signUpError.textContent = "Lỗi kết nối đến server.";
     }
 });

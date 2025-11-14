@@ -116,35 +116,38 @@ function renderMoments(moments, append = false) {
               <div class="moment-meta">
                 <span class="moment-time">${new Date(moment.createdAt).toLocaleString()}</span>
                 ${moment.share ? `<span class="moment-share">· ${moment.share}</span>` : ""}
-                ${editedText} <!-- 👈 hiển thị nếu bài đã chỉnh sửa -->
+                ${editedText}
               </div>
             </div>
           </div>
 
           <div class="moment-content">${moment.content || ""}</div>
-
           <div class="moment-images">
             ${moment.imageUrls.map(url => `<img src="${url}" alt="moment image">`).join("")}
           </div>
-          
-          <div class="moment-comments" id="comments-${moment.id}">
-          <div class="comment-list"></div>
-          <div class="comment-form">
-            <input type="text" placeholder="Viết bình luận..." class="comment-input">
-            <button class="comment-send" data-moment-id="${moment.id}">Gửi</button>
-          </div>
-          </div>
 
           <div class="moment-actions">
-            <button class="moment-btn edit-btn" data-id="${moment.id}" data-content="${moment.content}" data-share="${moment.share}">
-              ✏️
-            </button>
-            <button class="moment-btn delete-btn" data-id="${moment.id}">
-              🗑
-            </button>
+            <button class="moment-btn edit-btn" data-id="${moment.id}" data-content="${moment.content}" data-share="${moment.share}">✏️</button>
+            <button class="moment-btn delete-btn" data-id="${moment.id}">🗑</button>
+          </div>
+
+          <div class="moment-heart" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+            <button class="heart-btn" data-moment-id="${moment.id}" style="font-size:20px; cursor:pointer;">🤍</button>
+            <span class="heart-count" id="heart-count-${moment.id}" style="cursor:pointer">0</span>
+          </div>
+
+          <div class="moment-comments" id="comments-${moment.id}">
+            <div class="comment-list"></div>
+            <div class="comment-form">
+              <input type="text" placeholder="Viết bình luận..." class="comment-input">
+              <button class="comment-send" data-moment-id="${moment.id}">Gửi</button>
+            </div>
           </div>
         `;
         momentsList.appendChild(div);
+
+        // Load dữ liệu Heart & Comment
+        renderHearts(moment.id);
         loadComments(moment.id);
     });
 }
@@ -154,6 +157,112 @@ function resetMoments() {
     currentPage = 0;
     endReached = false;
     loadMoments();
+}
+
+async function loadHearts(momentId) {
+    const query = `
+      query GetHearts($momentId: ID, $page: Int!, $size: Int!) {
+        getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
+          success
+          data {
+            heartId
+            user {
+              id
+              userFullName
+              avatarUrl
+            }
+          }
+        }
+      }
+    `;
+    try {
+        const result = await graphqlRequest(query, { momentId, page: 0, size: 99 });
+        const response = result.data?.getHeartsByMomentId;
+        if (!response?.success) return [];
+        return response.data || [];
+    } catch (err) {
+        console.error("Load hearts error:", err);
+        return [];
+    }
+}
+
+async function renderHearts(momentId) {
+    const hearts = await loadHearts(momentId);
+    const countSpan = document.getElementById(`heart-count-${momentId}`);
+    countSpan.innerText = hearts.length;
+
+    const myUserId = Number(localStorage.getItem("userId"));
+    const heartBtn = document.querySelector(`.heart-btn[data-moment-id='${momentId}']`);
+
+    const isLiked = hearts.some(h => Number(h.user.id) === myUserId);
+
+    heartBtn.innerText = isLiked ? "❤️" : "🤍";
+    heartBtn.dataset.liked = isLiked;
+
+    // Click vào số lượng Heart => show danh sách người like
+    countSpan.onclick = () => showHeartUsers(momentId);
+}
+
+async function toggleHeart(momentId, isLiked) {
+    const mutation = isLiked ?
+        `mutation DeleteHeart($momentId: ID!) { deleteHeart(momentId: $momentId) { success message } }`
+        :
+        `mutation AddHeart($momentId: ID!) { addHeart(momentId: $momentId) { success message } }`;
+
+    const result = await graphqlRequest(mutation, { momentId });
+    const resData = isLiked ? result.data?.deleteHeart : result.data?.addHeart;
+
+    if (!resData?.success) {
+        alert(resData?.message || "Lỗi cập nhật tim!");
+        return false;
+    }
+    return true;
+}
+
+// Event delegate cho Heart button
+momentsList.addEventListener("click", async (e) => {
+    const heartBtn = e.target.closest(".heart-btn");
+    if (!heartBtn) return;
+
+    const momentId = heartBtn.dataset.momentId;
+    const liked = heartBtn.dataset.liked === "true";
+
+    const success = await toggleHeart(momentId, liked);
+    if (success) renderHearts(momentId);
+});
+
+async function showHeartUsers(momentId) {
+    const hearts = await loadHearts(momentId);
+    if (hearts.length === 0) {
+        alert("Chưa có ai thích bài viết này");
+        return;
+    }
+
+    const usersHtml = hearts.map(h => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <img src="${h.user.avatarUrl || '/icon/default-avatar.png'}" style="width:30px;height:30px;border-radius:50%;">
+            <span>${h.user.userFullName}</span>
+        </div>
+    `).join("");
+
+    const popup = document.createElement("div");
+    popup.innerHTML = `
+        <div style="
+            position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+            background:#fff; border:1px solid #ccc; border-radius:8px;
+            padding:16px; max-height:400px; overflow:auto; z-index:9999;
+            box-shadow:0 2px 12px rgba(0,0,0,0.2);
+        ">
+            <h3 style="margin-top:0;margin-bottom:10px;">Người thích</h3>
+            ${usersHtml}
+            <button id="close-heart-popup" style="margin-top:10px;padding:6px 12px;">Đóng</button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+
+    document.getElementById("close-heart-popup").onclick = () => {
+        document.body.removeChild(popup);
+    };
 }
 
 // --- Infinite scroll ---

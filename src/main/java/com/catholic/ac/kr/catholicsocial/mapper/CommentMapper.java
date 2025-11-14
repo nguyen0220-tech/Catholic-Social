@@ -1,9 +1,9 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
+import com.catholic.ac.kr.catholicsocial.convert.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
-import com.catholic.ac.kr.catholicsocial.entity.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +16,9 @@ public class CommentMapper {
         commentDTO.setComment(comment.getComment());
         commentDTO.setCommentDate(comment.getCreatedAt());
 
-        User user = comment.getUser();
-        if (user != null) {
-            UserGQLDTO userGQLDTO = new UserGQLDTO();
-            userGQLDTO.setUserFullName(user.getUserInfo().getFirstName() + " " + user.getUserInfo().getLastName());
-            userGQLDTO.setAvatarUrl(user.getUserInfo().getAvatarUrl());
-            commentDTO.setUser(userGQLDTO);
-        }
+        UserGQLDTO userGQLDTO = ConvertHandler.convertToUserGQLDTO(comment.getUser());
+
+        commentDTO.setUser(userGQLDTO);
 
         return commentDTO;
     }

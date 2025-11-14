@@ -117,6 +117,16 @@ function renderMoment(moment) {
             ${formatDateTime(moment.createdAt)} - Chia sẻ: ${moment.share} ${editedText}
         </div>
         
+        <div style="margin-top:8px; display:flex; gap:10px; align-items:center;">
+            <button class="heart-btn" 
+                    data-moment-id="${moment.id}" 
+                    style="border:none;background:none;font-size:20px;cursor:pointer;">
+                🤍
+            </button>
+            <span class="heart-count" id="heart-count-${moment.id}">0</span>
+        </div>
+
+        
         <div id="comments-${moment.id}" class="moment-comments" 
              style="margin-top:10px;padding:8px;background:#f0f0f0;border-radius:8px;">
           <div class="comment-list"></div>
@@ -132,8 +142,132 @@ function renderMoment(moment) {
 
     momentsContainer.appendChild(item);
     renderComments(moment.id);
+    renderHearts(moment.id)
 
 }
+
+async function loadHearts(momentId) {
+    const query = `
+      query GetHearts($momentId: ID, $page: Int!, $size: Int!) {
+        getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
+          success
+          data {
+            heartId
+            user {
+              id
+              userFullName
+              avatarUrl
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+        const result = await graphqlRequest(query, { momentId, page: 0, size: 99 });
+        const response = result.data?.getHeartsByMomentId;
+        if (!response?.success) return [];
+
+        return response.data || [];
+    } catch (err) {
+        console.error("Load hearts error:", err);
+        return [];
+    }
+}
+
+// --- Hiển thị danh sách Heart khi click vào số lượng ---
+async function showHeartUsers(momentId) {
+    const hearts = await loadHearts(momentId);
+    if (hearts.length === 0) {
+        alert("Chưa có ai thích khoảnh khắc này.");
+        return;
+    }
+
+    const usersHtml = hearts.map(h => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <img src="${h.user.avatarUrl || '/icon/default-avatar.png'}"
+                 style="width:30px;height:30px;border-radius:50%;">
+            <span>${h.user.userFullName}</span>
+        </div>
+    `).join("");
+
+    // Tạo popup tạm thời
+    const popup = document.createElement("div");
+    popup.innerHTML = `
+        <div style="
+            position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+            background:#fff; border:1px solid #ccc; border-radius:8px;
+            padding:16px; max-height:400px; overflow:auto; z-index:9999;
+            box-shadow:0 2px 12px rgba(0,0,0,0.2);
+        ">
+            <h3 style="margin-top:0;margin-bottom:10px;">Người thích</h3>
+            ${usersHtml}
+            <button id="close-heart-popup" style="margin-top:10px;padding:6px 12px;">Đóng</button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+
+    document.getElementById("close-heart-popup").addEventListener("click", () => {
+        document.body.removeChild(popup);
+    });
+}
+
+// --- renderHearts cập nhật ---
+async function renderHearts(momentId) {
+    const hearts = await loadHearts(momentId);
+    const countSpan = document.getElementById(`heart-count-${momentId}`);
+    countSpan.innerText = hearts.length;
+
+    const myUserId = Number(localStorage.getItem("userId"));
+    const heartBtn = document.querySelector(`.heart-btn[data-moment-id='${momentId}']`);
+
+    const isLiked = hearts.some(h => Number(h.user?.id) === myUserId);
+
+    if (isLiked) {
+        heartBtn.innerText = "❤️";
+        heartBtn.dataset.liked = "true";
+    } else {
+        heartBtn.innerText = "🤍";
+        heartBtn.dataset.liked = "false";
+    }
+
+    // --- Thêm click vào số lượng để show popup ---
+    countSpan.style.cursor = "pointer";
+    countSpan.onclick = () => showHeartUsers(momentId);
+}
+
+
+
+async function toggleHeart(momentId, isLiked) {
+    const mutation = isLiked ?
+        `
+        mutation DeleteHeart($momentId: ID!) {
+          deleteHeart(momentId: $momentId) {
+            success
+            message
+          }
+        }
+        `
+        :
+        `
+        mutation AddHeart($momentId: ID!) {
+          addHeart(momentId: $momentId) {
+            success
+            message
+          }
+        }
+        `;
+
+    const result = await graphqlRequest(mutation, { momentId });
+    const resData = isLiked ? result.data?.deleteHeart : result.data?.addHeart;
+
+    if (!resData?.success) {
+        alert(resData?.message || "Lỗi cập nhật tim!");
+        return false;
+    }
+    return true;
+}
+
 
 async function loadComments(momentId) {
     const query = `
@@ -301,6 +435,8 @@ logoutBtn.addEventListener("click", async () => {
 });
 
 momentsContainer.addEventListener("click", async (e) => {
+
+    // Comment
     if (e.target.classList.contains("comment-send")) {
         const momentId = e.target.dataset.momentId;
         const input = e.target.closest(".comment-form").querySelector(".comment-input");
@@ -308,8 +444,23 @@ momentsContainer.addEventListener("click", async (e) => {
         if (!commentText) return alert("Vui lòng nhập nội dung bình luận!");
         await sendComment(momentId, commentText);
         input.value = "";
+        return;
+    }
+
+    // Heart
+    const heartBtn = e.target.closest(".heart-btn");
+    if (heartBtn) {
+        const momentId = heartBtn.dataset.momentId;
+        const isLiked = heartBtn.dataset.liked === "true";
+
+        console.log("Heart clicked:", momentId, isLiked);
+
+        const ok = await toggleHeart(momentId, isLiked);
+        if (ok) {
+            await renderHearts(momentId);
+        }
+        return;
     }
 });
 
-// --- Load lần đầu ---
 fetchMoments();

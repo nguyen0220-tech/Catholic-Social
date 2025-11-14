@@ -3,8 +3,9 @@
 #getComments → tên hàm truy vấn mà client sẽ gọi.
 #momentId: ID → tham số đầu vào (ID có thể null, vì không có dấu !)
 #page: Int! và size: Int! → bắt buộc (!)
-#: ApiResponseComment → kiểu dữ liệu trả về (do bạn định nghĩa bên dưới).
+#: ApiResponse → kiểu dữ liệu trả về (do bạn định nghĩa bên dưới).
 type Query {
+    getHeartsByMomentId(momentId: ID, page: Int!, size: Int!):ApiResponseHeart
     getComments(momentId: ID, page: Int!,size: Int!): ApiResponseComment
 }
 
@@ -17,6 +18,8 @@ type Query {
 #: ApiResponseString → kiểu dữ liệu trả về (ở đây là chuỗi báo kết quả).
 type Mutation {
     createComment(momentId: ID!, request: CommentInput!): ApiResponseString
+    addHeart(momentId: ID!): ApiResponseString
+    deleteHeart(momentId: ID!): ApiResponseString
 }
 
 #input CommentInput: Đây là input type – giống như DTO cho request body trong REST.
@@ -42,6 +45,20 @@ type ApiResponseComment {
     data: [CommentDTO]
 }
 
+type HeatDTO{
+    heartId: ID!
+    user: UserDTO!
+}
+
+type ApiResponseHeart {
+    timestamp: String
+    status: Int
+    success: Boolean
+    code: String
+    message: String
+    data: [HeatDTO]
+}
+
 type ApiResponseString {
     timestamp: String
     status: Int
@@ -52,6 +69,7 @@ type ApiResponseString {
 }
 
 type UserDTO{
+    id: ID
     userFullName: String
     avatarUrl: String
 }

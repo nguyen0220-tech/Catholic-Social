@@ -4,8 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class UserGQLDTO {
-    private Long id;
-    private String userFullName;
-    private String avatarUrl;
+public class HeartDTO {
+    private Long heartId;
+    private UserGQLDTO user;
 }
