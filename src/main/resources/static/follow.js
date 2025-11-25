@@ -5,7 +5,10 @@ let page = 0;
 const size = 10;
 let isLoading = false;
 let isEnd = false;
-let currentTab = "followers"; //  followers | blocked
+
+let currentTab = "following"; // following | followers | blocked
+
+const tabFollowing = document.getElementById("tabFollowing");
 
 const container = document.getElementById("followers-container");
 const loading = document.getElementById("loading");
@@ -26,10 +29,14 @@ async function fetchFollowers() {
     loading.style.display = "block";
 
     try {
-        const url =
-            currentTab === "followers"
-                ? `${URL_BASE}/follow?page=${page}&size=${size}`
-                : `${URL_BASE}/follow/find-blocked?page=${page}&size=${size}`;
+        let url;
+        if (currentTab === "following") {
+            url = `${URL_BASE}/follow?page=${page}&size=${size}`;
+        } else if (currentTab === "followers") {
+            url = `${URL_BASE}/follow/users?page=${page}&size=${size}`;
+        } else { // blocked
+            url = `${URL_BASE}/follow/find-blocked?page=${page}&size=${size}`;
+        }
 
         const res = await fetch(url, {
             headers: {
@@ -41,15 +48,30 @@ async function fetchFollowers() {
         const json = await res.json();
         if (!res.ok) throw new Error(json.message || "Lỗi tải dữ liệu");
 
-        const list = json.data || [];
+        const raw = json.data || {};
+        const list = raw.users || [];
+        const count = raw.userNums || 0;
+
+        // Cập nhật số lượng
+        const countDiv = document.getElementById("followers-count");
+        if (currentTab === "following") {
+            countDiv.innerText = `Đang theo dõi: ${count} người`;
+        } else if (currentTab === "followers") {
+            countDiv.innerText = `Người theo dõi bạn: ${count} người`;
+        } else {
+            countDiv.innerText = `Bị chặn: ${count} người`;
+        }
+
         if (list.length === 0) {
             isEnd = true;
             loading.innerText = "Đã tải hết.";
             return;
         }
 
-        if (currentTab === "followers") {
+        if (currentTab === "following") {
             renderFollowers(list);
+        } else if (currentTab === "followers") {
+            renderFollowersMe(list);
         } else {
             renderBlocked(list);
         }
@@ -116,10 +138,10 @@ function resetAndLoad() {
 function renderFollowers(followers) {
     followers.forEach((f) => {
         const avatarUrl =
-            f.userAvatarUrl && f.userAvatarUrl.startsWith("http")
-                ? f.userAvatarUrl
-                : f.userAvatarUrl
-                    ? `${URL_BASE}${f.userAvatarUrl}`
+            f.avatarUrl && f.avatarUrl.startsWith("http")
+                ? f.avatarUrl
+                : f.avatarUrl
+                    ? `${URL_BASE}${f.avatarUrl}`
                     : "icon/default-avatar.png";
 
         const item = document.createElement("div");
@@ -131,10 +153,10 @@ function renderFollowers(followers) {
 
         item.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${avatarUrl}" alt="${f.userName}" 
+                <img src="${avatarUrl}" alt="${f.userFullName}" 
                      style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid #ccc;">
-                <a href="user.html?id=${f.userId}" style="text-decoration:none; color:#333; font-weight:bold;">
-                    ${f.userName}
+                <a href="user.html?id=${f.id}" style="text-decoration:none; color:#333; font-weight:bold;">
+                    ${f.userFullName}
                 </a>
             </div>
             <div style="display:flex; gap:6px;">
@@ -149,28 +171,75 @@ function renderFollowers(followers) {
             </div>
         `;
 
-        // Nút bỏ theo dõi
         item.querySelector(".unfollow-btn").addEventListener("click", () =>
-            userAction(f.userId, "UNFOLLOW", item)
+            userAction(f.id, "UNFOLLOW", item)
         );
 
-        //  Nút chặn
         item.querySelector(".block-btn").addEventListener("click", () =>
-            blockUser(f.userId, item)
+            blockUser(f.id, item)
         );
 
         container.appendChild(item);
     });
 }
 
+function renderFollowersMe(users) {
+    users.forEach((u) => {
+        const avatarUrl =
+            u.avatarUrl && u.avatarUrl.startsWith("http")
+                ? u.avatarUrl
+                : u.avatarUrl
+                    ? `${URL_BASE}${u.avatarUrl}`
+                    : "icon/default-avatar.png";
+
+        const item = document.createElement("div");
+        item.classList.add("follower-me-item");
+        item.style.cssText = `
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+            border:1px solid #ddd; border-radius:8px;
+            padding:10px; margin-bottom:8px; background-color:#eef9ff;`;
+
+        item.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${avatarUrl}" alt="${u.userFullName}" 
+                     style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid #ccc;">
+                <a href="user.html?id=${u.id}" style="text-decoration:none; color:#333; font-weight:bold;">
+                    ${u.userFullName}
+                </a>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <button class="follow-btn"
+                        style="background:#007bff;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+                    Theo dõi
+                </button>
+                <button class="block-btn" 
+                        style="background:#6c757d;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+                    Chặn
+                </button>
+            </div>
+        `;
+
+        item.querySelector(".follow-btn").addEventListener("click", async () => {
+            await followUser(u.id, item.querySelector(".follow-btn"));
+        });
+
+        item.querySelector(".block-btn").addEventListener("click", () =>
+            blockUser(u.id, item)
+        );
+
+        container.appendChild(item);
+    });
+}
+
+
 // --- HIỂN THỊ DANH SÁCH BỊ CHẶN ---
 function renderBlocked(blockedUsers) {
     blockedUsers.forEach((u) => {
         const avatarUrl =
-            u.userAvatarUrl && u.userAvatarUrl.startsWith("http")
-                ? u.userAvatarUrl
-                : u.userAvatarUrl
-                    ? `${URL_BASE}${u.userAvatarUrl}`
+            u.avatarUrl && u.avatarUrl.startsWith("http")
+                ? u.avatarUrl
+                : u.avatarUrl
+                    ? `${URL_BASE}${u.avatarUrl}`
                     : "icon/default-avatar.png";
 
         const item = document.createElement("div");
@@ -182,9 +251,9 @@ function renderBlocked(blockedUsers) {
 
         item.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${avatarUrl}" alt="${u.userName}" 
+                <img src="${avatarUrl}" alt="${u.userFullName}" 
                      style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid #ccc;">
-                <strong>${u.userName}</strong>
+                <strong>${u.userFullName}</strong>
             </div>
             <button class="unblock-btn"
                     style="background:#28a745;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
@@ -193,7 +262,7 @@ function renderBlocked(blockedUsers) {
         `;
 
         item.querySelector(".unblock-btn").addEventListener("click", () =>
-            userAction(u.userId, "UNBLOCK", item)
+            userAction(u.id, "UNBLOCK", item)
         );
 
         container.appendChild(item);
@@ -353,10 +422,18 @@ searchInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchUsers(searchInput.value);
 });
 
-// --- Sự kiện chuyển tab ---
+tabFollowing.addEventListener("click", () => {
+    currentTab = "following";
+    tabFollowing.style.background = "#007bff";
+    tabFollowers.style.background = "#6c757d";
+    tabBlocked.style.background = "#6c757d";
+    resetAndLoad();
+});
+
 tabFollowers.addEventListener("click", () => {
     currentTab = "followers";
     tabFollowers.style.background = "#007bff";
+    tabFollowing.style.background = "#6c757d";
     tabBlocked.style.background = "#6c757d";
     resetAndLoad();
 });
@@ -364,9 +441,11 @@ tabFollowers.addEventListener("click", () => {
 tabBlocked.addEventListener("click", () => {
     currentTab = "blocked";
     tabBlocked.style.background = "#dc3545";
+    tabFollowing.style.background = "#6c757d";
     tabFollowers.style.background = "#6c757d";
     resetAndLoad();
 });
+
 
 // --- Gọi lần đầu ---
 fetchFollowers();

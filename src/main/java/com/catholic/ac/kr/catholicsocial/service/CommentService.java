@@ -1,7 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
@@ -18,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,35 +29,30 @@ public class CommentService {
     private final MomentRepository momentRepository;
     private final FollowRepository followRepository;
 
-    public ApiResponse<List<CommentDTO>> getCommentsByMomentId(Long momentId, int page, int size) {
+    public List<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         List<Comment> comments = commentRepository.findByMomentId(momentId, pageable);
 
-        List<CommentDTO> commentDTOS = CommentMapper.commentDTOList(comments);
-
-        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Get all comments", commentDTOS);
+        return CommentMapper.commentDTOList(comments);
     }
 
-    public ApiResponse<String> createComment(Long userId, Long momentId, CommentRequest request) {
+    public String createComment(Long userId, Long momentId, CommentRequest request) {
 
         User currentUser = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
         Moment moment = EntityUtils.getOrThrow(momentRepository.findById(momentId), "Moment");
 
-        boolean followerBlock = followRepository.existsByFollowerAndUserAndState(currentUser,moment.getUser(),FollowState.BLOCKED);
-        boolean ownerMomentBlock = followRepository.existsByFollowerAndUserAndState(moment.getUser(),currentUser,FollowState.BLOCKED);
+        boolean followerBlock = followRepository.existsByFollowerAndUserAndState(currentUser, moment.getUser(), FollowState.BLOCKED);
+        boolean ownerMomentBlock = followRepository.existsByFollowerAndUserAndState(moment.getUser(), currentUser, FollowState.BLOCKED);
 
         if (followerBlock || ownerMomentBlock) {
-            return ApiResponse.fail(HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(),
-                    "You cannot comment.Because you blocked");
+            return "You cannot comment.Because you blocked";
         }
 
         //  Nếu PRIVATE → chỉ chủ sở hữu được comment
         if (moment.getShare() == MomentShare.PRIVATE &&
                 !moment.getUser().getId().equals(currentUser.getId())) {
-            return ApiResponse.fail(HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(),
-                    "You cannot comment on a private moment");
+            return "You cannot comment on a private moment";
         }
 
         // Nếu FOLLOWER → chỉ follower hoặc chủ sở hữu được comment
@@ -71,8 +64,7 @@ public class CommentService {
             );
 
             if (!isFollowed) {
-                return ApiResponse.fail(HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(),
-                        "Only followers can comment on this moment");
+                return "Only followers can comment on this moment";
             }
         }
 
@@ -84,8 +76,7 @@ public class CommentService {
 
         commentRepository.save(comment);
 
-        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Created comment successfully");
+        return "ok";
     }
 
 }

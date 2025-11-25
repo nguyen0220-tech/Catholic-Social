@@ -163,23 +163,18 @@ async function loadHearts(momentId) {
     const query = `
       query GetHearts($momentId: ID, $page: Int!, $size: Int!) {
         getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
-          success
-          data {
             heartId
             user {
-              id
-              userFullName
-              avatarUrl
+                id
+                userFullName
+                avatarUrl
             }
-          }
         }
       }
     `;
     try {
         const result = await graphqlRequest(query, { momentId, page: 0, size: 99 });
-        const response = result.data?.getHeartsByMomentId;
-        if (!response?.success) return [];
-        return response.data || [];
+        return result.data?.getHeartsByMomentId || [];
     } catch (err) {
         console.error("Load hearts error:", err);
         return [];
@@ -188,6 +183,7 @@ async function loadHearts(momentId) {
 
 async function renderHearts(momentId) {
     const hearts = await loadHearts(momentId);
+
     const countSpan = document.getElementById(`heart-count-${momentId}`);
     countSpan.innerText = hearts.length;
 
@@ -199,21 +195,22 @@ async function renderHearts(momentId) {
     heartBtn.innerText = isLiked ? "❤️" : "🤍";
     heartBtn.dataset.liked = isLiked;
 
-    // Click vào số lượng Heart => show danh sách người like
     countSpan.onclick = () => showHeartUsers(momentId);
 }
 
 async function toggleHeart(momentId, isLiked) {
-    const mutation = isLiked ?
-        `mutation DeleteHeart($momentId: ID!) { deleteHeart(momentId: $momentId) { success message } }`
-        :
-        `mutation AddHeart($momentId: ID!) { addHeart(momentId: $momentId) { success message } }`;
+    const mutation = isLiked
+        ? `mutation ($momentId: ID!) { deleteHeart(momentId: $momentId) }`
+        : `mutation ($momentId: ID!) { addHeart(momentId: $momentId) }`;
 
     const result = await graphqlRequest(mutation, { momentId });
-    const resData = isLiked ? result.data?.deleteHeart : result.data?.addHeart;
 
-    if (!resData?.success) {
-        alert(resData?.message || "Lỗi cập nhật tim!");
+    const response = isLiked
+        ? result.data?.deleteHeart
+        : result.data?.addHeart;
+
+    if (!response) {
+        alert("Lỗi cập nhật tim!");
         return false;
     }
     return true;
@@ -240,7 +237,8 @@ async function showHeartUsers(momentId) {
 
     const usersHtml = hearts.map(h => `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <img src="${h.user.avatarUrl || '/icon/default-avatar.png'}" style="width:30px;height:30px;border-radius:50%;">
+            <img src="${h.user.avatarUrl || '/icon/default-avatar.png'}" 
+                 style="width:30px;height:30px;border-radius:50%;">
             <span>${h.user.userFullName}</span>
         </div>
     `).join("");
@@ -255,7 +253,8 @@ async function showHeartUsers(momentId) {
         ">
             <h3 style="margin-top:0;margin-bottom:10px;">Người thích</h3>
             ${usersHtml}
-            <button id="close-heart-popup" style="margin-top:10px;padding:6px 12px;">Đóng</button>
+            <button id="close-heart-popup" 
+                    style="margin-top:10px;padding:6px 12px;">Đóng</button>
         </div>
     `;
     document.body.appendChild(popup);
@@ -381,87 +380,94 @@ momentsList.addEventListener("click", (e) => {
     }
 });
 
-//
 const GRAPHQL_URL = `${URL_BASE}/graphql`;
+
 async function graphqlRequest(query, variables = {}) {
-    const response = await fetch(GRAPHQL_URL, {
+    const res = await fetch(GRAPHQL_URL, {
         method: "POST",
         headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify({ query, variables })
     });
-    return response.json();
+    return await res.json();
 }
 
 async function loadComments(momentId) {
     const query = `
       query GetComments($momentId: ID, $page: Int!, $size: Int!) {
         getComments(momentId: $momentId, page: $page, size: $size) {
-          success
-          data {
+          id
+          comment
+          commentDate
+          user {
             id
-            comment
-            commentDate
-            user {
-              userFullName
-              avatarUrl
-            }
+            userFullName
+            avatarUrl
           }
         }
-      }`;
+      }
+    `;
 
-    const result = await graphqlRequest(query, { momentId, page: 0, size: 10 });
-    if (!result.data?.getComments?.success) return;
+    const result = await graphqlRequest(query, { momentId, page: 0, size: 50 });
+    const comments = result.data?.getComments || [];
 
-    const comments = result.data.getComments.data;
     const listDiv = document.querySelector(`#comments-${momentId} .comment-list`);
-    listDiv.innerHTML = comments.map(c => `
-      <div class="comment-item">
-        <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" class="comment-avatar">
-        <div class="comment-body">
-          <span class="comment-user">${c.user.userFullName}</span>
-          <p class="comment-text">${c.comment}</p>
-          <span class="comment-date">${new Date(c.commentDate).toLocaleString()}</span>
-        </div>
-      </div>
-    `).join("");
+    listDiv.innerHTML = comments
+        .map(c => `
+            <div class="comment-item">
+                <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" class="comment-avatar">
+                <div class="comment-body">
+                    <div class="comment-author">${c.user.userFullName}</div>
+                    <div class="comment-text">${c.comment}</div>
+                    <div class="comment-date">${formatCommentDate(c.commentDate)}</div>
+                </div>
+            </div>
+        `)
+        .join("");
 }
 
-async function sendComment(momentId, commentText) {
+function formatCommentDate(dateStr) {
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // tháng từ 0-11
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+
+async function createComment(momentId, text) {
     const mutation = `
       mutation CreateComment($momentId: ID!, $request: CommentInput!) {
-        createComment(momentId: $momentId, request: $request) {
-          success
-          message
-        }
-      }`;
+        createComment(momentId: $momentId, request: $request)
+      }
+    `;
 
-    const result = await graphqlRequest(mutation, {
+    const variables = {
         momentId,
-        request: { comment: commentText }
-    });
+        request: { comment: text }
+    };
 
-    const response = result.data?.createComment;
-    if (response?.success) {
-        await loadComments(momentId); // refresh
-    } else {
-        alert(response?.message || "Lỗi khi đăng bình luận");
-    }
+    const result = await graphqlRequest(mutation, variables);
+    return result.data?.createComment;
 }
 
 momentsList.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("comment-send")) {
-        const momentId = e.target.dataset.momentId;
-        const input = e.target.closest(".comment-form").querySelector(".comment-input");
-        const commentText = input.value.trim();
-        if (!commentText) return;
+    const btn = e.target.closest(".comment-send");
+    if (!btn) return;
 
-        await sendComment(momentId, commentText);
-        input.value = "";
-    }
+    const momentId = btn.dataset.momentId;
+    const input = btn.previousElementSibling;
+    const text = input.value.trim();
+    if (!text) return;
+
+    await createComment(momentId, text);
+    input.value = "";
+    loadComments(momentId);
 });
-
 
 loadMoments();

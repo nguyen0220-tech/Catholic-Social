@@ -29,4 +29,9 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
             """)
     Optional<Follow> findByFollowerAndUser_Action(User follower, User user);
 
+    List<Follow> findByUserIdAndState(Long userId, FollowState state, Pageable pageable);
+
+    int countFollowByUserIdAndState(Long userId, FollowState state);
+
+    int countFollowByFollowerIdAndState(Long followerId, FollowState state);
 }

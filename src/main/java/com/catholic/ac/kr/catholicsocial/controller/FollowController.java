@@ -10,24 +10,32 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("follow")
 @RequiredArgsConstructor
 public class FollowController {
     private final FollowService followService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<FollowDTO>>> getFollowers(
+    //Đang theo dõi
+    @GetMapping()
+    public ResponseEntity<ApiResponse<FollowDTO>> getFollowers(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(followService.getAllFollowers(useDetails.getUser().getId(), page, size));
     }
 
+    //Người theo dõi
+    @GetMapping("users")
+    public ResponseEntity<ApiResponse<FollowDTO>> getUsersFollowing(
+            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @RequestParam int page,
+            @RequestParam int size) {
+        return ResponseEntity.ok(followService.getAllUsersFollowing(useDetails.getUser().getId(), page, size));
+    }
+
     @GetMapping("find-blocked")
-    public ResponseEntity<ApiResponse<List<FollowDTO>>> getBlockedFollowers(
+    public ResponseEntity<ApiResponse<FollowDTO>> getBlockedFollowers(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {

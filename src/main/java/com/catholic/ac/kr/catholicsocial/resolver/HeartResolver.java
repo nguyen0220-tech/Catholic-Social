@@ -1,6 +1,5 @@
-package com.catholic.ac.kr.catholicsocial.graphql;
+package com.catholic.ac.kr.catholicsocial.resolver;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.HeartDTO;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.HeartService;
@@ -19,7 +18,7 @@ public class HeartResolver {
     private final HeartService heartService;
 
     @QueryMapping
-    public ApiResponse<List<HeartDTO>> getHeartsByMomentId(
+    public List<HeartDTO> getHeartsByMomentId(
             @Argument Long momentId,
             @Argument int page,
             @Argument int size ){
@@ -27,12 +26,12 @@ public class HeartResolver {
     }
 
     @MutationMapping
-    public ApiResponse<String> addHeart(@AuthenticationPrincipal CustomUseDetails useDetails, @Argument Long momentId){
+    public String addHeart(@AuthenticationPrincipal CustomUseDetails useDetails, @Argument Long momentId){
         return heartService.addHeart(useDetails.getUser().getId(), momentId);
     }
 
     @MutationMapping
-    public ApiResponse<String> deleteHeart(
+    public String deleteHeart(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @Argument Long momentId){
         return heartService.deleteHeart(useDetails.getUser().getId(), momentId);

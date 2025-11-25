@@ -28,27 +28,46 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
 
+    //Danh sách mình đang theo dõi người khác
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ApiResponse<List<FollowDTO>> getAllFollowers(Long currentUserId, int page, int size) {
+    public ApiResponse<FollowDTO> getAllFollowers(Long currentUserId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
-        List<Follow> follows = followRepository.findByFollowerIdAndState(currentUserId, FollowState.FOLLOWING, pageable);
 
-        List<FollowDTO> followDTOS = FollowMapper.toFollowDTO(follows);
+        List<Follow> follows = followRepository.findByFollowerIdAndState(currentUserId, FollowState.FOLLOWING, pageable);
+        FollowDTO followDTOS = FollowMapper.mapFollowingUses(follows);
+
+        int followingUserCount = followRepository.countFollowByFollowerIdAndState(currentUserId, FollowState.FOLLOWING);
+        followDTOS.setUserNums(followingUserCount);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Get all followers", followDTOS);
+                "Danh sách đang theo dõi", followDTOS);
     }
 
+    //Danh sách người đang theo dõi mình
+    public ApiResponse<FollowDTO> getAllUsersFollowing(Long currentUserId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
+
+        List<Follow> follows = followRepository.findByUserIdAndState(currentUserId, FollowState.FOLLOWING, pageable);
+        FollowDTO followDTOS = FollowMapper.mapUsersFollowing(follows);
+
+        int userFollowingCount = followRepository.countFollowByUserIdAndState(currentUserId, FollowState.FOLLOWING);
+        followDTOS.setUserNums(userFollowingCount);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Danh sách người theo dõi", followDTOS);    }
+
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ApiResponse<List<FollowDTO>> getBlockedFollowers(Long currentUserId, int page, int size) {
+    public ApiResponse<FollowDTO> getBlockedFollowers(Long currentUserId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
 
         List<Follow> listBlockedFollowers = followRepository.findByFollowerIdAndState(currentUserId, FollowState.BLOCKED, pageable);
+        FollowDTO blockedDTOS = FollowMapper.mapFollowingUses(listBlockedFollowers);
 
-        List<FollowDTO> followDTOS = FollowMapper.toFollowDTO(listBlockedFollowers);
+        int blockedUserCount = followRepository.countFollowByFollowerIdAndState(currentUserId, FollowState.BLOCKED);
+        blockedDTOS.setUserNums(blockedUserCount);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Get all blocked followers", followDTOS);
+                "Get all blocked followers", blockedDTOS);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
@@ -157,3 +176,4 @@ public class FollowService {
         return EntityUtils.getOrThrow(userRepository.findById(userId), "User");
     }
 }
+//fix chua xong khi block nguoi dung, load danh sach...

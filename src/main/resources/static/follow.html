@@ -9,13 +9,23 @@
     <title>Follow</title>
 </head>
 <body>
+<!-- Nav bar -->
+<nav style="background-color:#007bff; padding:10px; text-align:left;">
+    <a href="home.html" style="color:white; text-decoration:none; font-weight:bold;">
+        ← Trang chủ
+    </a>
+</nav>
 <h2 style="text-align:center;">Người theo dõi / Bị chặn</h2>
 
 <!-- 🔄 Chuyển tab -->
 <div style="text-align:center; margin-bottom:15px;">
-    <button id="tabFollowers"
+    <button id="tabFollowing"
             style="padding:8px 12px; background-color:#007bff; color:white; border:none; border-radius:5px; cursor:pointer;">
-        Người theo dõi
+        đang theo dõi
+    </button>
+    <button id="tabFollowers"
+            style="padding:8px 12px; background-color:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">
+        người theo dõi
     </button>
     <button id="tabBlocked"
             style="padding:8px 12px; background-color:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">
@@ -32,6 +42,7 @@
         Tìm
     </button>
 </div>
+<div id="followers-count" style="text-align:center; margin-bottom:10px; font-weight:bold;"></div>
 
 <!-- 📜 Danh sách -->
 <div id="followers-container" style="max-width: 400px; margin: auto;"></div>

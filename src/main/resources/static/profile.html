@@ -15,12 +15,10 @@
             margin: 0;
             font-family: "Poppins", "Roboto", sans-serif;
             background: linear-gradient(135deg, #c9d6ff, #e2e2e2);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            /* bỏ flex và height 100vh */
         }
 
+        /* profile-card căn giữa ngang */
         .profile-card {
             background: #fff;
             padding: 2.5rem 3rem;
@@ -28,6 +26,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             width: 430px;
             max-width: 90%;
+            margin: 40px auto;  /* cách trên 40px */
             text-align: center;
             transition: all 0.3s ease;
         }
@@ -151,6 +150,12 @@
 </head>
 
 <body>
+<nav style="background-color:#5d9bff; padding:10px; text-align:left;">
+    <a href="home.html" style="color:white; text-decoration:none; font-weight:bold;">
+        ← Trang chủ
+    </a>
+</nav>
+
 <div class="profile-card">
 
     <div class="avatar-container">

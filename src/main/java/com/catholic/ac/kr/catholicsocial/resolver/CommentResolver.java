@@ -1,6 +1,5 @@
-package com.catholic.ac.kr.catholicsocial.graphql;
+package com.catholic.ac.kr.catholicsocial.resolver;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
@@ -20,7 +19,7 @@ public class CommentResolver  {
     private final CommentService commentService;
 
     @QueryMapping
-    public ApiResponse<List<CommentDTO>> getComments(
+    public List<CommentDTO> getComments(
             @Argument int page,
             @Argument int size,
             @Argument Long momentId) {
@@ -28,11 +27,10 @@ public class CommentResolver  {
     }
 
     @MutationMapping
-    public ApiResponse<String> createComment(
+    public String createComment(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @Argument Long momentId,
             @Argument CommentRequest request) {
         return commentService.createComment(useDetails.getUser().getId(), momentId, request);
     }
-
 }
