@@ -12,6 +12,7 @@ public class CommentMapper {
     public static CommentDTO commentDTO(Comment comment) {
         CommentDTO commentDTO = new CommentDTO();
 
+        commentDTO.setMomentId(comment.getMoment().getId());
         commentDTO.setId(comment.getId());
         commentDTO.setComment(comment.getComment());
         commentDTO.setCommentDate(comment.getCreatedAt());

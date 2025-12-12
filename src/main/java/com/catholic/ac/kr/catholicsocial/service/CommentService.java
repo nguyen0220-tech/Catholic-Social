@@ -13,10 +13,15 @@ import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.status.MomentShare;
+import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
+import graphql.GraphQLException;
+import graphql.GraphqlErrorException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,15 +34,17 @@ public class CommentService {
     private final MomentRepository momentRepository;
     private final FollowRepository followRepository;
 
-    public List<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
+    public ListResponse<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         List<Comment> comments = commentRepository.findByMomentId(momentId, pageable);
 
-        return CommentMapper.commentDTOList(comments);
+        List<CommentDTO> commentDTOList = CommentMapper.commentDTOList(comments);
+
+        return new ListResponse<>(commentDTOList);
     }
 
-    public String createComment(Long userId, Long momentId, CommentRequest request) {
+    public GraphqlResponse<String> createComment(Long userId, Long momentId, CommentRequest request) {
 
         User currentUser = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
         Moment moment = EntityUtils.getOrThrow(momentRepository.findById(momentId), "Moment");
@@ -46,13 +53,13 @@ public class CommentService {
         boolean ownerMomentBlock = followRepository.existsByFollowerAndUserAndState(moment.getUser(), currentUser, FollowState.BLOCKED);
 
         if (followerBlock || ownerMomentBlock) {
-            return "You cannot comment.Because you blocked";
+            throw new GraphQLException("You cannot comment.Because you blocked");
         }
 
         //  Nếu PRIVATE → chỉ chủ sở hữu được comment
         if (moment.getShare() == MomentShare.PRIVATE &&
                 !moment.getUser().getId().equals(currentUser.getId())) {
-            return "You cannot comment on a private moment";
+            throw new GraphQLException("You cannot comment on a private moment");
         }
 
         // Nếu FOLLOWER → chỉ follower hoặc chủ sở hữu được comment
@@ -64,7 +71,7 @@ public class CommentService {
             );
 
             if (!isFollowed) {
-                return "Only followers can comment on this moment";
+                throw new GraphQLException( "Only followers can comment on this moment");
             }
         }
 
@@ -76,7 +83,7 @@ public class CommentService {
 
         commentRepository.save(comment);
 
-        return "ok";
+        return GraphqlResponse.success("comment success",null);
     }
 
 }

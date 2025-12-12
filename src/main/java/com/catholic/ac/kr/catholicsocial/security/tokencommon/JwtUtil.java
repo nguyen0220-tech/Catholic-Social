@@ -30,7 +30,7 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(String username, Map<String, Object> claims) {
-        return generateToken(username, claims, Duration.ofMinutes(30));
+        return generateToken(username, claims, Duration.ofHours(1));
     }
 
     public String generateToken(String username, Map<String, Object> claims, Duration duration) {

@@ -1,43 +1,63 @@
-#type Query: Đây là nơi định nghĩa các hàm đọc dữ liệu (GET).
+# =====================
+# QUERY
+# =====================
 
-#getComments → tên hàm truy vấn mà client sẽ gọi.
-#momentId: ID → tham số đầu vào (ID có thể null, vì không có dấu !)
-#page: Int! và size: Int! → bắt buộc (!)
 type Query {
-    getHeartsByMomentId(momentId: ID, page: Int!, size: Int!):[HeartDTO]
-    getComments(momentId: ID, page: Int!,size: Int!): [CommentDTO]
+    getHeartsByMomentId(momentId: ID, page: Int!, size: Int!): [HeartDTO]
+    getComments(page: Int!, size: Int!, momentId: ID): ListResponse_CommentDTO
 }
 
-#type Mutation: Đây là nơi định nghĩa các hành động ghi dữ liệu (POST, PUT, DELETE).
-#createComment → tên hàm mutation.
-#momentId: ID! → bắt buộc truyền momentId.
-#request: CommentInput! → input là một object (cấu trúc comment nhập vào).
+# =====================
+# MUTATION
+# =====================
+
 type Mutation {
-    createComment(momentId: ID!, request: CommentInput!): String
-    addHeart(momentId: ID!): String
-    deleteHeart(momentId: ID!): String
+    createComment(momentId: ID!, request: CommentInput!): GraphqlResponse_String
+    addHeart(momentId: ID!): GraphqlResponse_String
+    deleteHeart(momentId: ID!): GraphqlResponse_String
 }
 
-#input CommentInput: Đây là input type – giống như DTO cho request body trong REST.
+# =====================
+# INPUTS
+# =====================
+
 input CommentInput {
     comment: String!
 }
 
-#type CommentDTO: Đây là kiểu dữ liệu đại diện cho 1 comment, dùng trong response.
+# =====================
+# DATA TYPES
+# =====================
+
 type CommentDTO {
     id: ID!
+    moment: ID
     user: UserDTO!
     comment: String!
     commentDate: String!
 }
 
-type HeartDTO{
+type ListResponse_CommentDTO {
+    data: [CommentDTO]
+}
+
+type HeartDTO {
     heartId: ID!
     user: UserDTO!
 }
 
-type UserDTO{
+type UserDTO {
     id: ID
     userFullName: String
     avatarUrl: String
+}
+
+# =====================
+# MUTATION RESPONSE WRAPPER
+# =====================
+
+type GraphqlResponse_String {
+    success: Boolean!
+    message: String!
+    data: String
 }
