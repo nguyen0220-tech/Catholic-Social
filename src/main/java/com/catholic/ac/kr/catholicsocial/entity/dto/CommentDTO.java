@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 public class CommentDTO {
     private Long id;
+    private Long momentId;
     private UserGQLDTO user;
     private String comment;
     private LocalDateTime commentDate;

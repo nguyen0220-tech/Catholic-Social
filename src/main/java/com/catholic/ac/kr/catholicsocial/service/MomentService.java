@@ -32,6 +32,11 @@ public class MomentService {
     private final UserRepository userRepository;
     private final UploadFileHandler uploadFileHandler;
 
+    //use for DataLoader
+    public List<Moment> findAllByIds(List<Long> ids) {
+        return momentRepository.findAllById(ids);
+    }
+
     public ApiResponse<List<MomentDTO>> getAllMoments(Long userId,int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
