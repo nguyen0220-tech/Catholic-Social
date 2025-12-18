@@ -1,11 +1,15 @@
 package com.catholic.ac.kr.catholicsocial.resolver;
 
+import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
+import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.CommentService;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
+import com.catholic.ac.kr.catholicsocial.service.UserService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 public class CommentResolver  {
     private final CommentService commentService;
     private final MomentService momentService;
+    private final UserService userService;
 
     @QueryMapping
     public ListResponse<CommentDTO> getComments(
@@ -48,24 +53,24 @@ public class CommentResolver  {
     @BatchMapping(typeName = "CommentDTO", field = "moment")
     public Map<CommentDTO, Moment> moment(List<CommentDTO> comments) {
 
-//        System.out.println("======================================================");
-//        System.out.println(">>> GRAPHQL BATCH TRIGGERED for Comment.moment");
-//        System.out.println(">>> Total comments in batch  = " + comments.size());
-//
-//        List<Long> momentIds = comments.stream()
-//                .map(CommentDTO::getMomentId)
-//                .toList();
-//
-//        System.out.println(">>> Moment IDs requested (raw)      = " + momentIds);
+        System.out.println("======================================================");
+        System.out.println(">>> GRAPHQL BATCH TRIGGERED for Comment.moment");
+        System.out.println(">>> Total comments in batch  = " + comments.size());
+
+        List<Long> momentIds = comments.stream()
+                .map(CommentDTO::getMomentId)
+                .toList();
+
+        System.out.println(">>> Moment IDs requested (raw)      = " + momentIds);
 
         List<Long> distinctIds = comments.stream()
                 .map(CommentDTO::getMomentId)
                 .distinct()
                 .collect(Collectors.toList());
 
-//        System.out.println(">>> DISTINC Moment IDs (DB fetch)   = " + distinctIds);
-//        System.out.println(">>> This should be EXACTLY 1 database query!");
-//        System.out.println("======================================================");
+        System.out.println(">>> DISTINC Moment IDs (DB fetch)   = " + distinctIds);
+        System.out.println(">>> This should be EXACTLY 1 database query!");
+        System.out.println("======================================================");
 
         List<Moment> moments = momentService.findAllByIds(distinctIds);
 
@@ -76,6 +81,30 @@ public class CommentResolver  {
                 .collect(Collectors.toMap(
                         c -> c,
                         c -> momentMap.get(c.getMomentId())
+                ));
+    }
+
+    @BatchMapping(typeName = "CommentDTO",field = "user")
+    public Map<CommentDTO, UserGQLDTO> user(List<CommentDTO> comments) {
+        System.out.println(">>> BATCH Comment.user triggered");
+
+        List<Long> userIds = comments.stream()
+                .map(CommentDTO::getUserId)
+                .distinct()
+                .toList();
+
+        List<User> users = userService.findAllById(userIds);
+
+        Map<Long, UserGQLDTO> userMap = users.stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        ConvertHandler::convertToUserGQLDTO
+                ));
+
+        return comments.stream()
+                .collect(Collectors.toMap(
+                        c -> c,
+                        c -> userMap.get(c.getUserId())
                 ));
     }
 }
@@ -191,4 +220,8 @@ type CommentDTO {
 GraphQL engine sẽ đi theo pipeline chuẩn:
 Query → CommentListResponse → comments → CommentDTO → moment → BatchMapping
 → DataLoader được kích hoạt đúng cách.
+
+GraphQL không JOIN ở database,
+GraphQL JOIN ở resolver,
+và CHỈ khi client yêu cầu.
  */

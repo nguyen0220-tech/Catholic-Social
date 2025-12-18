@@ -1,36 +1,28 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
-import com.catholic.ac.kr.catholicsocial.convert.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
-import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
+import com.catholic.ac.kr.catholicsocial.projection.CommentProjection;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CommentMapper {
-    public static CommentDTO commentDTO(Comment comment) {
+    public static CommentDTO toDTO(CommentProjection projection) {
         CommentDTO commentDTO = new CommentDTO();
 
-        commentDTO.setMomentId(comment.getMoment().getId());
-        commentDTO.setId(comment.getId());
-        commentDTO.setComment(comment.getComment());
-        commentDTO.setCommentDate(comment.getCreatedAt());
+        commentDTO.setId(projection.getId());
+        commentDTO.setComment(projection.getComment());
+        commentDTO.setCommentDate(projection.getCreatedAt());
 
-        UserGQLDTO userGQLDTO = ConvertHandler.convertToUserGQLDTO(comment.getUser());
-
-        commentDTO.setUser(userGQLDTO);
+        commentDTO.setMomentId(projection.getMomentId());
+        commentDTO.setUserId(projection.getUserId());
 
         return commentDTO;
     }
 
-    public static List<CommentDTO> commentDTOList(List<Comment> comments) {
-        List<CommentDTO> commentDTOList = new ArrayList<>();
+    public static List<CommentDTO> toDTOList(List<CommentProjection> projections) {
+        return projections.stream()
+                .map(CommentMapper::toDTO)
+                .toList();
 
-        for (Comment comment : comments) {
-            commentDTOList.add(commentDTO(comment));
-        }
-
-        return commentDTOList;
     }
 }

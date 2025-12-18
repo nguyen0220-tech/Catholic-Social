@@ -116,12 +116,6 @@
             <artifactId>spring-boot-starter-graphql</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.graphql-java-kickstart</groupId>
-            <artifactId>graphiql-spring-boot-starter</artifactId>
-            <version>11.1.0</version>
-        </dependency>
-
         <!--    Bucket4j     -->
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>

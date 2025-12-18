@@ -73,14 +73,16 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(
-                        auth -> auth.requestMatchers(
+                        auth -> auth
+                                .requestMatchers(
                                         "/ws/**",
                                         "/auth/**",
-                                        "/user/find-username","/user/find-password","/user/reset-password","/user/verify-reset-password",
+                                        "/user/find-username", "/user/find-password", "/user/reset-password", "/user/verify-reset-password",
                                         "/*.html", "/*.css", "/*.js",
                                         "/*.png", "/*.jpg", "/*.svg",
-                                        "/icon/**", "/media/**")
-                                .permitAll()
+                                        "/icon/**", "/media/**").permitAll()
+                                .requestMatchers("/graphiql", "/graphiql/**").permitAll()
+                                .requestMatchers("/graphql").permitAll() // Cho phép gọi GraphQL (dev)
                                 .anyRequest()
                                 .authenticated()
                 )

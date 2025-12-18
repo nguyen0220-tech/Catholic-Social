@@ -1,7 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.HeartDTO;
-import com.catholic.ac.kr.catholicsocial.convert.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Heart;
 

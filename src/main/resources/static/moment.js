@@ -4,7 +4,21 @@ const form = document.getElementById("momentForm");
 const preview = document.getElementById("preview");
 const messageBox = document.getElementById("messageBox");
 const momentsList = document.getElementById("momentsList");
+const GRAPHQL_URL = `${URL_BASE}/graphql`;
+const currentUserId = Number(localStorage.getItem("userId"));
 
+
+async function graphqlRequest(query, variables = {}) {
+    const res = await fetch(GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ query, variables })
+    });
+    return await res.json();
+}
 // --- Preview ảnh trước khi upload ---
 document.getElementById("files").addEventListener("change", (event) => {
     preview.innerHTML = "";
@@ -131,10 +145,22 @@ function renderMoments(moments, append = false) {
             <button class="moment-btn delete-btn" data-id="${moment.id}">🗑</button>
           </div>
 
-          <div class="moment-heart" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
-            <button class="heart-btn" data-moment-id="${moment.id}" style="font-size:20px; cursor:pointer;">🤍</button>
-            <span class="heart-count" id="heart-count-${moment.id}" style="cursor:pointer">0</span>
-          </div>
+            <div class="moment-heart" style="margin-top:8px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button class="heart-btn"
+                        data-moment-id="${moment.id}"
+                        style="font-size:20px; cursor:pointer;">🤍</button>
+                <span class="heart-count"
+                      id="heart-count-${moment.id}"
+                      style="cursor:pointer">0</span>
+              </div>
+            
+              <div class="heart-users"
+                   id="heart-users-${moment.id}"
+                   style="display:none;margin-top:6px;background:#fff;
+                          border:1px solid #ddd;border-radius:6px;padding:6px;">
+              </div>
+            </div>
 
           <div class="moment-comments" id="comments-${moment.id}">
             <div class="comment-list"></div>
@@ -145,10 +171,10 @@ function renderMoments(moments, append = false) {
           </div>
         `;
         momentsList.appendChild(div);
-
-        // Load dữ liệu Heart & Comment
+        const commentList = div.querySelector(".comment-list");
+        loadComments(moment.id, commentList);
         renderHearts(moment.id);
-        loadComments(moment.id);
+
     });
 }
 
@@ -157,111 +183,6 @@ function resetMoments() {
     currentPage = 0;
     endReached = false;
     loadMoments();
-}
-
-async function loadHearts(momentId) {
-    const query = `
-      query GetHearts($momentId: ID, $page: Int!, $size: Int!) {
-        getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
-            heartId
-            user {
-                id
-                userFullName
-                avatarUrl
-            }
-        }
-      }
-    `;
-    try {
-        const result = await graphqlRequest(query, { momentId, page: 0, size: 99 });
-        return result.data?.getHeartsByMomentId || [];
-    } catch (err) {
-        console.error("Load hearts error:", err);
-        return [];
-    }
-}
-
-async function renderHearts(momentId) {
-    const hearts = await loadHearts(momentId);
-
-    const countSpan = document.getElementById(`heart-count-${momentId}`);
-    countSpan.innerText = hearts.length;
-
-    const myUserId = Number(localStorage.getItem("userId"));
-    const heartBtn = document.querySelector(`.heart-btn[data-moment-id='${momentId}']`);
-
-    const isLiked = hearts.some(h => Number(h.user.id) === myUserId);
-
-    heartBtn.innerText = isLiked ? "❤️" : "🤍";
-    heartBtn.dataset.liked = isLiked;
-
-    countSpan.onclick = () => showHeartUsers(momentId);
-}
-
-async function toggleHeart(momentId, isLiked) {
-    const mutation = isLiked
-        ? `mutation ($momentId: ID!) { deleteHeart(momentId: $momentId) }`
-        : `mutation ($momentId: ID!) { addHeart(momentId: $momentId) }`;
-
-    const result = await graphqlRequest(mutation, { momentId });
-
-    const response = isLiked
-        ? result.data?.deleteHeart
-        : result.data?.addHeart;
-
-    if (!response) {
-        alert("Lỗi cập nhật tim!");
-        return false;
-    }
-    return true;
-}
-
-// Event delegate cho Heart button
-momentsList.addEventListener("click", async (e) => {
-    const heartBtn = e.target.closest(".heart-btn");
-    if (!heartBtn) return;
-
-    const momentId = heartBtn.dataset.momentId;
-    const liked = heartBtn.dataset.liked === "true";
-
-    const success = await toggleHeart(momentId, liked);
-    if (success) renderHearts(momentId);
-});
-
-async function showHeartUsers(momentId) {
-    const hearts = await loadHearts(momentId);
-    if (hearts.length === 0) {
-        alert("Chưa có ai thích bài viết này");
-        return;
-    }
-
-    const usersHtml = hearts.map(h => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <img src="${h.user.avatarUrl || '/icon/default-avatar.png'}" 
-                 style="width:30px;height:30px;border-radius:50%;">
-            <span>${h.user.userFullName}</span>
-        </div>
-    `).join("");
-
-    const popup = document.createElement("div");
-    popup.innerHTML = `
-        <div style="
-            position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-            background:#fff; border:1px solid #ccc; border-radius:8px;
-            padding:16px; max-height:400px; overflow:auto; z-index:9999;
-            box-shadow:0 2px 12px rgba(0,0,0,0.2);
-        ">
-            <h3 style="margin-top:0;margin-bottom:10px;">Người thích</h3>
-            ${usersHtml}
-            <button id="close-heart-popup" 
-                    style="margin-top:10px;padding:6px 12px;">Đóng</button>
-        </div>
-    `;
-    document.body.appendChild(popup);
-
-    document.getElementById("close-heart-popup").onclick = () => {
-        document.body.removeChild(popup);
-    };
 }
 
 // --- Infinite scroll ---
@@ -380,94 +301,210 @@ momentsList.addEventListener("click", (e) => {
     }
 });
 
-const GRAPHQL_URL = `${URL_BASE}/graphql`;
-
-async function graphqlRequest(query, variables = {}) {
-    const res = await fetch(GRAPHQL_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({ query, variables })
-    });
-    return await res.json();
-}
-
-async function loadComments(momentId) {
-    const query = `
-      query GetComments($momentId: ID, $page: Int!, $size: Int!) {
-        getComments(momentId: $momentId, page: $page, size: $size) {
+const GET_COMMENTS = `
+  query GetComments($momentId: ID!, $page: Int!, $size: Int!) {
+    getComments(momentId: $momentId, page: $page, size: $size) {
+      data {
+        id
+        comment
+        commentDate
+        user {
           id
-          comment
-          commentDate
-          user {
-            id
-            userFullName
-            avatarUrl
-          }
+          userFullName
+          avatarUrl
         }
       }
-    `;
-
-    const result = await graphqlRequest(query, { momentId, page: 0, size: 50 });
-    const comments = result.data?.getComments || [];
-
-    const listDiv = document.querySelector(`#comments-${momentId} .comment-list`);
-    listDiv.innerHTML = comments
-        .map(c => `
-            <div class="comment-item">
-                <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" class="comment-avatar">
-                <div class="comment-body">
-                    <div class="comment-author">${c.user.userFullName}</div>
-                    <div class="comment-text">${c.comment}</div>
-                    <div class="comment-date">${formatCommentDate(c.commentDate)}</div>
-                </div>
-            </div>
-        `)
-        .join("");
-}
-
-function formatCommentDate(dateStr) {
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0'); // tháng từ 0-11
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-}
+    }
+  }
+`;
 
 
-async function createComment(momentId, text) {
-    const mutation = `
-      mutation CreateComment($momentId: ID!, $request: CommentInput!) {
-        createComment(momentId: $momentId, request: $request)
-      }
-    `;
+const CREATE_COMMENT = `
+  mutation CreateComment($momentId: ID!, $comment: String!) {
+    createComment(
+      momentId: $momentId,
+      request: { comment: $comment }
+    ) {
+      success
+      message
+    }
+  }
+`;
 
-    const variables = {
+async function loadComments(momentId, container) {
+    const res = await graphqlRequest(GET_COMMENTS, {
         momentId,
-        request: { comment: text }
-    };
+        page: 0,
+        size: 5
+    });
 
-    const result = await graphqlRequest(mutation, variables);
-    return result.data?.createComment;
+    const comments = res.data?.getComments?.data || [];
+    container.innerHTML = "";
+
+    comments.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "comment-item";
+        div.innerHTML = `
+          <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" class="comment-avatar">
+          <div>
+            <b>${c.user.userFullName}</b>
+            <p>${c.comment}</p>
+            <small>${new Date(c.commentDate).toLocaleString()}</small>
+          </div>
+        `;
+        container.appendChild(div);
+    });
 }
 
 momentsList.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".comment-send");
-    if (!btn) return;
+    const sendBtn = e.target.closest(".comment-send");
+    if (!sendBtn) return;
 
-    const momentId = btn.dataset.momentId;
-    const input = btn.previousElementSibling;
+    const momentId = sendBtn.dataset.momentId;
+    const wrapper = sendBtn.closest(".moment-comments");
+    const input = wrapper.querySelector(".comment-input");
+    const commentList = wrapper.querySelector(".comment-list");
+
     const text = input.value.trim();
     if (!text) return;
 
-    await createComment(momentId, text);
-    input.value = "";
-    loadComments(momentId);
+    const res = await graphqlRequest(CREATE_COMMENT, {
+        momentId,
+        comment: text
+    });
+
+    if (res.data?.createComment?.success) {
+        input.value = "";
+        loadComments(momentId, commentList); // reload comment
+    } else {
+        alert(res.data?.createComment?.message || "Lỗi gửi comment");
+    }
 });
+
+// ===== GRAPHQL HEART =====
+const GET_HEARTS = `
+  query GetHearts($momentId: ID!, $page: Int!, $size: Int!) {
+    getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
+      data {
+        heartId
+        user {
+          id
+          userFullName
+          avatarUrl
+        }
+      }
+    }
+  }
+`;
+
+const ADD_HEART = `
+  mutation AddHeart($momentId: ID!) {
+    addHeart(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+const DELETE_HEART = `
+  mutation DeleteHeart($momentId: ID!) {
+    deleteHeart(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+async function renderHearts(momentId) {
+    const countEl = document.getElementById(`heart-count-${momentId}`);
+    const btn = document.querySelector(`.heart-btn[data-moment-id="${momentId}"]`);
+    if (!countEl || !btn) return;
+
+    const res = await graphqlRequest(GET_HEARTS, {
+        momentId,
+        page: 0,
+        size: 100
+    });
+
+    if (res.errors?.length) {
+        console.error(res.errors);
+        return;
+    }
+
+    const hearts = res.data?.getHeartsByMomentId?.data || [];
+    countEl.innerText = hearts.length;
+
+    const isLiked = hearts.some(h => Number(h.user.id) === currentUserId);
+    btn.innerText = isLiked ? "❤️" : "🤍";
+    btn.dataset.liked = isLiked ? "true" : "false";
+
+    renderHeartUsers(momentId, hearts);
+}
+
+function renderHeartUsers(momentId, hearts) {
+    const box = document.getElementById(`heart-users-${momentId}`);
+    if (!box) return;
+
+    if (hearts.length === 0) {
+        box.innerHTML = "<i style='color:#777'>Chưa có ai thả tim</i>";
+        return;
+    }
+
+    box.innerHTML = hearts.map(h => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <img src="${
+        h.user.avatarUrl
+            ? (h.user.avatarUrl.startsWith("http")
+                ? h.user.avatarUrl
+                : URL_BASE + h.user.avatarUrl)
+            : "/icon/default-avatar.png"
+    }"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+            <span style="font-size:14px;">${h.user.userFullName}</span>
+        </div>
+    `).join("");
+}
+
+momentsList.addEventListener("click", async (e) => {
+    const heartBtn = e.target.closest(".heart-btn");
+    if (!heartBtn) return;
+
+    const momentId = heartBtn.dataset.momentId;
+    const liked = heartBtn.dataset.liked === "true";
+
+    let res;
+    if (liked) {
+        res = await graphqlRequest(DELETE_HEART, { momentId });
+    } else {
+        res = await graphqlRequest(ADD_HEART, { momentId });
+    }
+
+    if (res.errors?.length) {
+        alert(res.errors[0].message);
+        return;
+    }
+
+    const result = liked
+        ? res.data?.deleteHeart
+        : res.data?.addHeart;
+
+    if (result?.success) {
+        renderHearts(momentId);
+    } else {
+        alert(result?.message || "Lỗi xử lý heart");
+    }
+});
+
+momentsList.addEventListener("click", (e) => {
+    const countEl = e.target.closest(".heart-count");
+    if (!countEl) return;
+
+    const momentId = countEl.id.replace("heart-count-", "");
+    const box = document.getElementById(`heart-users-${momentId}`);
+    if (!box) return;
+
+    box.style.display = box.style.display === "none" ? "block" : "none";
+});
+
 
 loadMoments();

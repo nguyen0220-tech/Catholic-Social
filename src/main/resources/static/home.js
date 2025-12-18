@@ -5,6 +5,7 @@ const contentInput = document.getElementById("momentContent");
 const filesInput = document.getElementById("momentFiles");
 const shareSelect = document.getElementById("momentShare");
 const postBtn = document.getElementById("postMomentBtn");
+const currentUserId = Number(localStorage.getItem("userId"));
 
 const GRAPHQL_URL = `${URL_BASE}/graphql`;
 async function graphqlRequest(query, variables = {}) {
@@ -124,6 +125,13 @@ function renderMoment(moment) {
                 🤍
             </button>
             <span class="heart-count" id="heart-count-${moment.id}">0</span>
+            
+            <div class="heart-users" 
+                 id="heart-users-${moment.id}" 
+                 style="display:none;margin-top:6px;background:#fff;border:1px solid #ddd;
+                        border-radius:6px;padding:6px;">
+            </div>
+
         </div>
 
         
@@ -143,195 +151,6 @@ function renderMoment(moment) {
     momentsContainer.appendChild(item);
     renderComments(moment.id);
     renderHearts(moment.id)
-
-}
-
-async function loadHearts(momentId) {
-    const query = `
-      query GetHearts($momentId: ID, $page: Int!, $size: Int!) {
-        getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
-          heartId
-          user {
-            id
-            userFullName
-            avatarUrl
-          }
-        }
-      }
-    `;
-
-    try {
-        const result = await graphqlRequest(query, { momentId, page: 0, size: 50 });
-        return result.data?.getHeartsByMomentId || [];
-    } catch (err) {
-        console.error("Load hearts error:", err);
-        return [];
-    }
-}
-
-
-async function renderHearts(momentId) {
-    const hearts = await loadHearts(momentId);
-
-    // Count
-    const countSpan = document.getElementById(`heart-count-${momentId}`);
-    countSpan.innerText = hearts.length;
-
-    // Toggle button
-    const myUserId = Number(localStorage.getItem("userId"));
-    const heartBtn = document.querySelector(`.heart-btn[data-moment-id="${momentId}"]`);
-
-    const isLiked = hearts.some(h => Number(h.user?.id) === myUserId);
-
-    heartBtn.innerText = isLiked ? "❤️" : "🤍";
-    heartBtn.dataset.liked = isLiked ? "true" : "false";
-
-    // Click to show popup
-    countSpan.style.cursor = "pointer";
-    countSpan.onclick = () => showHeartUsers(momentId);
-}
-
-async function toggleHeart(momentId, isLiked) {
-    const mutation = isLiked
-        ? `mutation($momentId: ID!) { deleteHeart(momentId: $momentId) }`
-        : `mutation($momentId: ID!) { addHeart(momentId: $momentId) }`;
-
-    try {
-        const result = await graphqlRequest(mutation, { momentId });
-
-        // Debug: xem response
-        console.log("toggleHeart result:", result);
-
-        // Nếu có lỗi GraphQL
-        if (result.errors && result.errors.length > 0) {
-            console.error("GraphQL error:", result.errors);
-            return false;
-        }
-
-        // Lấy đúng value trả về
-        const resValue = isLiked ? result.data?.deleteHeart : result.data?.addHeart;
-
-        if (resValue === "ok") return true;
-
-        console.error("Unexpected response:", resValue);
-        return false;
-
-    } catch (err) {
-        console.error("toggleHeart error:", err);
-        return false;
-    }
-}
-
-async function showHeartUsers(momentId) {
-    const hearts = await loadHearts(momentId);
-
-    if (hearts.length === 0) {
-        alert("Chưa có ai thích khoảnh khắc này.");
-        return;
-    }
-
-    const usersHtml = hearts
-        .map(h => `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <img src="${h.user.avatarUrl || "/icon/default-avatar.png"}"
-                     style="width:30px;height:30px;border-radius:50%;">
-                <span>${h.user.userFullName}</span>
-            </div>
-        `)
-        .join("");
-
-    const popup = document.createElement("div");
-    popup.innerHTML = `
-        <div style="
-            position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-            background:#fff; border-radius:10px; padding:20px;
-            box-shadow:0 3px 20px rgba(0,0,0,0.25); z-index:2000;
-            max-height:400px; overflow:auto;
-        ">
-            <h3 style="margin-top:0;">Người đã thích ❤️</h3>
-            ${usersHtml}
-            <button id="close-heart-popup" style="margin-top:12px;padding:6px 16px;">Đóng</button>
-        </div>
-    `;
-
-    document.body.appendChild(popup);
-    document.getElementById("close-heart-popup").onclick = () => popup.remove();
-}
-
-async function loadComments(momentId) {
-    const query = `
-      query GetComments($momentId: ID, $page: Int!, $size: Int!) {
-        getComments(momentId: $momentId, page: $page, size: $size) {
-          id
-          comment
-          commentDate
-          user {
-            userFullName
-            avatarUrl
-          }
-        }
-      }`;
-
-    try {
-        const result = await graphqlRequest(query, { momentId, page: 0, size: 10 });
-
-        return result.data?.getComments || [];
-    } catch (err) {
-        console.error("Load comments error:", err);
-        return [];
-    }
-}
-
-async function sendComment(momentId, commentText) {
-    const mutation = `
-      mutation CreateComment($momentId: ID!, $request: CommentInput!) {
-        createComment(momentId: $momentId, request: $request)
-      }`;
-
-    try {
-        const result = await graphqlRequest(mutation, {
-            momentId,
-            request: { comment: commentText }
-        });
-
-        const response = result.data?.createComment;
-
-        if (response && response.toLowerCase().includes("ok")) {
-            await renderComments(momentId);
-        } else {
-            alert(response || "Lỗi khi gửi bình luận!");
-        }
-    } catch (err) {
-        console.error("Send comment error:", err);
-        alert("Không thể kết nối đến máy chủ!");
-    }
-}
-
-async function renderComments(momentId) {
-    const commentContainer = document.getElementById(`comments-${momentId}`);
-    if (!commentContainer) return;
-
-    const comments = await loadComments(momentId);
-    const listDiv = commentContainer.querySelector(".comment-list");
-
-    if (comments.length === 0) {
-        listDiv.innerHTML = `<p style="color:#777;font-size:13px;">Chưa có bình luận nào.</p>`;
-        return;
-    }
-
-    listDiv.innerHTML = comments.map(c => `
-      <div style="display:flex;gap:8px;margin-bottom:6px;">
-        <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}"
-             style="width:30px;height:30px;border-radius:50%;">
-        <div>
-          <strong>${c.user.userFullName}</strong>
-          <p style="margin:0;">${c.comment}</p>
-          <span style="font-size:12px;color:#666;">
-            ${new Date(c.commentDate).toLocaleString()}
-          </span>
-        </div>
-      </div>
-    `).join("");
 }
 
 // --- Lấy danh sách Moment từ API ---
@@ -380,6 +199,231 @@ window.addEventListener("scroll", () => {
     }
 });
 
+// ===== GRAPHQL COMMENT =====
+const GET_COMMENTS = `
+  query GetComments($momentId: ID!, $page: Int!, $size: Int!) {
+    getComments(momentId: $momentId, page: $page, size: $size) {
+      data {
+        id
+        comment
+        commentDate
+        user {
+          id
+          userFullName
+          avatarUrl
+        }
+      }
+    }
+  }
+`;
+
+const CREATE_COMMENT = `
+  mutation CreateComment($momentId: ID!, $comment: String!) {
+    createComment(
+      momentId: $momentId,
+      request: { comment: $comment }
+    ) {
+      success
+      message
+    }
+  }
+`;
+
+async function renderComments(momentId) {
+    const container = document.querySelector(`#comments-${momentId} .comment-list`);
+    if (!container) return;
+
+    const res = await graphqlRequest(GET_COMMENTS, {
+        momentId,
+        page: 0,
+        size: 5
+    });
+
+    const comments = res.data?.getComments?.data || [];
+    container.innerHTML = "";
+
+    comments.forEach(c => {
+        const div = document.createElement("div");
+        div.style.cssText = `
+            display:flex; gap:6px; margin-bottom:6px;
+        `;
+
+        div.innerHTML = `
+            <img src="${
+            c.user.avatarUrl
+                ? (c.user.avatarUrl.startsWith('http') ? c.user.avatarUrl : URL_BASE + c.user.avatarUrl)
+                : 'icon/default-avatar.png'
+        }"
+            style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+
+            <div style="background:#fff;padding:6px 8px;border-radius:6px;flex:1;">
+                <strong style="font-size:13px;">${c.user.userFullName}</strong>
+                <div style="font-size:14px;">${c.comment}</div>
+                <div style="font-size:11px;color:#777;">
+                    ${formatDateTime(c.commentDate)}
+                </div>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+momentsContainer.addEventListener("click", async (e) => {
+    const sendBtn = e.target.closest(".comment-send");
+    if (!sendBtn) return;
+
+    const momentId = sendBtn.dataset.momentId;
+    const wrapper = document.getElementById(`comments-${momentId}`);
+    const input = wrapper.querySelector(".comment-input");
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    const res = await graphqlRequest(CREATE_COMMENT, {
+        momentId,
+        comment: text
+    });
+
+    if (res.data?.createComment?.success) {
+        input.value = "";
+        renderComments(momentId); // reload comment
+    } else {
+        alert(res.data?.createComment?.message || "Gửi comment thất bại!");
+    }
+});
+
+// ===== GRAPHQL HEART =====
+const GET_HEARTS = `
+  query GetHearts($momentId: ID!, $page: Int!, $size: Int!) {
+    getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
+      data {
+        heartId
+        user {
+          id
+          userFullName
+          avatarUrl
+        }
+      }
+    }
+  }
+`;
+
+
+const ADD_HEART = `
+  mutation AddHeart($momentId: ID!) {
+    addHeart(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+const DELETE_HEART = `
+  mutation DeleteHeart($momentId: ID!) {
+    deleteHeart(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+async function renderHearts(momentId) {
+    const countEl = document.getElementById(`heart-count-${momentId}`);
+    const btn = document.querySelector(`.heart-btn[data-moment-id="${momentId}"]`);
+
+    if (!countEl || !btn) return;
+
+    const res = await graphqlRequest(GET_HEARTS, {
+        momentId,
+        page: 0,
+        size: 100
+    });
+
+    if (res.errors?.length) {
+        console.error(res.errors);
+        return;
+    }
+
+    const hearts = res.data?.getHeartsByMomentId?.data || [];
+    countEl.innerText = hearts.length;
+
+    const isLiked = hearts.some(h => Number(h.user.id) === currentUserId);
+    btn.innerText = isLiked ? "❤️" : "🤍";
+    btn.dataset.liked = isLiked ? "true" : "false";
+
+    //  render danh sách user
+    renderHeartUsers(momentId, hearts);
+}
+
+
+momentsContainer.addEventListener("click", async (e) => {
+    const heartBtn = e.target.closest(".heart-btn");
+    if (!heartBtn) return;
+
+    const momentId = heartBtn.dataset.momentId;
+    const liked = heartBtn.dataset.liked === "true";
+
+    let res;
+    if (liked) {
+        res = await graphqlRequest(DELETE_HEART, { momentId });
+    } else {
+        res = await graphqlRequest(ADD_HEART, { momentId });
+    }
+
+    if (res.errors?.length) {
+        console.error(res.errors);
+        alert(res.errors[0].message);
+        return;
+    }
+
+    const result = liked
+        ? res.data?.deleteHeart
+        : res.data?.addHeart;
+
+    if (result?.success) {
+        renderHearts(momentId);
+    } else {
+        alert(result?.message || "Lỗi xử lý heart");
+    }
+});
+
+function renderHeartUsers(momentId, hearts) {
+    const box = document.getElementById(`heart-users-${momentId}`);
+    if (!box) return;
+
+    if (hearts.length === 0) {
+        box.innerHTML = "<i style='color:#777'>Chưa có ai thả tim</i>";
+        return;
+    }
+
+    box.innerHTML = hearts.map(h => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <img src="${
+        h.user.avatarUrl
+            ? (h.user.avatarUrl.startsWith("http")
+                ? h.user.avatarUrl
+                : URL_BASE + h.user.avatarUrl)
+            : "/icon/default-avatar.png"
+    }"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+            <span style="font-size:14px;">${h.user.userFullName}</span>
+        </div>
+    `).join("");
+}
+
+momentsContainer.addEventListener("click", (e) => {
+    const countEl = e.target.closest(".heart-count");
+    if (!countEl) return;
+
+    const momentId = countEl.id.replace("heart-count-", "");
+    const box = document.getElementById(`heart-users-${momentId}`);
+    if (!box) return;
+
+    box.style.display = box.style.display === "none" ? "block" : "none";
+});
+
+
 // --- Đăng xuất ---
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -398,7 +442,7 @@ logoutBtn.addEventListener("click", async () => {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ refreshToken }) // 👈 dùng refreshToken thay vì accessToken
+            body: JSON.stringify({ refreshToken })
         });
 
         const json = await res.json();
@@ -419,59 +463,6 @@ logoutBtn.addEventListener("click", async () => {
     } catch (err) {
         console.error("Logout error:", err);
         alert("Không thể kết nối đến máy chủ!");
-    }
-});
-
-momentsContainer.addEventListener("click", async (e) => {
-    const heartBtn = e.target.closest(".heart-btn");
-    if (!heartBtn) return;
-
-    const momentId = heartBtn.dataset.momentId;
-    const isLiked = heartBtn.dataset.liked === "true";
-
-    const ok = await toggleHeart(momentId, isLiked);
-
-    if (ok) {
-        const countSpan = document.getElementById(`heart-count-${momentId}`);
-        let currentCount = Number(countSpan.innerText);
-
-        if (isLiked) {
-            heartBtn.innerText = "🤍";
-            countSpan.innerText = currentCount - 1;
-            heartBtn.dataset.liked = "false";
-        } else {
-            heartBtn.innerText = "❤️";
-            countSpan.innerText = currentCount + 1;
-            heartBtn.dataset.liked = "true";
-        }
-    } else {
-        alert("Không thể cập nhật tim!");
-    }
-});
-
-// Gắn sự kiện click cho button gửi comment
-momentsContainer.addEventListener("click", async (e) => {
-    const commentBtn = e.target.closest(".comment-send");
-    if (!commentBtn) return;
-
-    const momentId = commentBtn.dataset.momentId;
-    const input = commentBtn.closest(".comment-form").querySelector(".comment-input");
-    const commentText = input.value.trim();
-
-    if (!commentText) {
-        alert("Vui lòng nhập nội dung bình luận!");
-        return;
-    }
-
-    commentBtn.disabled = true;
-    commentBtn.innerText = "Đang gửi...";
-
-    try {
-        await sendComment(momentId, commentText);
-        input.value = ""; // Clear input sau khi gửi
-    } finally {
-        commentBtn.disabled = false;
-        commentBtn.innerText = "Gửi";
     }
 });
 

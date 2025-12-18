@@ -7,6 +7,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.CommentMapper;
+import com.catholic.ac.kr.catholicsocial.projection.CommentProjection;
 import com.catholic.ac.kr.catholicsocial.repository.CommentRepository;
 import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
 import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
@@ -16,12 +17,10 @@ import com.catholic.ac.kr.catholicsocial.status.MomentShare;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import graphql.GraphQLException;
-import graphql.GraphqlErrorException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,11 +36,9 @@ public class CommentService {
     public ListResponse<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        List<Comment> comments = commentRepository.findByMomentId(momentId, pageable);
-
-        List<CommentDTO> commentDTOList = CommentMapper.commentDTOList(comments);
-
-        return new ListResponse<>(commentDTOList);
+        List<CommentProjection> commentProjections = commentRepository.findByMomentId(momentId, pageable);
+        List<CommentDTO> dos = CommentMapper.toDTOList(commentProjections);
+        return new ListResponse<>(dos);
     }
 
     public GraphqlResponse<String> createComment(Long userId, Long momentId, CommentRequest request) {

@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 public class CommentDTO {
     private Long id;
     private Long momentId;
-    private UserGQLDTO user;
     private String comment;
     private LocalDateTime commentDate;
+
+    private Long userId; // FK để resolver dùng
+    private UserGQLDTO user;// GraphQL sẽ resolve field này
 }

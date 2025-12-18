@@ -47,6 +47,10 @@ public class UserService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final UploadFileHandler uploadFileHandler;
 
+    public List<User> findAllById(List<Long> ids) {
+        return userRepository.findAllById(ids);
+    }
+
     public ApiResponse<Page<UserDTO>> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("username").descending());
 
