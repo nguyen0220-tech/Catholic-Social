@@ -52,6 +52,7 @@ type ListResponse_HeartDTO{
 
 type HeartDTO {
     heartId: ID!
+    moment:MomentDTO!
     user: UserDTO!
 }
 

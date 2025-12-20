@@ -146,27 +146,28 @@ function renderMoments(moments, append = false) {
           </div>
 
             <div class="moment-heart" style="margin-top:8px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <button class="heart-btn"
-                        data-moment-id="${moment.id}"
-                        style="font-size:20px; cursor:pointer;">🤍</button>
-                <span class="heart-count"
-                      id="heart-count-${moment.id}"
-                      style="cursor:pointer">0</span>
-              </div>
-            
-              <div class="heart-users"
-                   id="heart-users-${moment.id}"
-                   style="display:none;margin-top:6px;background:#fff;
-                          border:1px solid #ddd;border-radius:6px;padding:6px;">
-              </div>
+
             </div>
 
           <div class="moment-comments" id="comments-${moment.id}">
             <div class="comment-list"></div>
             <div class="comment-form">
+               <div style="display:flex;align-items:center;gap:10px;">
+                <button class="heart-btn"
+                        data-moment-id="${moment.id}"
+                        style="font-size:20px; cursor:pointer;background-color: #ffffff">🤍</button>
+                <span class="heart-count"
+                      id="heart-count-${moment.id}"
+                      style="cursor:pointer">0</span>
+              </div>
+
               <input type="text" placeholder="Viết bình luận..." class="comment-input">
               <button class="comment-send" data-moment-id="${moment.id}">Gửi</button>
+            </div>
+            <div class="heart-users"
+                   id="heart-users-${moment.id}"
+                   style="display:none;margin-top:6px;background:#fff;
+                          border:1px solid #ddd;border-radius:6px;padding:6px;">
             </div>
           </div>
         `;

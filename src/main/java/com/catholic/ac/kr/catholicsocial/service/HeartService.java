@@ -6,6 +6,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.Heart;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.HeartMapper;
+import com.catholic.ac.kr.catholicsocial.projection.HeartProjection;
 import com.catholic.ac.kr.catholicsocial.repository.HeartRepository;
 import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
@@ -28,7 +29,7 @@ public class HeartService {
 
     public ListResponse<HeartDTO> getHeartsByMomentId(Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        List<Heart> hearts = heartRepository.findByMomentId(momentId, pageable);
+        List<HeartProjection> hearts = heartRepository.findByMomentId(momentId, pageable);
 
         return new ListResponse<>(HeartMapper.toListHeartDTO(hearts));
     }

@@ -54,7 +54,8 @@ public class FollowService {
         followDTOS.setUserNums(userFollowingCount);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Danh sách người theo dõi", followDTOS);    }
+                "Danh sách người theo dõi", followDTOS);
+    }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ApiResponse<FollowDTO> getBlockedFollowers(Long currentUserId, int page, int size) {
@@ -146,34 +147,38 @@ public class FollowService {
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ApiResponse<String> blockUser(Long followerId, Long userId) {
-        User follower = getUserById(followerId);
+
+        User currentUser = getUserById(followerId);
         User user = getUserById(userId);
 
-        Optional<Follow> followOpt = followRepository.findByFollowerAndUser_Action(follower, user);
+        // 1. currentUser → user = BLOCKED (create or update)
+        Follow block = followRepository
+                .findByFollowerAndUser_Action(currentUser, user)
+                .orElseGet(() -> {
+                    Follow f = new Follow();
+                    f.setFollower(currentUser);
+                    f.setUser(user);
+                    return f;
+                });
 
-        if (followOpt.isEmpty()) {
-            Follow block = new Follow();
-            block.setFollower(follower);
-            block.setUser(user);
-            block.setState(FollowState.BLOCKED);
+        block.setState(FollowState.BLOCKED);
+        followRepository.save(block);
 
-            followRepository.save(block);
-            return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                    "Đã block thành công!");
-        }
+        // 2. user → currentUser = CANCELLED (nếu tồn tại)
+        followRepository.findByFollowerAndUser_Action(user, currentUser)
+                .ifPresent(f -> {
+                    f.setState(FollowState.CANCELLED);
+                    followRepository.save(f);
+                });
 
-        Follow follow = followOpt.get();
-        follow.setState(FollowState.BLOCKED);
-
-        followRepository.save(follow);
-
-        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Đã block thành công!");
-
+        return ApiResponse.success(
+                HttpStatus.OK.value(),
+                HttpStatus.OK.getReasonPhrase(),
+                "Đã block thành công!"
+        );
     }
 
     private User getUserById(Long userId) {
         return EntityUtils.getOrThrow(userRepository.findById(userId), "User");
     }
 }
-//fix chua xong khi block nguoi dung, load danh sach...

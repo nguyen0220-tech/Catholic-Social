@@ -6,5 +6,6 @@ import lombok.Setter;
 @Getter @Setter
 public class HeartDTO {
     private Long heartId;
+    private Long userId;
     private UserGQLDTO user;
 }

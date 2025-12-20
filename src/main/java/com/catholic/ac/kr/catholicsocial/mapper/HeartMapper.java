@@ -1,28 +1,24 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.HeartDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
-import com.catholic.ac.kr.catholicsocial.entity.model.Heart;
 
-import java.util.ArrayList;
+import com.catholic.ac.kr.catholicsocial.projection.HeartProjection;
+
 import java.util.List;
 
 public class HeartMapper {
-    public static HeartDTO toHeartDTO(Heart heart) {
+    public static HeartDTO toHeartDTO(HeartProjection projection) {
         HeartDTO heartDTO = new HeartDTO();
 
-        heartDTO.setHeartId(heart.getId());
-        UserGQLDTO userGQLDTO = ConvertHandler.convertToUserGQLDTO(heart.getUser());
-        heartDTO.setUser(userGQLDTO);
+        heartDTO.setHeartId(projection.getId());
+        heartDTO.setUserId(projection.getUserId());
+
         return heartDTO;
     }
 
-    public static List<HeartDTO> toListHeartDTO(List<Heart> hearts) {
-        List<HeartDTO> heartDTOs = new ArrayList<>();
-
-        for (Heart heart : hearts) {
-            heartDTOs.add(toHeartDTO(heart));
-        }
-        return heartDTOs;
+    public static List<HeartDTO> toListHeartDTO(List<HeartProjection> projections) {
+        return projections.stream()
+                .map(HeartMapper::toHeartDTO)
+                .toList();
     }
 }
