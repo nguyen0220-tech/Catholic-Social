@@ -27,6 +27,10 @@ public class HeartService {
     private final UserRepository userRepository;
     private final MomentRepository momentRepository;
 
+    public List<Heart> getAllByMomentIds(List<Long> momentIds) {
+        return heartRepository.findAllByMoment_IdIn(momentIds);
+    }
+
     public ListResponse<HeartDTO> getHeartsByMomentId(Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         List<HeartProjection> hearts = heartRepository.findByMomentId(momentId, pageable);

@@ -244,20 +244,20 @@ async function renderComments(momentId) {
 
     comments.forEach(c => {
         const div = document.createElement("div");
-        div.style.cssText = `
-            display:flex; gap:6px; margin-bottom:6px;
-        `;
+        div.style.cssText = `display:flex; gap:6px; margin-bottom:6px; align-items:flex-start;`;
 
         div.innerHTML = `
             <img src="${
             c.user.avatarUrl
                 ? (c.user.avatarUrl.startsWith('http') ? c.user.avatarUrl : URL_BASE + c.user.avatarUrl)
                 : 'icon/default-avatar.png'
-        }"
-            style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+        }" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;" 
+           onclick="goToProfile(${c.user.id})">
 
             <div style="background:#fff;padding:6px 8px;border-radius:6px;flex:1;">
-                <strong style="font-size:13px;">${c.user.userFullName}</strong>
+                <strong style="font-size:13px;cursor:pointer;" onclick="goToProfile(${c.user.id})">
+                    ${c.user.userFullName}
+                </strong>
                 <div style="font-size:14px;">${c.comment}</div>
                 <div style="font-size:11px;color:#777;">
                     ${formatDateTime(c.commentDate)}
@@ -398,15 +398,13 @@ function renderHeartUsers(momentId, hearts) {
     }
 
     box.innerHTML = hearts.map(h => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;" 
+             onclick="goToProfile(${h.user.id})">
             <img src="${
         h.user.avatarUrl
-            ? (h.user.avatarUrl.startsWith("http")
-                ? h.user.avatarUrl
-                : URL_BASE + h.user.avatarUrl)
+            ? (h.user.avatarUrl.startsWith("http") ? h.user.avatarUrl : URL_BASE + h.user.avatarUrl)
             : "/icon/default-avatar.png"
-    }"
-            style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+    }" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
             <span style="font-size:14px;">${h.user.userFullName}</span>
         </div>
     `).join("");
@@ -465,5 +463,11 @@ logoutBtn.addEventListener("click", async () => {
         alert("Không thể kết nối đến máy chủ!");
     }
 });
+
+function goToProfile(userId) {
+    window.location.href = `/user.html?id=${userId}`;
+}
+
+window.goToProfile = goToProfile;
 
 fetchMoments();

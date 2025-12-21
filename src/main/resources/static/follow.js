@@ -363,7 +363,7 @@ function renderUserResults(users) {
             await followUser(u.id, item.querySelector(".follow-btn"));
         });
 
-        // ✅ Nút chặn
+        //  Nút chặn
         item.querySelector(".block-btn").addEventListener("click", () =>
             blockUser(u.id, item)
         );

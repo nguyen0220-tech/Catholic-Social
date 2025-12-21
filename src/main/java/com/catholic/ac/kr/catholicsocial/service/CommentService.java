@@ -33,6 +33,10 @@ public class CommentService {
     private final MomentRepository momentRepository;
     private final FollowRepository followRepository;
 
+    public List<Comment> getCommentsByIds(List<Long> ids) {
+        return commentRepository.findAllByMoment_IdIn(ids);
+    }
+
     public ListResponse<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 

@@ -2,7 +2,10 @@ package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.ProfileDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserProfileDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
+import org.springframework.context.annotation.Profile;
 
 import java.util.stream.Collectors;
 
@@ -44,6 +47,14 @@ public class UserMapper {
         profileDTO.setAvatarUrl(user.getUserInfo().getAvatarUrl());
 
         return profileDTO;
+    }
+
+    public static UserProfileDTO toUserProfileDTO(UserProjection projection) {
+        UserProfileDTO userProfileDTO = new UserProfileDTO();
+
+        userProfileDTO.setId(projection.getId());
+
+        return userProfileDTO;
     }
 
 }

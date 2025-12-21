@@ -22,4 +22,6 @@ public interface CommentRepository  extends JpaRepository<Comment, Long> {
             WHERE c.moment.id = :momentId
             """)
     List<CommentProjection> findByMomentId(@Param("momentId") Long momentId, Pageable pageable);
+
+    List<Comment> findAllByMoment_IdIn(List<Long> momentIds);
 }

@@ -9,9 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletionStage;
 
 @Repository
 public interface MomentRepository extends JpaRepository<Moment, Long> {
@@ -30,4 +28,9 @@ public interface MomentRepository extends JpaRepository<Moment, Long> {
     List<Moment> findByUserId(Long userId, Pageable pageable);
 
     Optional<Moment> findByIdAndUser(Long id, User user);
+
+//    @Query("""
+//            SELECT m FROM Moment m WHERE m.user.id IN :userIds
+//            """)
+    List<Moment> findByUser_IdIn(List<Long> userIds);
 }

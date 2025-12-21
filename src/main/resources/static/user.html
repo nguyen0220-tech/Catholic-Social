@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title></title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        a{
+            text-decoration: none;
+        }
+
+        .profile-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ===== PROFILE HEADER ===== */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .profile-header img {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+        }
+
+        .profile-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        /* ===== MOMENT CARD ===== */
+        .moment {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .moment p {
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        /* ===== IMAGE GRID ===== */
+        .moment-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .moment-images img {
+            width: 100%;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        /* ===== META ===== */
+        .createdAt {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* ===== HEARTS ===== */
+        .hearts {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+
+        .heart-user {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .heart-user img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+        }
+
+        /* ===== COMMENTS ===== */
+        .comments {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .comment {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .comment img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .comment b {
+            font-size: 14px;
+        }
+
+        .comment span {
+            font-size: 14px;
+        }
+
+        .heart-user,
+        .comment img,
+        .comment b {
+            cursor: pointer;
+        }
+
+        .heart-user:hover span,
+        .comment b:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== TOP NAV ===== */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .top-nav a:hover {
+            color: #007bff;
+            transform: translateY(-2px);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<div class="profile-container">
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="home.html" class="nav-logo">🏠 Trang chủ</a>
+        </div>
+        <div class="nav-right">
+        </div>
+    </nav>
+
+    <div id="profile"></div>
+    <div id="moments" class="moments"></div>
+</div>
+
+
+<script type="module" src="user.js"></script>
+</body>
+</html>

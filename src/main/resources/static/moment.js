@@ -345,10 +345,17 @@ async function loadComments(momentId, container) {
     comments.forEach(c => {
         const div = document.createElement("div");
         div.className = "comment-item";
+        div.style.display = "flex";
+        div.style.gap = "8px";
+        div.style.alignItems = "flex-start";
+
         div.innerHTML = `
-          <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" class="comment-avatar">
+          <img src="${c.user.avatarUrl || '/icon/default-avatar.png'}" 
+               class="comment-avatar" 
+               style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;"
+               onclick="goToProfile(${c.user.id})">
           <div>
-            <b>${c.user.userFullName}</b>
+            <b style="cursor:pointer;" onclick="goToProfile(${c.user.id})">${c.user.userFullName}</b>
             <p>${c.comment}</p>
             <small>${new Date(c.commentDate).toLocaleString()}</small>
           </div>
@@ -452,7 +459,8 @@ function renderHeartUsers(momentId, hearts) {
     }
 
     box.innerHTML = hearts.map(h => `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;" 
+             onclick="goToProfile(${h.user.id})">
             <img src="${
         h.user.avatarUrl
             ? (h.user.avatarUrl.startsWith("http")
@@ -507,5 +515,9 @@ momentsList.addEventListener("click", (e) => {
     box.style.display = box.style.display === "none" ? "block" : "none";
 });
 
+function goToProfile(userId) {
+    window.location.href = `/user.html?id=${userId}`;
+}
 
+window.goToProfile = goToProfile;
 loadMoments();

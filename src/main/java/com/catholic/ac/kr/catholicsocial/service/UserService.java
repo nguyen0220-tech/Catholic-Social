@@ -1,10 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ProfileDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest;
@@ -14,6 +11,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.entity.model.UserInfo;
 import com.catholic.ac.kr.catholicsocial.entity.model.VerificationToken;
 import com.catholic.ac.kr.catholicsocial.mapper.UserMapper;
+import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
 import com.catholic.ac.kr.catholicsocial.repository.RoleRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.repository.VerificationTokenRepository;
@@ -241,5 +239,14 @@ public class UserService {
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Find user follow success", userFollowDTO);
+    }
+
+    public UserProfileDTO getUserProfileDTO(Long userId) {
+        UserProjection userProjection = userRepository.findUserProjectionById(userId);
+        return UserMapper.toUserProfileDTO(userProjection);
+    }
+
+    public User getUser(Long userId) {
+        return EntityUtils.getOrThrow(userRepository.findById(userId), "User");
     }
 }

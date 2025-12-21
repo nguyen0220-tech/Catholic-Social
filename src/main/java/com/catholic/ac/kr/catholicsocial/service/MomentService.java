@@ -37,6 +37,14 @@ public class MomentService {
         return momentRepository.findAllById(ids);
     }
 
+    public List<Moment> findMomentsByUserId(Long userId, int page, int size) {
+        return momentRepository.findByUserId(userId, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+    }
+
+    public List<Moment> findAllByUserIds(List<Long> userIds) {
+        return momentRepository.findByUser_IdIn(userIds);
+    }
+
     public ApiResponse<List<MomentDTO>> getAllMoments(Long userId,int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 

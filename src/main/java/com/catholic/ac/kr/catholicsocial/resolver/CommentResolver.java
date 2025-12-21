@@ -6,7 +6,6 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
 import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.CommentService;
-import com.catholic.ac.kr.catholicsocial.service.MomentService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CommentResolver {
     private final CommentService commentService;
-    private final MomentService momentService;
     private final UserBatchLoader userBatchLoader;
 
     @QueryMapping
@@ -46,12 +44,12 @@ public class CommentResolver {
 
     @BatchMapping(typeName = "CommentDTO", field = "user")
     public Map<CommentDTO, UserGQLDTO> user(List<CommentDTO> comments) {
-        System.out.println(">>> BATCH Comment.user triggered");
 
         List<Long> userIds = comments.stream()
                 .map(CommentDTO::getUserId)
                 .distinct()
                 .toList();
+        System.out.println(">>> BATCH Comment.user" + userIds);
 
         Map<Long, UserGQLDTO> userMap = userBatchLoader.loadUserByIds(userIds);
 

@@ -2,6 +2,7 @@ package com.catholic.ac.kr.catholicsocial.repository;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -54,7 +55,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                         u.id,u.userInfo.firstName,u.userInfo.lastName,u.userInfo.avatarUrl)
                         FROM User u
                         WHERE u.id != :userId
-                                    AND CONCAT(u.userInfo.firstName,' ',u.userInfo.lastName) LIKE LOWER( CONCAT('%', :keyword,'%')) 
+                                    AND CONCAT(u.userInfo.firstName,' ',u.userInfo.lastName) LIKE LOWER( CONCAT('%', :keyword,'%'))
                                     AND NOT EXISTS (
                                                     SELECT 1
                                                     FROM Follow f
@@ -63,4 +64,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                                     )
             """)
     List<UserFollowDTO> findUserFollowByUserId(@Param("userId") Long userId, @Param("keyword") String keyword, Pageable pageable);
+
+    @Query("""
+            SELECT u.id AS id  FROM User u WHERE u.id = :userId
+            """)
+    UserProjection findUserProjectionById(@Param("userId") Long userId);
 }

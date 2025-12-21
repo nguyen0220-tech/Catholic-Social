@@ -5,6 +5,7 @@
 type Query {
     getHeartsByMomentId(momentId: ID, page: Int!, size: Int!): ListResponse_HeartDTO
     getComments(page: Int!, size: Int!, momentId: ID): ListResponse_CommentDTO
+    getProfile(userId:ID!):UserProfileDTO
 }
 
 # =====================
@@ -41,6 +42,35 @@ type MomentDTO {
     id: ID!
     content: String
 }
+
+type UserProfileDTO{
+    id: ID!
+    user:UserInfo!
+    moments(page:Int, size:Int):MomentConnection
+}
+
+type MomentConnection{
+    content:[MomentUserDTO]!
+    page:Int!
+    size:Int!
+}
+
+type UserInfo{
+    fullName:String!
+    avatarUrl:String!
+    birthday:String!
+}
+
+type MomentUserDTO{
+    id:ID!
+    content:String!
+    imgUrls:[String]!
+    createdAt:String!
+    share:String!
+    comments:[CommentDTO]!
+    hearts:[HeartDTO]!
+}
+
 
 type ListResponse_CommentDTO {
     data: [CommentDTO]
