@@ -13,7 +13,8 @@ public class ConvertHandler {
 
         userGQLDTO.setId(user.getId());
         userGQLDTO.setUserFullName(user.getUserInfo().getFirstName() + " " + user.getUserInfo().getLastName());
-        userGQLDTO.setAvatarUrl(user.getUserInfo().getAvatarUrl());
+        userGQLDTO.setAvatarUrl(user.getUserInfo().getAvatarUrl() != null ?
+                user.getUserInfo().getAvatarUrl() : "/icon/default-avatar.png");
 
         return userGQLDTO;
     }

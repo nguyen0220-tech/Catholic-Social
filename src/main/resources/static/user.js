@@ -20,11 +20,12 @@ const currentUserId = localStorage.getItem("userId");
 
 const userId = paramUserId ? Number(paramUserId) : Number(currentUserId);
 
-
 const PROFILE_QUERY = `
 query ($userId: ID!) {
   getProfile(userId: $userId) {
     id
+    isFollowing
+    isBlocked
     user {
       fullName
       avatarUrl
@@ -65,16 +66,57 @@ async function loadProfile() {
     const res = await graphqlRequest(PROFILE_QUERY, {userId});
     const profile = res.data.getProfile;
 
-    renderProfile(profile.user);
+    renderProfile(profile);
     renderMoments(profile.moments.content);
 }
 
-function renderProfile(user) {
+function renderProfile(profile) {
+    const isMe = userId === Number(currentUserId);
+
+    let followBtn = "";
+    let blockBtn = "";
+
+    if (!isMe) {
+        if (profile.isBlocked) {
+            blockBtn = `
+                <button class="btn unblock" onclick="unblockUser(${userId})">
+                    Unblock
+                </button>
+            `;
+        } else {
+            blockBtn = `
+                <button class="btn block" onclick="blockUser(${userId})">
+                    Block
+                </button>
+            `;
+        }
+
+        if (!profile.isBlocked) {
+            if (profile.isFollowing) {
+                followBtn = `
+                    <button class="btn unfollow" onclick="unfollowUser(${userId})">
+                        Unfollow
+                    </button>
+                `;
+            } else {
+                followBtn = `
+                    <button class="btn follow" onclick="followUser(${userId})">
+                        Follow
+                    </button>
+                `;
+            }
+        }
+    }
+
     document.getElementById("profile").innerHTML = `
         <div class="profile-header">
-            <img src="${user.avatarUrl}">
+            <img src="${profile.user.avatarUrl}">
             <div>
-                <h2>${user.fullName}</h2>
+                <h2>${profile.user.fullName}</h2>
+                <div class="profile-actions">
+                    ${followBtn}
+                    ${blockBtn}
+                </div>
             </div>
         </div>
     `;
@@ -131,5 +173,53 @@ function renderMoments(moments) {
 function goToProfile(userId) {
     window.location.href = `/user.html?id=${userId}`;
 }
+
+async function followUser(userId) {
+    await fetch(`/follow?userId=${userId}`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        }
+    });
+    loadProfile();
+}
+
+window.followUser = followUser
+
+async function unfollowUser(userId) {
+    await fetch(`/follow?userId=${userId}&action=UNFOLLOW`, {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        }
+    });
+    loadProfile();
+}
+
+window.unfollowUser = unfollowUser;
+
+async function blockUser(userId) {
+    await fetch(`/follow/block?userId=${userId}`, {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        }
+    });
+    loadProfile();
+}
+
+window.blockUser = blockUser
+
+async function unblockUser(userId) {
+    await fetch(`/follow?userId=${userId}&action=UNBLOCK`, {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        }
+    });
+    loadProfile();
+}
+
+window.unblockUser = unblockUser
 
 window.goToProfile = goToProfile;

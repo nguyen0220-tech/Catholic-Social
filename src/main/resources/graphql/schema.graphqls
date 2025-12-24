@@ -45,6 +45,8 @@ type MomentDTO {
 
 type UserProfileDTO{
     id: ID!
+    isFollowing:Boolean!
+    isBlocked:Boolean!
     user:UserInfo!
     moments(page:Int, size:Int):MomentConnection
 }

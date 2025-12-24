@@ -3,12 +3,14 @@ package com.catholic.ac.kr.catholicsocial.resolver;
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -23,10 +25,29 @@ public class UserResolver {
     private final CommentService commentService;
     private final MomentService momentService;
     private final HeartService heartService;
+    private final FollowService followService;
 
     @QueryMapping
     public UserProfileDTO getProfile(@Argument Long userId) {
         return userService.getUserProfileDTO(userId);
+    }
+
+    @SchemaMapping(typeName = "UserProfileDTO", field = "isFollowing")
+    public boolean isFollowing(
+            UserProfileDTO user,
+            @AuthenticationPrincipal CustomUseDetails me) {
+        if (me == null) return false;
+
+        return followService.isFollowing(me.getUser().getId(), user.getId());
+    }
+
+    @SchemaMapping(typeName = "UserProfileDTO", field = "isBlocked")
+    public boolean isBlocked(
+            UserProfileDTO user,
+            @AuthenticationPrincipal CustomUseDetails me) {
+        if (me == null) return false;
+
+        return followService.isBlocked(me.getUser().getId(), user.getId());
     }
 
     @SchemaMapping(typeName = "UserProfileDTO", field = "user")
@@ -115,7 +136,7 @@ public class UserResolver {
 
         List<Heart> hearts = heartService.getAllByMomentIds(momentId);
 
-        Map<Long,List<HeartDTO>> map = hearts.stream()
+        Map<Long, List<HeartDTO>> map = hearts.stream()
                 .collect(Collectors.groupingBy(
                         h -> h.getMoment().getId(),
                         Collectors.mapping(ConvertHandler::convertToHeartDTO, Collectors.toList())

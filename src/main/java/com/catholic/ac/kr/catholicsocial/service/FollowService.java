@@ -28,6 +28,20 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
 
+    public boolean isFollowing(Long currentUserId, Long userId) {
+        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId),"User");
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId),"User");
+
+        return followRepository.existsByFollowerAndUserAndState(currentUser, user, FollowState.FOLLOWING);
+    }
+
+    public boolean isBlocked(Long currentUserId, Long userId) {
+        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId),"User");
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId),"User");
+
+        return followRepository.existsByFollowerAndUserAndState(currentUser, user, FollowState.BLOCKED);
+    }
+
     //Danh sách mình đang theo dõi người khác
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ApiResponse<FollowDTO> getAllFollowers(Long currentUserId, int page, int size) {
