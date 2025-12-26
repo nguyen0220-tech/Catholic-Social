@@ -1,9 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.controller;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ProfileDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest;
@@ -94,5 +91,10 @@ public class UserController {
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(userService.findUserFollow(useDetails.getUser().getId(),keyword, page, size));
+    }
+
+    @GetMapping("suggestion")
+    public ResponseEntity<ApiResponse<List<UserSuggestions>>> getUserSuggestions(@AuthenticationPrincipal CustomUseDetails useDetails) {
+        return ResponseEntity.ok(userService.findUserSuggestions(useDetails.getUser().getId()));
     }
 }

@@ -4,3 +4,7 @@ This favicon was generated using the following font:
 - Font Author: undefined
 - Font Source: https://fonts.gstatic.com/s/rowdies/v18/ptRJTieMYPNBAK21zrdJwObZNQo.ttf
 - Font License: undefined)
+
+--BUTTON
+background: #EE82EE / #DC3545
+color:      #00fb00 / #FFFFFF

@@ -165,7 +165,7 @@ function renderFollowers(followers) {
                     Bỏ theo dõi
                 </button>
                 <button class="block-btn" 
-                        style="background:#6c757d;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+                        style="background:#dc3545;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
                     Chặn
                 </button>
             </div>
@@ -209,11 +209,11 @@ function renderFollowersMe(users) {
             </div>
             <div style="display:flex; gap:6px;">
                 <button class="follow-btn"
-                        style="background:#007bff;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+                        style="background:#EE82EE;color:#00fb00;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
                     Theo dõi
                 </button>
                 <button class="block-btn" 
-                        style="background:#6c757d;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+                        style="background:#dc3545;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
                     Chặn
                 </button>
             </div>
@@ -256,7 +256,7 @@ function renderBlocked(blockedUsers) {
                 <strong>${u.userFullName}</strong>
             </div>
             <button class="unblock-btn"
-                    style="background:#28a745;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
+                    style="background:#EE82EE;color:#00fb00;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
                 Bỏ chặn
             </button>
         `;
@@ -323,7 +323,6 @@ async function blockUser(userId, itemElement) {
     }
 }
 
-// HIỂN THỊ KẾT QUẢ TÌM KIẾM (Thêm nút Block)
 function renderUserResults(users) {
     users.forEach((u) => {
         const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Không tên";
@@ -348,11 +347,11 @@ function renderUserResults(users) {
             </div>
             <div style="display:flex; gap:6px;">
                 <button class="follow-btn"
-                        style="background:#007bff; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">
+                        style="background:#EE82EE; color:#00fb00; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">
                     Theo dõi
                 </button>
                 <button class="block-btn"
-                        style="background:#6c757d; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">
+                        style="background:#dc3545; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">
                     Chặn
                 </button>
             </div>
@@ -396,7 +395,7 @@ async function followUser(userId, button) {
 
         alert(json.message || "Theo dõi thành công!");
         button.innerText = "Đã theo dõi";
-        button.style.background = "#6c757d";
+        button.style.background = "#EE82EE";
         button.style.cursor = "default";
     } catch (err) {
         console.error("Follow error:", err);

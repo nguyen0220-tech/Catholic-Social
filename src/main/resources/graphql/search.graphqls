@@ -1,0 +1,30 @@
+extend type Query {
+    searchHistory(page:Int!, size:Int!):ListResponser_SearchDTO
+}
+
+extend type Mutation {
+    search(request:SearchRequest!):GraphqlResponse_String!
+    deleteSearch(searchId:ID):GraphqlResponse_String!
+}
+
+input SearchRequest{
+    keyword:String
+}
+
+
+type ListResponser_SearchDTO{
+    data:[SearchDTO]
+    pageInfo:PageInfo
+}
+
+type SearchDTO{
+    id:ID!
+    keyword:String!
+    createdAt:String!
+}
+
+type PageInfo{
+    page:Int!
+    size:Int!
+    hasNext:Boolean!
+}

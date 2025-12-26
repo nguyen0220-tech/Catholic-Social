@@ -1,6 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.repository;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserSuggestions;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
 import org.springframework.data.domain.Pageable;
@@ -69,4 +70,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SELECT u.id AS id  FROM User u WHERE u.id = :userId
             """)
     UserProjection findUserProjectionById(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.UserSuggestions(
+            u.id, u.userInfo.firstName, u.userInfo.lastName, u.userInfo.avatarUrl, f1.user.userInfo.firstName, f1.user.userInfo.lastName )
+            FROM Follow f1
+            JOIN Follow f2 ON f1.user.id = f2.follower.id
+            JOIN User u ON u.id = f2.user.id
+            WHERE f1.follower.id = :userId
+                  AND f1.state = 'FOLLOWING'
+                  AND f2.state = 'FOLLOWING'
+                  AND u.id != :userId
+                  AND u.id NOT IN (
+                              SELECT f.user.id FROM Follow f
+                                       WHERE f.follower.id = :userId AND f.state = 'FOLLOWING'
+                                   )
+            
+            """)
+    List<UserSuggestions> findUserSuggestionsByUserId(Long userId);
 }

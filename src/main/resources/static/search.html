@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">    <title>Search</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            margin: 0;
+            padding: 40px 0;
+            color: #262626;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .back-home {
+            display: inline-block;
+            margin-bottom: 12px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #0095f6;
+            font-weight: 600;
+        }
+
+        .back-home:hover {
+            text-decoration: underline;
+        }
+
+
+        .title {
+            margin-bottom: 20px;
+        }
+
+        /* Search box */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #dbdbdb;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #0095f6;
+        }
+
+        .search-box button {
+            padding: 0 18px;
+            border-radius: 10px;
+            border: none;
+            background: #EE82EE;
+            color: #00fb00;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .search-box button:hover {
+            background: #0077cc;
+        }
+
+        /* Section */
+        .section {
+            margin-top: 24px;
+        }
+
+        .section h4 {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #8e8e8e;
+        }
+
+        /* History list */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .history-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .history-list li:hover {
+            background: #f5f5f5;
+        }
+
+        .history-list span {
+            font-size: 14px;
+        }
+
+        .history-list button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Load more */
+        .load-more {
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #dbdbdb;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .load-more:hover {
+            background: #f5f5f5;
+        }
+
+        /* User result list */
+        .user-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .user-list li {
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .user-list li:hover {
+            background: #f5f5f5;
+        }
+
+        .user-list a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #262626;
+        }
+
+        .user-list img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .user-list span {
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="home.html" class="back-home">
+        ← Trang chủ
+    </a>
+
+    <h2 class="title">🔍 Search</h2>
+
+    <div class="search-box">
+        <input id="searchInput" placeholder="Search people..." />
+        <button id="searchBtn">Search</button>
+    </div>
+
+    <div class="section">
+        <h4>Recent searches</h4>
+        <ul id="historyList" class="history-list"></ul>
+
+        <button id="loadMoreBtn" class="load-more">Load more</button>
+    </div>
+
+    <div class="section">
+        <h4>Results</h4>
+        <ul id="userResultList" class="user-list"></ul>
+    </div>
+
+    <h3>Gợi ý theo dõi</h3>
+    <div id="suggestionList"></div>
+
+
+</div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="search.js"></script>
+</body>
+
+</html>

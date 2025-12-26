@@ -142,7 +142,7 @@ function renderMoment(moment) {
             <input type="text" class="comment-input" placeholder="Viết bình luận..."
                    style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc;">
             <button class="comment-send" data-moment-id="${moment.id}"
-                    style="background:#007bff;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Gửi</button>
+                    style="background:#EE82EE;color:#00fb00;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;">Gửi</button>
           </div>
         </div>
 

@@ -249,4 +249,12 @@ public class UserService {
     public User getUser(Long userId) {
         return EntityUtils.getOrThrow(userRepository.findById(userId), "User");
     }
+
+    public ApiResponse<List<UserSuggestions>> findUserSuggestions(Long userId) {
+
+        List<UserSuggestions> userSuggestions = userRepository.findUserSuggestionsByUserId(userId);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Find user suggestions success", userSuggestions);
+    }
 }

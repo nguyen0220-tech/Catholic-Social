@@ -216,8 +216,8 @@ function showEditForm(momentId, oldContent, oldShare) {
             <option value="PRIVATE" ${oldShare === "PRIVATE" ? "selected" : ""}>Chỉ mình tôi</option>
         </select>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-            <button id="saveEdit" style="background:#007bff;color:#fff;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Lưu</button>
-            <button id="cancelEdit" style="background:#ccc;color:#333;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Hủy</button>
+            <button id="saveEdit" style="background:#EE82EE;color:#00fb00;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Lưu</button>
+            <button id="cancelEdit" style="background:#DC3545;color:#ffffff;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Hủy</button>
         </div>
     `;
 
