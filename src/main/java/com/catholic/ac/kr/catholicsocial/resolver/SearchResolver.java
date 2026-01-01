@@ -28,7 +28,7 @@ public class SearchResolver {
     }
 
     @MutationMapping
-    public GraphqlResponse<String> search(
+    public GraphqlResponse<String> createSearch(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @Argument SearchRequest request) {
         return searchService.createSearch(useDetails.getUser().getId(), request);

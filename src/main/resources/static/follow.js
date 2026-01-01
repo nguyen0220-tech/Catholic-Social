@@ -34,7 +34,7 @@ async function fetchFollowers() {
             url = `${URL_BASE}/follow?page=${page}&size=${size}`;
         } else if (currentTab === "followers") {
             url = `${URL_BASE}/follow/users?page=${page}&size=${size}`;
-        } else { // blocked
+        } else {
             url = `${URL_BASE}/follow/find-blocked?page=${page}&size=${size}`;
         }
 
@@ -51,6 +51,7 @@ async function fetchFollowers() {
         const raw = json.data || {};
         const list = raw.users || [];
         const count = raw.userNums || 0;
+        const followingUserIdSet = new Set(raw.followingUserIdSet || []);
 
         // Cập nhật số lượng
         const countDiv = document.getElementById("followers-count");
@@ -71,7 +72,7 @@ async function fetchFollowers() {
         if (currentTab === "following") {
             renderFollowers(list);
         } else if (currentTab === "followers") {
-            renderFollowersMe(list);
+            renderFollowersMe(list, followingUserIdSet);
         } else {
             renderBlocked(list);
         }
@@ -183,8 +184,11 @@ function renderFollowers(followers) {
     });
 }
 
-function renderFollowersMe(users) {
+function renderFollowersMe(users, followingUserIdSet) {
     users.forEach((u) => {
+
+        const isFollowed = followingUserIdSet.has(u.id);
+
         const avatarUrl =
             u.avatarUrl && u.avatarUrl.startsWith("http")
                 ? u.avatarUrl
@@ -195,42 +199,53 @@ function renderFollowersMe(users) {
         const item = document.createElement("div");
         item.classList.add("follower-me-item");
         item.style.cssText = `
-            display:flex; align-items:center; justify-content:space-between; gap:10px;
-            border:1px solid #ddd; border-radius:8px;
-            padding:10px; margin-bottom:8px; background-color:#eef9ff;`;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid #eee;
+            margin-bottom:8px;
+            background:#fff;
+        `;
 
         item.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${avatarUrl}" alt="${u.userFullName}" 
-                     style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid #ccc;">
-                <a href="user.html?id=${u.id}" style="text-decoration:none; color:#333; font-weight:bold;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <img src="${avatarUrl}"
+                     style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+                <a href="user.html?id=${u.id}"
+                   style="font-weight:600;color:#333;text-decoration:none;">
                     ${u.userFullName}
                 </a>
             </div>
-            <div style="display:flex; gap:6px;">
-                <button class="follow-btn"
-                        style="background:#EE82EE;color:#00fb00;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
-                    Theo dõi
-                </button>
-                <button class="block-btn" 
-                        style="background:#dc3545;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
-                    Chặn
-                </button>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+                ${!isFollowed ? `
+                    <button class="follow-btn">Theo dõi lại</button>
+                ` : `
+                    <span style="font-size:13px;color:#6c757d;">
+                        Đã theo dõi
+                    </span>
+                `}
+                <button class="block-btn">Chặn</button>
             </div>
         `;
 
-        item.querySelector(".follow-btn").addEventListener("click", async () => {
-            await followUser(u.id, item.querySelector(".follow-btn"));
-        });
+        if (!isFollowed) {
+            const followBtn = item.querySelector(".follow-btn");
+            followBtn.addEventListener("click", async () => {
+                followBtn.disabled = true;
+                followBtn.innerText = "Đang theo dõi...";
+                await followUser(u.id, followBtn);
+            });
+        }
 
-        item.querySelector(".block-btn").addEventListener("click", () =>
-            blockUser(u.id, item)
-        );
+        item.querySelector(".block-btn")
+            .addEventListener("click", () => blockUser(u.id, item));
 
         container.appendChild(item);
     });
 }
-
 
 // --- HIỂN THỊ DANH SÁCH BỊ CHẶN ---
 function renderBlocked(blockedUsers) {

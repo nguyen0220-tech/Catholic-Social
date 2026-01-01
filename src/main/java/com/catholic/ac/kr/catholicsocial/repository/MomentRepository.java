@@ -29,8 +29,5 @@ public interface MomentRepository extends JpaRepository<Moment, Long> {
 
     Optional<Moment> findByIdAndUser(Long id, User user);
 
-//    @Query("""
-//            SELECT m FROM Moment m WHERE m.user.id IN :userIds
-//            """)
     List<Moment> findByUser_IdIn(List<Long> userIds);
 }

@@ -3,9 +3,9 @@
 # =====================
 
 type Query {
-    getHeartsByMomentId(momentId: ID, page: Int!, size: Int!): ListResponse_HeartDTO
-    getComments(page: Int!, size: Int!, momentId: ID): ListResponse_CommentDTO
-    getProfile(userId:ID!):UserProfileDTO
+    hearts(momentId: ID, page: Int!, size: Int!): ListResponse_HeartDTO
+    comments(page: Int!, size: Int!, momentId: ID): ListResponse_CommentDTO
+    profile(userId:ID!):UserProfileDTO
 }
 
 # =====================
@@ -32,13 +32,13 @@ input CommentInput {
 
 type CommentDTO {
     id: ID!
-    moment: MomentDTO!
+    moment: MomentGQLDTO
     user: UserDTO!
     comment: String!
     commentDate: String!
 }
 
-type MomentDTO {
+type MomentGQLDTO {
     id: ID!
     content: String
 }
@@ -83,8 +83,8 @@ type ListResponse_HeartDTO{
 }
 
 type HeartDTO {
-    heartId: ID!
-    moment:MomentDTO!
+    id: ID!
+    moment:MomentGQLDTO
     user: UserDTO!
 }
 

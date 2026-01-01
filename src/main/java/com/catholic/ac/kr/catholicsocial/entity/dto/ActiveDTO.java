@@ -4,9 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class HeartDTO {
+public class ActiveDTO {
     private Long id;
-    private Long userId;
-    private Long momentId;
-    private UserGQLDTO user;
+    private Long entityId;
+    private String type;
+    private Object target;
 }

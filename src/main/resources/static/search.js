@@ -20,7 +20,7 @@ let hasNext = true;
 
 const SEARCH_MUTATION = `
 mutation Search($request: SearchRequest!) {
-  search(request: $request) {
+  createSearch(request: $request) {
     message
   }
 }

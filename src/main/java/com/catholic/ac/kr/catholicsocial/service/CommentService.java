@@ -3,15 +3,14 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
+import com.catholic.ac.kr.catholicsocial.entity.model.Active;
 import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.CommentMapper;
 import com.catholic.ac.kr.catholicsocial.projection.CommentProjection;
-import com.catholic.ac.kr.catholicsocial.repository.CommentRepository;
-import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
-import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
-import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.repository.*;
+import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.status.MomentShare;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
@@ -32,9 +31,14 @@ public class CommentService {
     private final UserRepository userRepository;
     private final MomentRepository momentRepository;
     private final FollowRepository followRepository;
+    private final ActiveRepository activeRepository;
+
+    public List<Comment> getCommentsByMomentIds(List<Long> momentIds) {
+        return commentRepository.findAllByMoment_IdIn(momentIds);
+    }
 
     public List<Comment> getCommentsByIds(List<Long> ids) {
-        return commentRepository.findAllByMoment_IdIn(ids);
+        return commentRepository.findAllById(ids);
     }
 
     public ListResponse<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
@@ -72,7 +76,7 @@ public class CommentService {
             );
 
             if (!isFollowed) {
-                throw new GraphQLException( "Only followers can comment on this moment");
+                throw new GraphQLException("Only followers can comment on this moment");
             }
         }
 
@@ -84,7 +88,15 @@ public class CommentService {
 
         commentRepository.save(comment);
 
-        return GraphqlResponse.success("comment success",null);
+        Active newActive = Active.builder()
+                .user(currentUser)
+                .entityId(comment.getId())
+                .type(ActiveType.COMMENT_MOMENT)
+                .build();
+
+        activeRepository.save(newActive);
+
+        return GraphqlResponse.success("comment success", null);
     }
 
 }

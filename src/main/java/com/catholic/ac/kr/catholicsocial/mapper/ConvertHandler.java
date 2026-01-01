@@ -1,9 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.HeartDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.MomentUserDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
 
 public class ConvertHandler {
@@ -30,6 +27,15 @@ public class ConvertHandler {
         return momentUserDTO;
     }
 
+    public static MomentGQLDTO convertMomentGraphql(Moment moment) {
+        MomentGQLDTO momentGQLDTO = new MomentGQLDTO();
+
+        momentGQLDTO.setId(moment.getId());
+        momentGQLDTO.setContent(moment.getContent());
+
+        return momentGQLDTO;
+    }
+
     public static String convertImgUrl(Image image) {
         return image.getImageUrl();
     }
@@ -40,6 +46,7 @@ public class ConvertHandler {
         commentDTO.setId(comment.getId());
         commentDTO.setComment(comment.getComment());
         commentDTO.setCommentDate(comment.getCreatedAt());
+        commentDTO.setMomentId(comment.getMoment().getId());
         commentDTO.setUserId(comment.getUser().getId());
 
         return commentDTO;
@@ -48,8 +55,9 @@ public class ConvertHandler {
     public static HeartDTO convertToHeartDTO(Heart heart) {
         HeartDTO heartDTO = new HeartDTO();
 
-        heartDTO.setHeartId(heart.getId());
+        heartDTO.setId(heart.getId());
         heartDTO.setUserId(heart.getUser().getId());
+        heartDTO.setMomentId(heart.getMoment().getId());
 
         return heartDTO;
     }

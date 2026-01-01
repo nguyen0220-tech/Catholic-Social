@@ -304,7 +304,7 @@ momentsList.addEventListener("click", (e) => {
 
 const GET_COMMENTS = `
   query GetComments($momentId: ID!, $page: Int!, $size: Int!) {
-    getComments(momentId: $momentId, page: $page, size: $size) {
+    comments(momentId: $momentId, page: $page, size: $size) {
       data {
         id
         comment
@@ -339,7 +339,7 @@ async function loadComments(momentId, container) {
         size: 5
     });
 
-    const comments = res.data?.getComments?.data || [];
+    const comments = res.data?.comments?.data || [];
     container.innerHTML = "";
 
     comments.forEach(c => {
@@ -392,9 +392,9 @@ momentsList.addEventListener("click", async (e) => {
 // ===== GRAPHQL HEART =====
 const GET_HEARTS = `
   query GetHearts($momentId: ID!, $page: Int!, $size: Int!) {
-    getHeartsByMomentId(momentId: $momentId, page: $page, size: $size) {
+    hearts(momentId: $momentId, page: $page, size: $size) {
       data {
-        heartId
+        id
         user {
           id
           userFullName
@@ -439,7 +439,7 @@ async function renderHearts(momentId) {
         return;
     }
 
-    const hearts = res.data?.getHeartsByMomentId?.data || [];
+    const hearts = res.data?.hearts?.data || [];
     countEl.innerText = hearts.length;
 
     const isLiked = hearts.some(h => Number(h.user.id) === currentUserId);

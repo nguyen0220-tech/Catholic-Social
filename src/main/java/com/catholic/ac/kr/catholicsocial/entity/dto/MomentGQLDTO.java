@@ -4,9 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class HeartDTO {
+public class MomentGQLDTO {
     private Long id;
-    private Long userId;
-    private Long momentId;
-    private UserGQLDTO user;
+    private String content;
 }

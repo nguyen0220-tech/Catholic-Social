@@ -22,7 +22,7 @@ const userId = paramUserId ? Number(paramUserId) : Number(currentUserId);
 
 const PROFILE_QUERY = `
 query ($userId: ID!) {
-  getProfile(userId: $userId) {
+  profile(userId: $userId) {
     id
     isFollowing
     isBlocked
@@ -47,7 +47,7 @@ query ($userId: ID!) {
           }
         }
         hearts {
-          heartId
+          id
           user {
             id
             userFullName
@@ -60,11 +60,9 @@ query ($userId: ID!) {
 }
 `;
 
-loadProfile();
-
 async function loadProfile() {
     const res = await graphqlRequest(PROFILE_QUERY, {userId});
-    const profile = res.data.getProfile;
+    const profile = res.data.profile;
 
     renderProfile(profile);
     renderMoments(profile.moments.content);
@@ -223,3 +221,5 @@ async function unblockUser(userId) {
 window.unblockUser = unblockUser
 
 window.goToProfile = goToProfile;
+
+loadProfile();

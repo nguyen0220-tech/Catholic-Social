@@ -1,18 +1,20 @@
 package com.catholic.ac.kr.catholicsocial.resolver;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.MomentGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
+import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
+import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.CommentService;
+import com.catholic.ac.kr.catholicsocial.service.MomentService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.graphql.data.method.annotation.Argument;
-import org.springframework.graphql.data.method.annotation.BatchMapping;
-import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.graphql.data.method.annotation.QueryMapping;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.graphql.data.method.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
@@ -20,14 +22,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class CommentResolver {
     private final CommentService commentService;
     private final UserBatchLoader userBatchLoader;
+    private final MomentService momentService;
 
     @QueryMapping
-    public ListResponse<CommentDTO> getComments(
+    public ListResponse<CommentDTO> comments(
             @Argument int page,
             @Argument int size,
             @Argument Long momentId) {
@@ -42,6 +46,20 @@ public class CommentResolver {
         return commentService.createComment(useDetails.getUser().getId(), momentId, request);
     }
 
+    @SchemaMapping(typeName = "CommentDTO", field = "moment")
+    public MomentGQLDTO moment(CommentDTO comment) {
+        Long momentId = comment.getMomentId();
+
+        if (momentId == null) {
+            System.out.println("MomentId is null");
+            return null;
+        }
+
+        Moment moment = momentService.getMoment(momentId);
+
+        return ConvertHandler.convertMomentGraphql(moment);
+    }
+
     @BatchMapping(typeName = "CommentDTO", field = "user")
     public Map<CommentDTO, UserGQLDTO> user(List<CommentDTO> comments) {
 
@@ -49,7 +67,8 @@ public class CommentResolver {
                 .map(CommentDTO::getUserId)
                 .distinct()
                 .toList();
-        System.out.println(">>> BATCH Comment.user" + userIds);
+
+        log.info(">>> BATCH Comment.user {}",userIds);
 
         Map<Long, UserGQLDTO> userMap = userBatchLoader.loadUserByIds(userIds);
 

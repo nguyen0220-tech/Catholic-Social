@@ -6,6 +6,41 @@
     <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
     <link rel="manifest" href="icon/site.webmanifest">
+    <style>
+        .follow-btn {
+            background: #EE82EE;
+            color: #00fb00;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .follow-btn:hover,
+        .block-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .follow-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .block-btn {
+            background: #dc3545;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+    </style>
     <title>Follow</title>
 </head>
 <body>

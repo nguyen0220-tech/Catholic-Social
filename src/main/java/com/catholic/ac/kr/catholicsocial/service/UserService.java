@@ -45,7 +45,7 @@ public class UserService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final UploadFileHandler uploadFileHandler;
 
-    public List<User> findAllById(List<Long> ids) {
+    public List<User> getAllById(List<Long> ids) {
         return userRepository.findAllById(ids);
     }
 

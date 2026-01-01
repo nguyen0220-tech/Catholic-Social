@@ -5,12 +5,15 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentUpdateRequest;
+import com.catholic.ac.kr.catholicsocial.entity.model.Active;
 import com.catholic.ac.kr.catholicsocial.entity.model.Image;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.MomentMapper;
+import com.catholic.ac.kr.catholicsocial.repository.ActiveRepository;
 import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.status.ImageType;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +34,14 @@ public class MomentService {
     private final MomentRepository momentRepository;
     private final UserRepository userRepository;
     private final UploadFileHandler uploadFileHandler;
+    private final ActiveRepository activeRepository;
+
+    public Moment getMoment(Long id) {
+        return EntityUtils.getOrThrow(momentRepository.findById(id),"Moment");
+    }
 
     //use for DataLoader
-    public List<Moment> findAllByIds(List<Long> ids) {
+    public List<Moment> getAllByIds(List<Long> ids) {
         return momentRepository.findAllById(ids);
     }
 
@@ -99,6 +107,14 @@ public class MomentService {
         moment.setShare(request.getShare());
 
         momentRepository.save(moment);
+
+        Active newActive = Active.builder()
+                .user(user)
+                .entityId(moment.getId())
+                .type(ActiveType.UPLOAD_MOMENT)
+                .build();
+
+        activeRepository.save(newActive);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Uploaded moment successfully");

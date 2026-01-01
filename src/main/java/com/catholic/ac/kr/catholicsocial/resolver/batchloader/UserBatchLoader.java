@@ -19,7 +19,7 @@ public class UserBatchLoader {
     }
 
     public Map<Long, UserGQLDTO> loadUserByIds(List<Long> userIds) {
-        List<User> users = userService.findAllById(userIds);
+        List<User> users = userService.getAllById(userIds);
 
         return users.stream()
                 .collect(Collectors.toMap(

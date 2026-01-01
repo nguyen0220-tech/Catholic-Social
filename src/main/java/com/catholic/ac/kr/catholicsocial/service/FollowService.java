@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,15 +31,15 @@ public class FollowService {
     private final UserRepository userRepository;
 
     public boolean isFollowing(Long currentUserId, Long userId) {
-        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId),"User");
-        User user = EntityUtils.getOrThrow(userRepository.findById(userId),"User");
+        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId), "User");
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
 
         return followRepository.existsByFollowerAndUserAndState(currentUser, user, FollowState.FOLLOWING);
     }
 
     public boolean isBlocked(Long currentUserId, Long userId) {
-        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId),"User");
-        User user = EntityUtils.getOrThrow(userRepository.findById(userId),"User");
+        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId), "User");
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
 
         return followRepository.existsByFollowerAndUserAndState(currentUser, user, FollowState.BLOCKED);
     }
@@ -59,13 +61,35 @@ public class FollowService {
 
     //Danh sách người đang theo dõi mình
     public ApiResponse<FollowDTO> getAllUsersFollowing(Long currentUserId, int page, int size) {
+        User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId), "User");
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
 
-        List<Follow> follows = followRepository.findByUserIdAndState(currentUserId, FollowState.FOLLOWING, pageable);
-        FollowDTO followDTOS = FollowMapper.mapUsersFollowing(follows);
+        //người đang theo dõi mình
+        List<Follow> followers = followRepository.findByUserIdAndState(currentUser.getId(), FollowState.FOLLOWING, pageable);
+        FollowDTO followDTOS = FollowMapper.mapUsersFollowing(followers);
 
         int userFollowingCount = followRepository.countFollowByUserIdAndState(currentUserId, FollowState.FOLLOWING);
         followDTOS.setUserNums(userFollowingCount);
+
+        Set<Long> followerIdSet = followers.stream()
+                .map(Follow::getFollower)
+                .map(User::getId)
+                .collect(Collectors.toSet());
+
+        //người mình đang theo dõi
+        List<Follow> followings = followRepository.findAllByFollowerAndState(currentUser, FollowState.FOLLOWING);
+
+        Set<Long> followingIdSet = followings.stream()
+                .map(Follow::getUser)
+                .map(User::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> isFollowedIds = followerIdSet.stream()
+                .filter(followingIdSet::contains)
+                .collect(Collectors.toSet());
+
+        followDTOS.setFollowingUserIdSet(isFollowedIds);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Danh sách người theo dõi", followDTOS);

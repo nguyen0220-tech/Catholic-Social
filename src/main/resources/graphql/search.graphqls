@@ -1,9 +1,9 @@
 extend type Query {
-    searchHistory(page:Int!, size:Int!):ListResponser_SearchDTO
+    searchHistory(page:Int!, size:Int!):ListResponse_SearchDTO
 }
 
 extend type Mutation {
-    search(request:SearchRequest!):GraphqlResponse_String!
+    createSearch(request:SearchRequest!):GraphqlResponse_String!
     deleteSearch(searchId:ID):GraphqlResponse_String!
 }
 
@@ -12,7 +12,7 @@ input SearchRequest{
 }
 
 
-type ListResponser_SearchDTO{
+type ListResponse_SearchDTO{
     data:[SearchDTO]
     pageInfo:PageInfo
 }

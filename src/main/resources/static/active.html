@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title>Active</title>
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f6f8;
+        margin: 0;
+        padding: 0;
+    }
+
+    .top-nav {
+        background: white;
+        padding: 12px 20px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .top-nav a {
+        text-decoration: none;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .title {
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    #activity-list {
+        max-width: 600px;
+        margin: auto;
+    }
+
+    .activity-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .activity-item {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .activity-header {
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .activity-time {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .activity-content {
+        margin-top: 8px;
+    }
+
+    .activity-content img {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 8px;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 15px;
+        color: #666;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+</style>
+<body>
+<div class="top-nav">
+    <a href="home.html">🏠 Trang chủ</a>
+</div>
+
+<h2 class="title">Activity</h2>
+
+<div id="activity-list"></div>
+<div id="loading" class="loading hidden">Đang tải...</div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="active.js"></script>
+</body>
+
+</html>

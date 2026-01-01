@@ -10,7 +10,7 @@ public class HeartMapper {
     public static HeartDTO toHeartDTO(HeartProjection projection) {
         HeartDTO heartDTO = new HeartDTO();
 
-        heartDTO.setHeartId(projection.getId());
+        heartDTO.setId(projection.getId());
         heartDTO.setUserId(projection.getUserId());
 
         return heartDTO;

@@ -2,14 +2,17 @@ package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.HeartDTO;
+import com.catholic.ac.kr.catholicsocial.entity.model.Active;
 import com.catholic.ac.kr.catholicsocial.entity.model.Heart;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.HeartMapper;
 import com.catholic.ac.kr.catholicsocial.projection.HeartProjection;
+import com.catholic.ac.kr.catholicsocial.repository.ActiveRepository;
 import com.catholic.ac.kr.catholicsocial.repository.HeartRepository;
 import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import graphql.GraphQLException;
@@ -26,9 +29,14 @@ public class HeartService {
     private final HeartRepository heartRepository;
     private final UserRepository userRepository;
     private final MomentRepository momentRepository;
+    private final ActiveRepository activeRepository;
 
     public List<Heart> getAllByMomentIds(List<Long> momentIds) {
         return heartRepository.findAllByMoment_IdIn(momentIds);
+    }
+
+    public List<Heart> getAllByIds(List<Long> ids) {
+        return heartRepository.findAllById(ids);
     }
 
     public ListResponse<HeartDTO> getHeartsByMomentId(Long momentId, int page, int size) {
@@ -53,6 +61,14 @@ public class HeartService {
         heart.setMoment(moment);
 
         heartRepository.save(heart);
+
+        Active newActive = Active.builder()
+                .user(user)
+                .entityId(heart.getId())
+                .type(ActiveType.HEART_MOMENT)
+                .build();
+
+        activeRepository.save(newActive);
 
         return GraphqlResponse.success("Add heart success",null);
     }

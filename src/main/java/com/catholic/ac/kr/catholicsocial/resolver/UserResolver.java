@@ -6,6 +6,7 @@ import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class UserResolver {
@@ -28,7 +30,7 @@ public class UserResolver {
     private final FollowService followService;
 
     @QueryMapping
-    public UserProfileDTO getProfile(@Argument Long userId) {
+    public UserProfileDTO profile(@Argument Long userId) {
         return userService.getUserProfileDTO(userId);
     }
 
@@ -51,7 +53,7 @@ public class UserResolver {
     }
 
     @SchemaMapping(typeName = "UserProfileDTO", field = "user")
-    public UserInfoDTO getUserInfo(UserProfileDTO userProfileDTO) {
+    public UserInfoDTO user(UserProfileDTO userProfileDTO) {
         Long userId = userProfileDTO.getId();
 
         User user = userService.getUser(userId);
@@ -63,7 +65,7 @@ public class UserResolver {
     }
 
     @SchemaMapping(typeName = "UserProfileDTO", field = "moments")
-    public MomentConnection getMoments(
+    public MomentConnection moments(
             UserProfileDTO profile,
             @Argument int page,
             @Argument int size) {
@@ -86,7 +88,8 @@ public class UserResolver {
                 .map(MomentUserDTO::getId)
                 .toList();
 
-        System.out.println("CHECK BATCH Moment.img.url: " + momentIds);
+        log.info("CHECK BATCH Moment.img.url: {}", momentIds);
+
         List<Image> images = imageService.getImages(momentIds);
 
         Map<Long, List<String>> map = images.stream()
@@ -104,14 +107,14 @@ public class UserResolver {
     }
 
     @BatchMapping(typeName = "MomentUserDTO", field = "comments")
-    public Map<MomentUserDTO, List<CommentDTO>> getComments(List<MomentUserDTO> moments) {
+    public Map<MomentUserDTO, List<CommentDTO>> comments(List<MomentUserDTO> moments) {
         List<Long> momentIds = moments.stream()
                 .map(MomentUserDTO::getId)
                 .toList();
 
-        System.out.println("CHECK BATCH Moment.comment: " + momentIds);
+        log.info("CHECK BATCH Moment.comment: {}", momentIds);
 
-        List<Comment> comments = commentService.getCommentsByIds(momentIds);
+        List<Comment> comments = commentService.getCommentsByMomentIds(momentIds);
 
         Map<Long, List<CommentDTO>> map = comments.stream()
                 .collect(Collectors.groupingBy(
@@ -127,12 +130,12 @@ public class UserResolver {
     }
 
     @BatchMapping(typeName = "MomentUserDTO", field = "hearts")
-    public Map<MomentUserDTO, List<HeartDTO>> getHearts(List<MomentUserDTO> moments) {
+    public Map<MomentUserDTO, List<HeartDTO>> hearts(List<MomentUserDTO> moments) {
         List<Long> momentId = moments.stream()
                 .map(MomentUserDTO::getId)
                 .toList();
 
-        System.out.println("CHECK BATCH Moment.heart: " + momentId);
+        log.info("CHECK BATCH Moment.heart: {}", momentId);
 
         List<Heart> hearts = heartService.getAllByMomentIds(momentId);
 

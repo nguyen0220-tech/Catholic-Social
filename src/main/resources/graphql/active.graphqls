@@ -1,0 +1,16 @@
+extend type Query {
+    allActive(page:Int, size:Int):ListResponse_ActiveDTO
+}
+
+type ListResponse_ActiveDTO{
+    data:[ActiveDTO]
+    pageInfo:PageInfo
+}
+
+union ActiveTarget = MomentUserDTO | CommentDTO | HeartDTO
+
+type ActiveDTO {
+    id: ID!
+    type: String!
+    target: ActiveTarget
+}

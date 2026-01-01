@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface FollowRepository extends JpaRepository<Follow, Integer> {
     List<Follow> findByFollowerIdAndState(Long followerId, FollowState state, Pageable pageable);
 
+    List<Follow> findAllByFollowerAndState(User follower, FollowState state);
+
     boolean existsByFollowerAndUserAndState(User follower, User user, FollowState state);
 
     @Query("""
