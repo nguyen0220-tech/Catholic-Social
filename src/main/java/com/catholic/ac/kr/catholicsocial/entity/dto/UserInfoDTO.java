@@ -6,6 +6,10 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
+/*
+    hiển thị info trong profile của mỗi user
+ */
+
 @Getter @Setter
 @AllArgsConstructor
 public class UserInfoDTO {

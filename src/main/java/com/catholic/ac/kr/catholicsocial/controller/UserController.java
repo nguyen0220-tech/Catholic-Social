@@ -7,6 +7,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UserRequest;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.UserService;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.controller;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentUpdateRequest;

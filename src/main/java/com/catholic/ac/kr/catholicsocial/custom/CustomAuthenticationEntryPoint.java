@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.custom;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

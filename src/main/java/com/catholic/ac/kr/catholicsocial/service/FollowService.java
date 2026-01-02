@@ -1,7 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.FollowDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Follow;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;

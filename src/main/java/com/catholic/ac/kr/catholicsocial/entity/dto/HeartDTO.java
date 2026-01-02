@@ -8,6 +8,6 @@ public class HeartDTO {
     private Long id;
     private Long userId;
     private Long momentId;
-    private UserGQLDTO user;
-    private MomentGQLDTO moment;
+    private UserGQLDTO user; //FK resolver
+    private MomentGQLDTO moment; //FK resolver
 }

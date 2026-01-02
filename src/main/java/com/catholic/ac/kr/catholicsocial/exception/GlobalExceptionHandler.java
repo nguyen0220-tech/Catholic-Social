@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.exception;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;

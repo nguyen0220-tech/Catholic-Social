@@ -6,6 +6,9 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+    class chứa thông tin moment lấy các comment, heart
+ */
 @Getter @Setter
 public class MomentGQLDTO {
     private Long id;

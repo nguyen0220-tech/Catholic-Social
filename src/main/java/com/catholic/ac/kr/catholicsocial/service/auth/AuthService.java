@@ -1,7 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.service.auth;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.TokenResponseDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LoginRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LogoutRequest;

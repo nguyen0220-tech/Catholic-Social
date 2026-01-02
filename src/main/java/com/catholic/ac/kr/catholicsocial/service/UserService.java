@@ -18,6 +18,7 @@ import com.catholic.ac.kr.catholicsocial.repository.VerificationTokenRepository;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenService;
 import com.catholic.ac.kr.catholicsocial.status.Sex;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

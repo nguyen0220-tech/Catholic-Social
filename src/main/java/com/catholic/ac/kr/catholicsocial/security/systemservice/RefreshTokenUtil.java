@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.security.systemservice;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ApiResponse;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.model.RefreshToken;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.repository.RefreshTokenRepository;

@@ -12,7 +12,7 @@ public class CommentDTO {
     private String comment;
     private LocalDateTime commentDate;
 
-    private MomentGQLDTO moment;
+    private MomentGQLDTO moment; //FK resolver
     private Long userId; // FK để resolver dùng
     private UserGQLDTO user;// GraphQL sẽ resolve field này
 }

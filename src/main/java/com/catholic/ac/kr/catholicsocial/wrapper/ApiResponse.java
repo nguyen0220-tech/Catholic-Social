@@ -1,4 +1,4 @@
-package com.catholic.ac.kr.catholicsocial.entity.dto;
+package com.catholic.ac.kr.catholicsocial.wrapper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
