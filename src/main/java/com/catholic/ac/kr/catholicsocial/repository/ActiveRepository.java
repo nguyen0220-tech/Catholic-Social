@@ -15,9 +15,10 @@ public interface ActiveRepository extends JpaRepository<Active, Long> {
     @Query("""
         SELECT a.id AS id,
                a.entityId AS entityId,
-               a.type AS type
+               a.type AS type,
+               a.user.id AS userId
         FROM Active a
-        WHERE a.user = :user
+        WHERE a.user.id = :userId
 """)
-    Page<ActiveProjection> findAllByUser(@Param("user") User user, Pageable pageable);
+    Page<ActiveProjection> findAllByUserId(@Param("userId") Long userId, Pageable pageable);
 }

@@ -8,5 +8,7 @@ public class ActiveDTO {
     private Long id;
     private Long entityId;
     private String type;
+    private Long userId;
+    private UserGQLDTO user;
     private Object target;
 }

@@ -21,6 +21,11 @@ query GetAllActive($page: Int!, $size: Int!) {
     data {
       id
       type
+      user {
+        id
+        userFullName
+        avatarUrl
+      }
       target {
         __typename
 
@@ -36,10 +41,6 @@ query GetAllActive($page: Int!, $size: Int!) {
           id
           comment
           commentDate
-          user {
-            userFullName
-            avatarUrl
-          }
           moment {
             id
             content
@@ -48,10 +49,6 @@ query GetAllActive($page: Int!, $size: Int!) {
 
         ... on HeartDTO {
           id
-          user {
-            userFullName
-            avatarUrl
-          }
           moment {
             id
             content
@@ -71,7 +68,7 @@ query GetAllActive($page: Int!, $size: Int!) {
 const activityList = document.getElementById("activity-list");
 const loadingEl = document.getElementById("loading");
 
-let currentPage = 1;
+let currentPage = 0;
 const PAGE_SIZE = 5;
 let hasNext = true;
 let isLoading = false;
@@ -108,24 +105,31 @@ async function loadActivities() {
 
 function renderActivity(active) {
     const target = active.target;
-    if (!target) return;
+    if (!target || !active.user) return;
 
-    const { name, avatar } = getActorInfo(target);
+    const { userFullName, avatarUrl } = active.user;
+    const userId = active.user.id;
 
     const div = document.createElement("div");
     div.className = "activity-item";
+
+    const actorHtml = `
+        <a href="user.html?id=${userId}" class="activity-actor">
+            <img class="activity-avatar" src="${avatarUrl || 'icon/default-avatar.png'}" />
+            <span class="activity-name">${userFullName}</span>
+        </a>
+    `;
 
     switch (target.__typename) {
 
         case "MomentUserDTO":
             div.innerHTML = `
                 <div class="activity-header">
-                    <img class="activity-avatar" src="${avatar}" />
-                    <div>
-                        <div class="activity-title">📸 ${name} đã đăng bài viết mới</div>
-                        <div class="activity-time">${formatDate(target.createdAt)}</div>
-                    </div>
+                    ${actorHtml}
+                    <br>
+                    <span class="activity-text">📤 đã đăng bài viết mới</span>
                 </div>
+                <div class="activity-time">${formatDate(target.createdAt)}</div>
 
                 <div class="activity-content">
                     <p>${target.content}</p>
@@ -137,12 +141,11 @@ function renderActivity(active) {
         case "CommentDTO":
             div.innerHTML = `
                 <div class="activity-header">
-                    <img class="activity-avatar" src="${avatar}" />
-                    <div>
-                        <div class="activity-title">💬 ${name} đã bình luận</div>
-                        <div class="activity-time">${formatDate(target.commentDate)}</div>
-                    </div>
+                    ${actorHtml}
+                    <br>
+                    <span class="activity-text">🗯️ đã bình luận</span>
                 </div>
+                <div class="activity-time">${formatDate(target.commentDate)}</div>
 
                 <div class="activity-content">
                     <p>"${target.comment}"</p>
@@ -154,10 +157,9 @@ function renderActivity(active) {
         case "HeartDTO":
             div.innerHTML = `
                 <div class="activity-header">
-                    <img class="activity-avatar" src="${avatar}" />
-                    <div>
-                        <div class="activity-title">❤️ ${name} đã thích bài viết</div>
-                    </div>
+                    ${actorHtml}
+                    <br>
+                    <span class="activity-text">❤️ đã thích bài viết</span>
                 </div>
 
                 <div class="activity-content">
@@ -172,22 +174,19 @@ function renderActivity(active) {
 
 
 /* ================= Helpers ================= */
-function getActorInfo(target) {
-    // Comment / Heart → có user
-    if (target.user) {
+function getActorInfo(active) {
+    if (active.user) {
         return {
-            name: target.user.userFullName,
-            avatar: target.user.avatarUrl
+            name: active.user.userFullName,
+            avatar: active.user.avatarUrl
         };
     }
 
-    // MomentUserDTO → chính mình
     return {
-        name: "Bạn",
+        name: "Hệ thống",
         avatar: "icon/default-avatar.png"
     };
 }
-
 
 function renderImages(imgUrls = []) {
     return imgUrls

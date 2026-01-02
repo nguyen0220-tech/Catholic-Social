@@ -12,6 +12,7 @@ public class ActiveMapper {
         activeDTO.setId(projection.getId());
         activeDTO.setEntityId(projection.getEntityId());
         activeDTO.setType(projection.getType());
+        activeDTO.setUserId(projection.getUserId());
 
         return activeDTO;
     }

@@ -4,4 +4,5 @@ public interface ActiveProjection {
     Long getId();
     Long getEntityId();
     String getType();
+    Long getUserId();
 }

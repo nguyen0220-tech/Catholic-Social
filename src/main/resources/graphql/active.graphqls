@@ -12,5 +12,6 @@ union ActiveTarget = MomentUserDTO | CommentDTO | HeartDTO
 type ActiveDTO {
     id: ID!
     type: String!
+    user:UserDTO!
     target: ActiveTarget
 }

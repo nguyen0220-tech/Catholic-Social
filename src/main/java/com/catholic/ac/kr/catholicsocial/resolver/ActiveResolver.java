@@ -1,13 +1,11 @@
 package com.catholic.ac.kr.catholicsocial.resolver;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ActiveDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.CommentDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.HeartDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.MomentUserDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
 import com.catholic.ac.kr.catholicsocial.entity.model.Heart;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.ActiveService;
 import com.catholic.ac.kr.catholicsocial.service.CommentService;
@@ -35,13 +33,34 @@ public class ActiveResolver {
     private final MomentService momentService;
     private final HeartService heartService;
     private final CommentService commentService;
+    private final UserBatchLoader userBatchLoader;
 
     @QueryMapping
     public ListResponse<ActiveDTO> allActive(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @Argument int page,
             @Argument int size) {
-        return activeService.getAllByUser(useDetails.getUser().getId(), page, size);
+        System.out.println("current user: " + useDetails.getUsername());
+        System.out.println("List active"+ activeService.getAllByUserId(useDetails.getUser().getId(), page, size));
+        return activeService.getAllByUserId(useDetails.getUser().getId(), page, size);
+    }
+
+    @BatchMapping(typeName = "ActiveDTO", field = "user")
+    public Map<ActiveDTO, UserGQLDTO> user(List<ActiveDTO> actives) {
+        List<Long> userIds = actives.stream()
+                .map(ActiveDTO::getUserId)
+                .distinct()
+                .toList();
+
+        System.out.println("BatchMapping userIds" + userIds);
+
+        Map<Long, UserGQLDTO> userGQLDTOMap = userBatchLoader.loadUserByIds(userIds);
+
+        return actives.stream()
+                .collect(Collectors.toMap(
+                        a -> a,
+                        a -> userGQLDTOMap.get(a.getUserId())
+                ));
     }
 
     @BatchMapping(typeName = "ActiveDTO", field = "target")
