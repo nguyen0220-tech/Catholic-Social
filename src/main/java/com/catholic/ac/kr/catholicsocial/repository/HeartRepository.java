@@ -29,4 +29,6 @@ public interface HeartRepository extends JpaRepository<Heart,Long> {
     Optional<Heart> findByUserAndMoment(User user, Moment moment);
 
     List<Heart> findAllByMoment_IdIn(List<Long> momentIds);
+
+    boolean existsByUser_IdAndMoment_Id(Long userId, Long momentId);
 }

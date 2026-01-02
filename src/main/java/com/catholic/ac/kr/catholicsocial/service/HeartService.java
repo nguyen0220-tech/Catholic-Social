@@ -31,6 +31,10 @@ public class HeartService {
     private final MomentRepository momentRepository;
     private final ActiveRepository activeRepository;
 
+    public boolean checkHeart(Long userId, Long momentId) {
+        return heartRepository.existsByUser_IdAndMoment_Id(userId, momentId);
+    }
+
     public List<Heart> getAllByMomentIds(List<Long> momentIds) {
         return heartRepository.findAllByMoment_IdIn(momentIds);
     }

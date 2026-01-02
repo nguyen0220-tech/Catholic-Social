@@ -109,30 +109,37 @@ function renderActivity(active) {
     const target = active.target;
     if (!target || !active.user) return;
 
+    const momentId = extractMomentId(target);
+    if (!momentId) return;
+
     const { userFullName, avatarUrl } = active.user;
     const userId = active.user.id;
 
     const div = document.createElement("div");
     div.className = "activity-item";
+    div.style.cursor = "pointer";
+
+    div.onclick = () => {
+        window.location.href = `moment-detail.html?id=${momentId}`;
+    };
 
     const actorHtml = `
-        <a href="user.html?id=${userId}" class="activity-actor">
-            <img class="activity-avatar" src="${avatarUrl || 'icon/default-avatar.png'}" />
+        <a href="user.html?id=${userId}" 
+           class="activity-actor"
+           onclick="event.stopPropagation()">
+            <img class="activity-avatar" src="${avatarUrl || 'icon/default-avatar.png'}"  alt=""/>
             <span class="activity-name">${userFullName}</span>
         </a>
     `;
 
     switch (target.__typename) {
-
         case "MomentUserDTO":
             div.innerHTML = `
                 <div class="activity-header">
                     ${actorHtml}
-                    <br>
                     <span class="activity-text">📤 đã đăng bài viết mới</span>
                 </div>
                 <div class="activity-time">${formatDate(target.createdAt)}</div>
-
                 <div class="activity-content">
                     <p>${target.content}</p>
                     ${renderMomentPreview(target.imgUrls)}
@@ -144,11 +151,9 @@ function renderActivity(active) {
             div.innerHTML = `
                 <div class="activity-header">
                     ${actorHtml}
-                    <br>
                     <span class="activity-text">🗯️ đã bình luận</span>
                 </div>
                 <div class="activity-time">${formatDate(target.commentDate)}</div>
-
                 <div class="activity-content">
                     <p>"${target.comment}"</p>
                     <small>Bài viết: ${target.moment.content}</small>
@@ -161,10 +166,8 @@ function renderActivity(active) {
             div.innerHTML = `
                 <div class="activity-header">
                     ${actorHtml}
-                    <br>
                     <span class="activity-text">❤️ đã thích bài viết</span>
                 </div>
-
                 <div class="activity-content">
                     <p>${target.moment.content}</p>
                     ${renderMomentPreview(target.moment?.images)}
@@ -176,6 +179,23 @@ function renderActivity(active) {
     activityList.appendChild(div);
 }
 
+function extractMomentId(target) {
+    if (!target) return null;
+
+    switch (target.__typename) {
+        case "MomentUserDTO":
+            return target.id;
+
+        case "CommentDTO":
+            return target.moment?.id;
+
+        case "HeartDTO":
+            return target.moment?.id;
+
+        default:
+            return null;
+    }
+}
 
 /* ================= Helpers ================= */
 function renderMomentPreview(images = []) {
@@ -186,8 +206,8 @@ function renderMomentPreview(images = []) {
     return `
         <div class="moment-preview">
             ${preview.map(
-        url => `<img src="${url}" class="moment-preview-img" />`
-    ).join("")}
+                url => `<img src="${url}" class="moment-preview-img"  alt=""/>`
+            ).join("")}
         </div>
     `;
 }

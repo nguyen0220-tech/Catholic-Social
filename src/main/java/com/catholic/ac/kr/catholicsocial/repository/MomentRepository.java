@@ -2,6 +2,7 @@ package com.catholic.ac.kr.catholicsocial.repository;
 
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import com.catholic.ac.kr.catholicsocial.projection.MomentProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -30,4 +31,11 @@ public interface MomentRepository extends JpaRepository<Moment, Long> {
     Optional<Moment> findByIdAndUser(Long id, User user);
 
     List<Moment> findByUser_IdIn(List<Long> userIds);
+
+    @Query("""
+            SELECT m.id AS id, m.user.id AS userId
+            FROM Moment m
+            WHERE m.id = :id
+            """)
+    MomentProjection findByMomentId(@Param("id") Long id);
 }

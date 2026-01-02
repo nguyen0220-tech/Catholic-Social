@@ -1,8 +1,10 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDetailDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Image;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
+import com.catholic.ac.kr.catholicsocial.projection.MomentProjection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,5 +34,14 @@ public class MomentMapper {
         }
 
         return momentDTOS;
+    }
+
+    public static MomentDetailDTO toMomentDetailDTO(MomentProjection projection) {
+        MomentDetailDTO momentDetailDTO = new MomentDetailDTO();
+
+        momentDetailDTO.setId(projection.getId());
+        momentDetailDTO.setActorId(projection.getUserId());
+
+        return momentDetailDTO;
     }
 }

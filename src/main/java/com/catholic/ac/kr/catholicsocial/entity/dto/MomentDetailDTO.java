@@ -6,7 +6,10 @@ import lombok.Setter;
 @Getter @Setter
 public class MomentDetailDTO {
     private Long id;
-    private boolean isHeart;
-    private UserGQLDTO user;
+    private Long actorId; //chủ moment
+    private boolean isHeart; //đã heart hay chưa
+    private boolean isFollowingActor; //đã theo dõi actor hay chưa
+    private boolean mySelf;
+    private UserGQLDTO actor;
     private MomentUserDTO moment;
 }

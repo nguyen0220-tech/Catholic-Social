@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fafafa;
+        }
+
+        .top-nav {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eaeaea;
+            background: #fff;
+        }
+
+        .nav-home {
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            color: #262626;
+        }
+
+        .nav-home:hover {
+            color: #EE82EE;
+        }
+
+
+        .moment-actor {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .follow-btn {
+            margin-left: auto;
+            border: none;
+            background: #EE82EE;
+            color: #00fb00;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .moment-images img {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .moment-card {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 16px;
+        }
+
+        .moment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .actor-info {
+            display: flex;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+        }
+
+        .avatar-sm {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+        }
+
+        .moment-images {
+            display: grid;
+            gap: 4px;
+            margin-top: 10px;
+        }
+
+        .grid-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .grid-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .moment-images img {
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .moment-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .heart-btn.active {
+            color: red;
+        }
+
+        .heart-users {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .comment-header {
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .comment-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 12px 0;
+        }
+
+        .comment-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .comment-input button {
+            background: #EE82EE;
+            border: none;
+            color: #00fb00;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        .clickable:hover {
+            opacity: 0.85;
+        }
+
+    </style>
+    <title>Moment Detail</title>
+</head>
+<body>
+<nav class="top-nav">
+    <a href="home.html" class="nav-home">
+        🏠 Trang chủ
+    </a>
+</nav>
+
+<div id="moment-detail" class="moment-detail"></div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="moment-detail.js"></script>
+</body>
+</html>

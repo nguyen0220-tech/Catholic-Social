@@ -2,6 +2,7 @@ type Query {
     hearts(momentId: ID, page: Int!, size: Int!): ListResponse_HeartDTO
     comments(page: Int!, size: Int!, momentId: ID): ListResponse_CommentDTO
     profile(userId:ID!):UserProfileDTO
+    momentDetail(momentId:ID):MomentDetail!
 }
 
 type Mutation {
@@ -16,6 +17,16 @@ input CommentInput {
 }
 
 # DATA TYPES
+
+type MomentDetail{
+    id:ID!
+    actorId:Int!
+    isHeart:Boolean!
+    isFollowing:Boolean!
+    mySelf:Boolean!
+    actor:UserDTO!
+    moment:MomentUserDTO!
+}
 
 type CommentDTO {
     id: ID!

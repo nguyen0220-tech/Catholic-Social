@@ -1,6 +1,8 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
+import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDetailDTO;
+import com.catholic.ac.kr.catholicsocial.projection.MomentProjection;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentRequest;
@@ -38,6 +40,12 @@ public class MomentService {
 
     public Moment getMoment(Long id) {
         return EntityUtils.getOrThrow(momentRepository.findById(id),"Moment");
+    }
+
+    public MomentDetailDTO getMomentDetail(Long id) {
+        MomentProjection projection = momentRepository.findByMomentId(id);
+
+        return MomentMapper.toMomentDetailDTO(projection);
     }
 
     //use for DataLoader
