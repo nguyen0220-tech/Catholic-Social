@@ -17,9 +17,10 @@ import java.util.Optional;
 public interface HeartRepository extends JpaRepository<Heart,Long> {
     @Query("""
             SELECT h.id AS id,
-                   h.user.id AS userId
+                   h.user.id AS userId,
+                   h.moment.id AS momentId
                         FROM Heart h
-                                    WHERE h.moment.id = :momentId
+                        WHERE h.moment.id = :momentId
             """)
     List<HeartProjection> findByMomentId(@Param("momentId") Long momentId, Pageable pageable);
 

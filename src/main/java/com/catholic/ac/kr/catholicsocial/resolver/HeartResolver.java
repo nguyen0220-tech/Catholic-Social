@@ -54,7 +54,7 @@ public class HeartResolver {
         Long momentId = heartDTO.getMomentId();
 
         if (momentId == null) {
-            System.out.println("MomentId is null");
+            System.out.println("MomentId is null ~~~");
             return null;
         }
 

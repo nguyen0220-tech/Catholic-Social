@@ -12,6 +12,7 @@ public class HeartMapper {
 
         heartDTO.setId(projection.getId());
         heartDTO.setUserId(projection.getUserId());
+        heartDTO.setMomentId(projection.getMomentId());
 
         return heartDTO;
     }

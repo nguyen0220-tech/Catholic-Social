@@ -9,4 +9,5 @@ public class HeartDTO {
     private Long userId;
     private Long momentId;
     private UserGQLDTO user;
+    private MomentGQLDTO moment;
 }

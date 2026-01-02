@@ -44,6 +44,7 @@ query GetAllActive($page: Int!, $size: Int!) {
           moment {
             id
             content
+            images
           }
         }
 
@@ -52,6 +53,7 @@ query GetAllActive($page: Int!, $size: Int!) {
           moment {
             id
             content
+            images
           }
         }
       }
@@ -133,7 +135,7 @@ function renderActivity(active) {
 
                 <div class="activity-content">
                     <p>${target.content}</p>
-                    ${renderImages(target.imgUrls)}
+                    ${renderMomentPreview(target.imgUrls)}
                 </div>
             `;
             break;
@@ -150,6 +152,7 @@ function renderActivity(active) {
                 <div class="activity-content">
                     <p>"${target.comment}"</p>
                     <small>Bài viết: ${target.moment.content}</small>
+                    ${renderMomentPreview(target.moment?.images)}
                 </div>
             `;
             break;
@@ -164,6 +167,7 @@ function renderActivity(active) {
 
                 <div class="activity-content">
                     <p>${target.moment.content}</p>
+                    ${renderMomentPreview(target.moment?.images)}
                 </div>
             `;
             break;
@@ -174,31 +178,22 @@ function renderActivity(active) {
 
 
 /* ================= Helpers ================= */
-function getActorInfo(active) {
-    if (active.user) {
-        return {
-            name: active.user.userFullName,
-            avatar: active.user.avatarUrl
-        };
-    }
+function renderMomentPreview(images = []) {
+    if (!images || images.length === 0) return "";
 
-    return {
-        name: "Hệ thống",
-        avatar: "icon/default-avatar.png"
-    };
+    const preview = images.slice(0, 3); // chỉ lấy tối đa 3 ảnh
+
+    return `
+        <div class="moment-preview">
+            ${preview.map(
+        url => `<img src="${url}" class="moment-preview-img" />`
+    ).join("")}
+        </div>
+    `;
 }
-
-function renderImages(imgUrls = []) {
-    return imgUrls
-        .map(url => `<img src="${url}"  alt=""/>`)
-        .join("");
-}
-
 function formatDate(dateStr) {
     return new Date(dateStr).toLocaleString();
 }
-
-/* ================= Infinite Scroll ================= */
 
 window.addEventListener("scroll", () => {
     const scrollBottom =
@@ -209,5 +204,4 @@ window.addEventListener("scroll", () => {
     }
 });
 
-/* Load lần đầu */
 loadActivities();

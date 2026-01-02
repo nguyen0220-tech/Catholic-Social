@@ -3,6 +3,8 @@ package com.catholic.ac.kr.catholicsocial.mapper;
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
 
+import java.util.List;
+
 public class ConvertHandler {
 
     public static UserGQLDTO convertToUserGQLDTO(User user) {
@@ -32,6 +34,12 @@ public class ConvertHandler {
 
         momentGQLDTO.setId(moment.getId());
         momentGQLDTO.setContent(moment.getContent());
+
+        List<String> imgList = moment.getImages().stream()
+                .map(Image::getImageUrl)
+                .toList();
+
+        momentGQLDTO.setImages(imgList);
 
         return momentGQLDTO;
     }

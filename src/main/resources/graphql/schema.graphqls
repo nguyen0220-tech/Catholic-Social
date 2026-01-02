@@ -1,16 +1,8 @@
-# =====================
-# QUERY
-# =====================
-
 type Query {
     hearts(momentId: ID, page: Int!, size: Int!): ListResponse_HeartDTO
     comments(page: Int!, size: Int!, momentId: ID): ListResponse_CommentDTO
     profile(userId:ID!):UserProfileDTO
 }
-
-# =====================
-# MUTATION
-# =====================
 
 type Mutation {
     createComment(momentId: ID!, request: CommentInput!): GraphqlResponse_String
@@ -18,17 +10,12 @@ type Mutation {
     deleteHeart(momentId: ID!): GraphqlResponse_String
 }
 
-# =====================
 # INPUTS
-# =====================
-
 input CommentInput {
     comment: String!
 }
 
-# =====================
 # DATA TYPES
-# =====================
 
 type CommentDTO {
     id: ID!
@@ -41,6 +28,7 @@ type CommentDTO {
 type MomentGQLDTO {
     id: ID!
     content: String
+    images:[String]
 }
 
 type UserProfileDTO{
