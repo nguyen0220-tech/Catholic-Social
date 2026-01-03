@@ -110,7 +110,7 @@ function renderMomentDetail(data) {
             ${renderImages(moment.imgUrls)}
 
             <div class="moment-actions">
-                <button 
+                <button style="border: none; background-color: #ffffff; cursor: pointer"
                   class="heart-btn ${isHeart ? "active" : ""}"
                   onclick="toggleHeart(${momentId}, ${isHeart})">
                     ❤️ ${moment.hearts.length}

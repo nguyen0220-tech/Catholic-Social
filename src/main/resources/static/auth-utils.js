@@ -19,14 +19,14 @@ window.fetch = async (url, options = {}) => {
     let response = await originalFetch(url, options);
 
     // Nếu access token hết hạn (401/403) và không phải request refresh
-    if ((response.status === 401 || response.status === 403) && refreshToken && !url.includes("/auth/refresh")) {
+    if ((response.status === 401 || response.status === 403) && refreshToken && !url.includes("/auth/refresh-token")) {
         console.warn("⚠️ Access token hết hạn. Thử gọi refresh...");
 
         try {
-            const refreshResponse = await originalFetch(`${API_BASE}/auth/refresh`, {
+            const refreshResponse = await originalFetch(`${API_BASE}/auth/refresh-token`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refresh_token: refreshToken })
+                body: JSON.stringify({ refreshToken: refreshToken })
             });
 
             console.log("👉 Kết quả gọi refresh:", refreshResponse.status);

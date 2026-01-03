@@ -32,6 +32,7 @@ query ($userId: ID!) {
     }
     moments(page: 0, size: 10) {
       content {
+        id
         content
         createdAt
         share
@@ -124,7 +125,12 @@ function renderMoments(moments) {
     const container = document.getElementById("moments");
     container.innerHTML = "";
 
+    const myId = Number(localStorage.getItem("userId"));
+
     moments.forEach(m => {
+        const isHearted = m.hearts.some(h => Number(h.user.id) === myId);
+        const heartIcon = isHearted ? "❤️" : "🤍";
+
         container.innerHTML += `
             <div class="moment">
                 <p>${m.content}</p>
@@ -138,30 +144,43 @@ function renderMoments(moments) {
                     ${new Date(m.createdAt).toLocaleString()} · ${m.share}
                 </div>
 
-                <div class="hearts">
-                    ❤️ ${m.hearts.length}
-                    ${m.hearts.map(h => `
-                        <div class="heart-user" onclick="goToProfile(${h.user.id})">
-                            <img src="${h.user.avatarUrl}">
-                            <span>${h.user.userFullName}</span>
-                        </div>
-                    `).join("")}
+                <div class="hearts-section">
+                    <span class="heart-btn" 
+                          style="cursor:pointer; font-size: 1.2rem;" 
+                          onclick="toggleHeart('${m.id}', ${isHearted})">
+                        ${heartIcon} ${m.hearts.length}
+                    </span>
+                    
+                    <div class="hearts-list" style="display: flex; gap: 5px; margin-top: 5px;">
+                        ${m.hearts.map(h => `
+                            <div class="heart-user" onclick="goToProfile(${h.user.id})" title="${h.user.userFullName}">
+                                <img src="${h.user.avatarUrl}" style="width: 20px; height: 20px; border-radius: 50%;">
+                            </div>
+                        `).join("")}
+                    </div>
                 </div>
 
                 <div class="comments">
                     💬 ${m.comments.length}
                     ${m.comments.map(c => `
                         <div class="comment">
-                            <img src="${c.user.avatarUrl}"
-                                 onclick="goToProfile(${c.user.id})">
-                        
-                            <b onclick="goToProfile(${c.user.id})">
-                                ${c.user.userFullName}
-                            </b>
-                        
+                            <img src="${c.user.avatarUrl}" onclick="goToProfile(${c.user.id})">
+                            <b onclick="goToProfile(${c.user.id})">${c.user.userFullName}</b>
                             <span>${c.comment}</span>
                         </div>
                     `).join("")}
+                </div>
+
+                <div class="add-comment-section" style="margin-top: 10px; display: flex; gap: 5px;">
+                    <input type="text" 
+                           id="comment-input-${m.id}" 
+                           placeholder="Viết bình luận..." 
+                           style="flex: 1; padding: 5px;"
+                           onkeydown="if(event.key === 'Enter') postComment('${m.id}')"
+                    >
+                    <button onclick="postComment('${m.id}')" style="padding: 5px 10px; cursor: pointer; background-color: #EE82EE; color: #00fb00">
+                        Gửi
+                    </button>
                 </div>
             </div>
         `;
@@ -221,5 +240,79 @@ async function unblockUser(userId) {
 window.unblockUser = unblockUser
 
 window.goToProfile = goToProfile;
+
+const CREATE_COMMENT_MUTATION = `
+mutation ($momentId: ID!, $request: CommentInput!) {
+  createComment(momentId: $momentId, request: $request) {
+    message
+  }
+}
+`;
+
+async function postComment(momentId) {
+    const inputElement = document.getElementById(`comment-input-${momentId}`);
+    const commentText = inputElement.value.trim();
+
+    if (!commentText) {
+        alert("Vui lòng nhập nội dung bình luận!");
+        return;
+    }
+
+    try {
+        const variables = {
+            momentId: momentId,
+            request: {
+                comment: commentText
+            }
+        };
+
+        const res = await graphqlRequest(CREATE_COMMENT_MUTATION, variables);
+
+        if (res.errors) {
+            console.error(res.errors);
+            alert("Có lỗi xảy ra khi bình luận.");
+        } else {
+            inputElement.value = "";
+            loadProfile();
+        }
+    } catch (error) {
+        console.error("Error posting comment:", error);
+    }
+}
+
+window.postComment = postComment;
+
+const ADD_HEART_MUTATION = `
+mutation ($momentId: ID!) {
+  addHeart(momentId: $momentId) {
+    message
+  }
+}
+`;
+
+const DELETE_HEART_MUTATION = `
+mutation ($momentId: ID!) {
+  deleteHeart(momentId: $momentId) {
+    message
+  }
+}
+`;
+
+async function toggleHeart(momentId, isHearted) {
+    const query = isHearted ? DELETE_HEART_MUTATION : ADD_HEART_MUTATION;
+
+    try {
+        const res = await graphqlRequest(query, { momentId });
+        if (res.errors) {
+            console.error(res.errors);
+        } else {
+            loadProfile();
+        }
+    } catch (error) {
+        console.error("Error toggling heart:", error);
+    }
+}
+
+window.toggleHeart = toggleHeart;
 
 loadProfile();
