@@ -1,5 +1,12 @@
+enum ActiveType{
+    UPLOAD_MOMENT
+    COMMENT_MOMENT
+    HEART_MOMENT
+}
+
 extend type Query {
     allActive(page:Int, size:Int):ListResponse_ActiveDTO
+    activeType(type:ActiveType, page:Int, size:Int):ListResponse_ActiveDTO
 }
 
 type ListResponse_ActiveDTO{

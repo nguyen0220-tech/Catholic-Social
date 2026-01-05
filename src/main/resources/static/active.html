@@ -28,11 +28,6 @@
         color: #333;
     }
 
-    .title {
-        max-width: 600px;
-        margin: 20px auto;
-    }
-
     #activity-list {
         max-width: 600px;
         margin: auto;
@@ -43,7 +38,7 @@
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 15px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
     .activity-header {
@@ -129,6 +124,28 @@
         cursor: pointer;
     }
 
+    .activity-header-container {
+        max-width: 600px;
+        margin: 20px auto 10px;
+    }
+
+    .activity-header-container .title {
+        margin: 0 0 8px;
+    }
+
+    .activity-filter {
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .activity-filter select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+        background: #fff;
+        cursor: pointer;
+    }
 
 </style>
 <body>
@@ -136,7 +153,18 @@
     <a href="home.html">🏠 Trang chủ</a>
 </div>
 
-<h2 class="title">Activity</h2>
+<div class="activity-header-container">
+    <h2 class="title">Activity</h2>
+
+    <div class="activity-filter">
+        <select id="activity-filter-select">
+            <option value="ALL">📋 Tất cả</option>
+            <option value="UPLOAD_MOMENT">📤 Bài viết</option>
+            <option value="COMMENT_MOMENT">🗯️ Bình luận</option>
+            <option value="HEART_MOMENT">❤️ Lượt thích</option>
+        </select>
+    </div>
+</div>
 
 <div id="activity-list"></div>
 <div id="loading" class="loading hidden">Đang tải...</div>

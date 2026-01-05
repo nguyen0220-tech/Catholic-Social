@@ -11,6 +11,7 @@ import com.catholic.ac.kr.catholicsocial.service.ActiveService;
 import com.catholic.ac.kr.catholicsocial.service.CommentService;
 import com.catholic.ac.kr.catholicsocial.service.HeartService;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
+import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,16 @@ public class ActiveResolver {
             @Argument int page,
             @Argument int size) {
         System.out.println("current user: " + useDetails.getUsername());
-        System.out.println("List active"+ activeService.getAllByUserId(useDetails.getUser().getId(), page, size));
         return activeService.getAllByUserId(useDetails.getUser().getId(), page, size);
+    }
+
+    @QueryMapping
+    public ListResponse<ActiveDTO> activeType(
+            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @Argument ActiveType type,
+            @Argument int page,
+            @Argument int size){
+        return activeService.getAndFilterAllByUserId(useDetails.getUser().getId(), type, page, size);
     }
 
     @BatchMapping(typeName = "ActiveDTO", field = "user")
@@ -109,9 +118,7 @@ public class ActiveResolver {
 
         // Filter trước –> luôn trả object
         for (ActiveDTO a : actives) {
-            System.out.println("Active id=" + a.getId()
-                    + " type=" + a.getType()
-                    + " entityId=" + a.getEntityId());
+
             Object value = switch (a.getType()) {
                 case "UPLOAD_MOMENT" -> momentUserDTOMap.get(a.getEntityId());
                 case "COMMENT_MOMENT" -> commentDTOMap.get(a.getEntityId());

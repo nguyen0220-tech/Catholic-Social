@@ -17,12 +17,13 @@ public interface MomentRepository extends JpaRepository<Moment, Long> {
 
     @Query("""
             SELECT m FROM Moment m
-                     WHERE (m.share = 'PUBLIC'
-                           OR m.user.id = :userId
-                           OR m.user.id IN (SELECT f.user.id FROM Follow f WHERE f.follower.id = :userId AND f.state = 'FOLLOWING'))
-                           AND m.user.id NOT IN (SELECT f.user.id  FROM Follow f WHERE f.follower.id = :userId AND f.state ='BLOCKED'
-                                                 UNION
-                                                 SELECT f.follower.id  FROM Follow f WHERE f.user.id = :userId AND f.state ='BLOCKED' )
+                     WHERE m.user.id = :userId
+                           OR  ((m.user.id = :userId
+                               OR m.user.id IN (SELECT f.user.id FROM Follow f WHERE f.follower.id = :userId AND f.state = 'FOLLOWING'))
+                               AND m.user.id NOT IN (SELECT f.user.id  FROM Follow f WHERE f.follower.id = :userId AND f.state ='BLOCKED'
+                                                     UNION
+                                                     SELECT f.follower.id  FROM Follow f WHERE f.user.id = :userId AND f.state ='BLOCKED' )
+                               AND m.share <> 'PRIVATE')
             """)
     List<Moment> findAllMomentFollowAndPublic(@Param("userId") Long userId, Pageable pageable);
 

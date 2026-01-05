@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.repository;
 import com.catholic.ac.kr.catholicsocial.entity.model.Active;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.projection.ActiveProjection;
+import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +22,14 @@ public interface ActiveRepository extends JpaRepository<Active, Long> {
         WHERE a.user.id = :userId
 """)
     Page<ActiveProjection> findAllByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+        SELECT a.id AS id,
+               a.entityId AS entityId,
+               a.type AS type,
+               a.user.id AS userId
+        FROM Active a
+        WHERE a.user.id = :userId AND a.type = :type
+""")
+    Page<ActiveProjection> findAllByUserIdAndType(@Param("userId") Long userId,@Param("type") ActiveType type, Pageable pageable);
 }

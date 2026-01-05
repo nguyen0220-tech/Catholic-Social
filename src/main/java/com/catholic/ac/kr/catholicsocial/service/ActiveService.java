@@ -5,6 +5,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
 import com.catholic.ac.kr.catholicsocial.mapper.ActiveMapper;
 import com.catholic.ac.kr.catholicsocial.projection.ActiveProjection;
 import com.catholic.ac.kr.catholicsocial.repository.ActiveRepository;
+import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,5 +31,17 @@ public class ActiveService {
         List<ActiveDTO> activeDTOS = ActiveMapper.toActiveDTO(activeList);
 
         return new ListResponse<>(activeDTOS, new PageInfo(page, size, activeProjections.hasNext()));
+    }
+
+    public ListResponse<ActiveDTO> getAndFilterAllByUserId(Long userId, ActiveType activeType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<ActiveProjection> projections = activeRepository.findAllByUserIdAndType(userId, activeType, pageable);
+
+        List<ActiveProjection> activeList = projections.getContent();
+
+        List<ActiveDTO> activeDTOS = ActiveMapper.toActiveDTO(activeList);
+
+        return new ListResponse<>(activeDTOS, new PageInfo(page, size, projections.hasNext()));
     }
 }

@@ -81,10 +81,20 @@ async function loadActivities() {
     isLoading = true;
     loadingEl.classList.remove("hidden");
 
-    const res = await graphqlRequest(QUERY_GET_ACTIVE, {
-        page: currentPage,
-        size: PAGE_SIZE
-    });
+    let res;
+
+    if (currentFilter === "ALL") {
+        res = await graphqlRequest(QUERY_GET_ACTIVE, {
+            page: currentPage,
+            size: PAGE_SIZE
+        });
+    } else {
+        res = await graphqlRequest(QUERY_GET_ACTIVE_BY_TYPE, {
+            type: currentFilter,
+            page: currentPage,
+            size: PAGE_SIZE
+        });
+    }
 
     if (res.errors) {
         console.error("GraphQL errors:", res.errors);
@@ -92,7 +102,12 @@ async function loadActivities() {
         return;
     }
 
-    const { data, pageInfo } = res.data.allActive;
+    const result =
+        currentFilter === "ALL"
+            ? res.data.allActive
+            : res.data.activeType;
+
+    const { data, pageInfo } = result;
 
     data.forEach(renderActivity);
 
@@ -196,6 +211,76 @@ function extractMomentId(target) {
             return null;
     }
 }
+
+const QUERY_GET_ACTIVE_BY_TYPE = `
+query GetActiveByType($type: ActiveType!, $page: Int!, $size: Int!) {
+  activeType(type: $type, page: $page, size: $size) {
+    data {
+      id
+      type
+      user {
+        id
+        userFullName
+        avatarUrl
+      }
+      target {
+        __typename
+
+        ... on MomentUserDTO {
+          id
+          content
+          createdAt
+          imgUrls
+          share
+        }
+
+        ... on CommentDTO {
+          id
+          comment
+          commentDate
+          moment {
+            id
+            content
+            images
+          }
+        }
+
+        ... on HeartDTO {
+          id
+          moment {
+            id
+            content
+            images
+          }
+        }
+      }
+    }
+    pageInfo {
+      page
+      size
+      hasNext
+    }
+  }
+}
+`;
+
+let currentFilter = "ALL";
+
+function resetActivityList() {
+    activityList.innerHTML = "";
+    currentPage = 0;
+    hasNext = true;
+}
+
+document
+    .getElementById("activity-filter-select")
+    .addEventListener("change", (e) => {
+        currentFilter = e.target.value;
+        resetActivityList();
+        loadActivities();
+    });
+
+
 
 /* ================= Helpers ================= */
 function renderMomentPreview(images = []) {
