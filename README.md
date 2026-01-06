@@ -46,6 +46,12 @@ backend
  ├── security          # JWT / OAuth2
  ├── status            # Enum definitions
  └── wrapper           # Unified API / REST, GraphQL response wrappers
+
+frontend
+ ├── static            # HTML, CSS, Vanilla JS
+ │   └── icon          # Favicon & static icons
+ └── graphql           # GraphQL queries & mutations
+
 ```
 
 
