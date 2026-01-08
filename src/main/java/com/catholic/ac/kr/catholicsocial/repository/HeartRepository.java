@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface HeartRepository extends JpaRepository<Heart,Long> {
+public interface HeartRepository extends JpaRepository<Heart, Long> {
     @Query("""
             SELECT h.id AS id,
                    h.user.id AS userId,
@@ -31,4 +31,22 @@ public interface HeartRepository extends JpaRepository<Heart,Long> {
     List<Heart> findAllByMoment_IdIn(List<Long> momentIds);
 
     boolean existsByUser_IdAndMoment_Id(Long userId, Long momentId);
+
+    @Query("""
+            SELECT h.moment.id, count (h.id)
+            FROM Heart h
+            WHERE h.moment.id IN :momentIds
+            GROUP BY h.moment.id
+            """)
+    List<Object[]> countByMoment_IdIn(@Param("momentIds") List<Long> momentIds);
+    /*
+    query của KHÔNG trả về Entity, mà trả về nhiều cột.
+
+    Object[] thực chất là gì?
+    Mỗi row trong SQL result → 1 Object[]
+
+    moment_id	count
+    37	        1
+    36	        4
+     */
 }

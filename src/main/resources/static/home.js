@@ -118,7 +118,9 @@ function renderMoment(moment) {
             ${formatDateTime(moment.createdAt)} - Chia sẻ: ${moment.share} ${editedText}
         </div>
         
-        <div style="margin-top:8px; display:flex; gap:10px; align-items:center;">
+        <div style="margin-top:8px; display:flex; gap:14px; align-items:center;">
+            
+            <!-- HEART -->
             <button class="heart-btn" 
                     data-moment-id="${moment.id}" 
                     style="border:none;background:none;font-size:20px;cursor:pointer;">
@@ -131,7 +133,15 @@ function renderMoment(moment) {
                  style="display:none;margin-top:6px;background:#fff;border:1px solid #ddd;
                         border-radius:6px;padding:6px;">
             </div>
-
+            <!-- SAVE -->
+            <button class="save-btn"
+                    data-moment-id="${moment.id}"
+                    data-saved="${moment.saved}"
+                    title="Lưu moment"
+                    style="border:none;background:none;font-size:20px;cursor:pointer;">
+                ${moment.saved ? "🔖" : "📑"}
+            </button>
+        
         </div>
 
         
@@ -469,5 +479,60 @@ function goToProfile(userId) {
 }
 
 window.goToProfile = goToProfile;
+
+// ===== GRAPHQL SAVED =====
+const CREATE_SAVED = `
+  mutation CreateSaved($momentId: ID!) {
+    createSaved(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+const DELETE_SAVED = `
+  mutation DeleteSaved($momentId: ID!) {
+    deleteSaved(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+momentsContainer.addEventListener("click", async (e) => {
+    const saveBtn = e.target.closest(".save-btn");
+    if (!saveBtn) return;
+
+    const momentId = saveBtn.dataset.momentId;
+    const isSaved = saveBtn.dataset.saved === "true";
+
+    // Optimistic UI
+    saveBtn.innerText = isSaved ? "📑" : "🔖";
+    saveBtn.dataset.saved = (!isSaved).toString();
+
+    let res;
+    try {
+        res = isSaved
+            ? await graphqlRequest(DELETE_SAVED, { momentId })
+            : await graphqlRequest(CREATE_SAVED, { momentId });
+
+        const result = isSaved
+            ? res.data?.deleteSaved
+            : res.data?.createSaved;
+
+        if (!result?.success) {
+            throw new Error(result?.message || "Lỗi lưu moment");
+        }
+
+    } catch (err) {
+        console.error("Save moment error:", err);
+
+        // rollback UI nếu lỗi
+        saveBtn.innerText = isSaved ? "🔖" : "📑";
+        saveBtn.dataset.saved = isSaved.toString();
+        alert(err.message || "Không thể lưu moment");
+    }
+});
+
 
 fetchMoments();

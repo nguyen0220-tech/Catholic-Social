@@ -31,10 +31,11 @@ public class HeartResolver {
 
     @QueryMapping
     public ListResponse<HeartDTO> hearts(
+            @AuthenticationPrincipal CustomUseDetails me,
             @Argument Long momentId,
             @Argument int page,
             @Argument int size) {
-        return heartService.getHeartsByMomentId(momentId, page, size);
+        return heartService.getHeartsByMomentId(me.getUser().getId(), momentId, page, size);
     }
 
     @MutationMapping

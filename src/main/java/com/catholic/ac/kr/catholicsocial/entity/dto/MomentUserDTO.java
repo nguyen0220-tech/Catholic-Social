@@ -14,10 +14,12 @@ thông tin chi tiết moment, mỗi moment có coment + user heart
 public class MomentUserDTO {
     private Long id;
     private String content;
-    private List<String> imgUrls;
+    private List<String> imgUrls; //FK resolver
     private LocalDateTime createdAt;
     private String share;
 
-    private List<CommentDTO> comments;
-    private List<HeartDTO> hearts;
+    private boolean saved; //FK resolver
+    private List<CommentDTO> comments; //FK resolver
+    private List<HeartDTO> hearts; //FK resolver
+
 }

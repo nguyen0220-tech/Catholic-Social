@@ -16,4 +16,5 @@ public class MomentDTO {
     private boolean edited;
     private LocalDateTime createdAt;
     private String share;
+    private boolean saved;
 }

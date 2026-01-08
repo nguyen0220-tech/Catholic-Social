@@ -140,10 +140,22 @@ function renderMoments(moments, append = false) {
             ${moment.imageUrls.map(url => `<img src="${url}" alt="moment image">`).join("")}
           </div>
 
-          <div class="moment-actions">
-            <button class="moment-btn edit-btn" data-id="${moment.id}" data-content="${moment.content}" data-share="${moment.share}">✏️</button>
-            <button class="moment-btn delete-btn" data-id="${moment.id}">🗑</button>
-          </div>
+            <div class="moment-actions">
+              <button class="moment-btn edit-btn"
+                      data-id="${moment.id}"
+                      data-content="${moment.content}"
+                      data-share="${moment.share}">✏️</button>
+            
+              <button class="moment-btn delete-btn"
+                      data-id="${moment.id}">🗑</button>
+            
+              <button class="moment-btn save-btn"
+                      data-moment-id="${moment.id}"
+                      data-saved="${moment.saved}"
+                      title="${moment.saved ? "Bỏ lưu" : "Lưu"}">
+                  ${moment.saved ? "🔖" : "📑"}
+              </button>
+            </div>
 
             <div class="moment-heart" style="margin-top:8px;">
 
@@ -423,6 +435,26 @@ const DELETE_HEART = `
   }
 `;
 
+// ===== GRAPHQL SAVED =====
+const CREATE_SAVED = `
+  mutation CreateSaved($momentId: ID!) {
+    createSaved(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+const DELETE_SAVED = `
+  mutation DeleteSaved($momentId: ID!) {
+    deleteSaved(momentId: $momentId) {
+      success
+      message
+    }
+  }
+`;
+
+
 async function renderHearts(momentId) {
     const countEl = document.getElementById(`heart-count-${momentId}`);
     const btn = document.querySelector(`.heart-btn[data-moment-id="${momentId}"]`);
@@ -520,4 +552,42 @@ function goToProfile(userId) {
 }
 
 window.goToProfile = goToProfile;
+
+momentsList.addEventListener("click", async (e) => {
+    const saveBtn = e.target.closest(".save-btn");
+    if (!saveBtn) return;
+
+    const momentId = saveBtn.dataset.momentId;
+    const isSaved = saveBtn.dataset.saved === "true";
+
+    // ===== Optimistic UI =====
+    saveBtn.innerText = isSaved ? "📑" : "🔖";
+    saveBtn.dataset.saved = (!isSaved).toString();
+    saveBtn.title = isSaved ? "Lưu" : "Bỏ lưu";
+
+    try {
+        const res = isSaved
+            ? await graphqlRequest(DELETE_SAVED, { momentId })
+            : await graphqlRequest(CREATE_SAVED, { momentId });
+
+        const result = isSaved
+            ? res.data?.deleteSaved
+            : res.data?.createSaved;
+
+        if (!result?.success) {
+            throw new Error(result?.message || "Lỗi lưu moment");
+        }
+
+    } catch (err) {
+        console.error("Save moment error:", err);
+
+        // ===== rollback UI =====
+        saveBtn.innerText = isSaved ? "🔖" : "📑";
+        saveBtn.dataset.saved = isSaved.toString();
+        saveBtn.title = isSaved ? "Bỏ lưu" : "Lưu";
+
+        alert(err.message || "Không thể lưu moment");
+    }
+});
+
 loadMoments();

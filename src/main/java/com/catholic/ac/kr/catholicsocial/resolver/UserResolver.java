@@ -4,6 +4,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
 import com.catholic.ac.kr.catholicsocial.wrapper.MomentConnection;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +16,11 @@ import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +33,8 @@ public class UserResolver {
     private final MomentService momentService;
     private final HeartService heartService;
     private final FollowService followService;
+    private final UserDetailsForBatchMapping userDetailsForBatchMapping;
+    private final SavedService savedService;
 
     @QueryMapping
     public UserProfileDTO profile(@Argument Long userId) {
@@ -107,8 +113,42 @@ public class UserResolver {
                 ));
     }
 
+    @BatchMapping(typeName = "MomentUserDTO", field = "saved")
+    public Map<MomentUserDTO, Boolean> saved(List<MomentUserDTO> moments, Principal principal) {
+        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        Long myId = me.getUser().getId();
+
+        List<Long> momentIds = moments.stream()
+                .map(MomentUserDTO::getId)
+                .toList();
+
+        // Set momentId mà user đang đăng nhập đã saved
+        Set<Long> savedMomentIdList = new HashSet<>(savedService.getAllByMomentIds(myId, momentIds));
+
+        System.out.println("CHECK BATCH: " + savedMomentIdList);
+
+        return moments.stream()
+                .collect(Collectors.toMap(
+                        m -> m,
+                        m -> savedMomentIdList.contains(m.getId())
+                ));
+    }
+
     @BatchMapping(typeName = "MomentUserDTO", field = "comments")
-    public Map<MomentUserDTO, List<CommentDTO>> comments(List<MomentUserDTO> moments) {
+    public Map<MomentUserDTO, List<CommentDTO>> comments(List<MomentUserDTO> moments, Principal principal) {
+        /*.
+        // lấy thông tin phiên đăng nhập hiện tại. Đây là cách chuẩn trong Spring Security để lấy user ở bất kỳ đâu
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        CustomUseDetails me = null;
+
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUseDetails) {
+            me = (CustomUseDetails) authentication.getPrincipal();
+        }
+         */
+
+        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+
         List<Long> momentIds = moments.stream()
                 .map(MomentUserDTO::getId)
                 .toList();
@@ -117,7 +157,20 @@ public class UserResolver {
 
         List<Comment> comments = commentService.getCommentsByMomentIds(momentIds);
 
-        Map<Long, List<CommentDTO>> map = comments.stream()
+        List<Long> myBlockedUserIds = me == null ?
+                List.of() : followService.getUserIdsBlocked(me.getUser().getId()); //ds userId mà currentId đang đăng nhập chặn
+
+        Set<Long> setBlocked = new HashSet<>(myBlockedUserIds);
+        List<Comment> rs = comments.stream() //loại những comment của user bị chặn
+                .filter(c -> !setBlocked.contains(c.getUser().getId()))
+                .toList();
+
+        if (me != null)
+            System.out.println(("my id: " + me.getUser().getId()));
+        System.out.println("myBlockedUserIds: " + myBlockedUserIds);
+        System.out.println("userIds un-block" + rs.stream().map(Comment::getUser).map(User::getId).toList());
+
+        Map<Long, List<CommentDTO>> map = rs.stream()
                 .collect(Collectors.groupingBy(
                         c -> c.getMoment().getId(),
                         Collectors.mapping(ConvertHandler::convertToCommentDTO, Collectors.toList())
@@ -131,7 +184,9 @@ public class UserResolver {
     }
 
     @BatchMapping(typeName = "MomentUserDTO", field = "hearts")
-    public Map<MomentUserDTO, List<HeartDTO>> hearts(List<MomentUserDTO> moments) {
+    public Map<MomentUserDTO, List<HeartDTO>> hearts(List<MomentUserDTO> moments, Principal principal) {
+        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+
         List<Long> momentId = moments.stream()
                 .map(MomentUserDTO::getId)
                 .toList();
@@ -140,7 +195,15 @@ public class UserResolver {
 
         List<Heart> hearts = heartService.getAllByMomentIds(momentId);
 
-        Map<Long, List<HeartDTO>> map = hearts.stream()
+        List<Long> myBlockedUserIds = me == null ?
+                List.of() : followService.getUserIdsBlocked(me.getUser().getId());
+
+        Set<Long> setBlocked = new HashSet<>(myBlockedUserIds);
+        List<Heart> rs = hearts.stream()
+                .filter(h -> !setBlocked.contains(h.getUser().getId()))
+                .toList();
+
+        Map<Long, List<HeartDTO>> map = rs.stream()
                 .collect(Collectors.groupingBy(
                         h -> h.getMoment().getId(),
                         Collectors.mapping(ConvertHandler::convertToHeartDTO, Collectors.toList())
@@ -154,7 +217,8 @@ public class UserResolver {
     }
 }
 
-/* @BatchMapping(typeName = "UserProfileDTO", field = "moments")
+/*.
+ @BatchMapping(typeName = "UserProfileDTO", field = "moments")
     public Map<UserProfileDTO, List<MomentUserDTO>> getMomentUsers(List<UserProfileDTO> profiles) {
 
         List<Long> userIds = profiles.stream()

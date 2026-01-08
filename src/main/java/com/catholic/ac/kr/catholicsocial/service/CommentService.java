@@ -22,7 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -41,11 +43,19 @@ public class CommentService {
         return commentRepository.findAllById(ids);
     }
 
-    public ListResponse<CommentDTO> getCommentsByMomentId(Long momentId, int page, int size) {
+    public ListResponse<CommentDTO> getCommentsByMomentId(Long currentUserId, Long momentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         List<CommentProjection> commentProjections = commentRepository.findByMomentId(momentId, pageable);
-        List<CommentDTO> dos = CommentMapper.toDTOList(commentProjections);
+
+        //filter comments of users in list un-block
+        Set<Long> setBlocked = new HashSet<>(followRepository.findUserIdsBlocked(currentUserId));
+
+        List<CommentProjection> filterComments = commentProjections.stream()
+                .filter(c -> !setBlocked.contains(c.getUserId()))
+                .toList();
+
+        List<CommentDTO> dos = CommentMapper.toDTOList(filterComments);
         return new ListResponse<>(dos);
     }
 

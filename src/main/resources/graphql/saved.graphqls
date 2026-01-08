@@ -1,0 +1,21 @@
+extend type Query {
+    allSaved(page:Int!, size:Int!):ListResponse_SavedDTO
+}
+
+extend type Mutation {
+    createSaved(momentId:ID):GraphqlResponse_String
+    deleteSaved(momentId:ID):GraphqlResponse_String
+}
+
+type SavedDTO{
+    id:ID!
+    userId:ID
+    momentId:ID
+    heartCount:Int
+    moment:MomentGQLDTO
+}
+
+type ListResponse_SavedDTO{
+    data:[SavedDTO]
+    pageInfo:PageInfo
+}

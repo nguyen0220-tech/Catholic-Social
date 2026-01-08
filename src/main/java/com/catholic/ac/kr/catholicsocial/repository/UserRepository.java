@@ -69,7 +69,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             SELECT u.id AS id  FROM User u WHERE u.id = :userId
             """)
-    UserProjection findUserProjectionById(@Param("userId") Long userId);
+    Optional<UserProjection> findUserProjectionById(@Param("userId") Long userId);
 
     @Query("""
             SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.UserSuggestions(

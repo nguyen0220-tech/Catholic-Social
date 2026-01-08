@@ -32,10 +32,11 @@ public class CommentResolver {
 
     @QueryMapping
     public ListResponse<CommentDTO> comments(
+            @AuthenticationPrincipal CustomUseDetails me,
             @Argument int page,
             @Argument int size,
             @Argument Long momentId) {
-        return commentService.getCommentsByMomentId(momentId, page, size);
+        return commentService.getCommentsByMomentId(me.getUser().getId(), momentId, page, size);
     }
 
     @MutationMapping

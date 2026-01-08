@@ -30,6 +30,10 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
 
+    public List<Long> getUserIdsBlocked(Long myId) {
+        return followRepository.findUserIdsBlocked(myId);
+    }
+
     public boolean isFollowing(Long currentUserId, Long userId) {
         User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId), "User");
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");

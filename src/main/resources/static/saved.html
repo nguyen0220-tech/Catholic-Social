@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Saved Moments</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #fafafa;
+            color: #111;
+        }
+
+        .top-nav {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #333;
+        }
+
+        header {
+            padding: 16px 20px;
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid #eaeaea;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        #saved-list {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 0 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .moment {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 2px;
+            background: #eee;
+        }
+
+        .images img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .moment-content {
+            padding: 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .moment-content h4 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .moment-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .heart {
+            font-size: 14px;
+            color: #e0245e;
+            font-weight: 500;
+        }
+
+        .btn-remove {
+            background-color: #dc3545;
+            border: none;
+            color: #ffffff;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all .2s ease;
+        }
+
+        .btn-remove:hover {
+            background: #f3f3f3;
+            color: #e0245e;
+        }
+
+        @media (max-width: 480px) {
+            .images img {
+                height: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="top-nav">
+    <a href="home.html">🏠 Trang chủ</a>
+</div>
+
+<header>📌 Saved Moments</header>
+
+<div id="saved-list"></div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="saved.js"></script>
+</body>
+</html>

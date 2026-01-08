@@ -37,6 +37,7 @@ query ($userId: ID!) {
         createdAt
         share
         imgUrls
+        saved
         comments {
           id
           comment
@@ -60,6 +61,25 @@ query ($userId: ID!) {
   }
 }
 `;
+
+const CREATE_SAVED_MUTATION = `
+mutation ($momentId: ID!) {
+  createSaved(momentId: $momentId) {
+    success
+    message
+  }
+}
+`;
+
+const DELETE_SAVED_MUTATION = `
+mutation ($momentId: ID!) {
+  deleteSaved(momentId: $momentId) {
+    success
+    message
+  }
+}
+`;
+
 
 async function loadProfile() {
     const res = await graphqlRequest(PROFILE_QUERY, {userId});
@@ -130,6 +150,7 @@ function renderMoments(moments) {
     moments.forEach(m => {
         const isHearted = m.hearts.some(h => Number(h.user.id) === myId);
         const heartIcon = isHearted ? "❤️" : "🤍";
+        const saveIcon = m.saved ? "🔖" : "📑";
 
         container.innerHTML += `
             <div class="moment">
@@ -145,12 +166,19 @@ function renderMoments(moments) {
                 </div>
 
                 <div class="hearts-section">
-                    <span class="heart-btn" 
-                          style="cursor:pointer; font-size: 1.2rem;" 
+                    <span class="heart-btn"
+                          style="cursor:pointer; font-size: 1.2rem;"
                           onclick="toggleHeart('${m.id}', ${isHearted})">
                         ${heartIcon} ${m.hearts.length}
                     </span>
-                    
+                
+                    <span class="save-btn"
+                          style="cursor:pointer; font-size: 1.2rem; margin-left: 10px;"
+                          onclick="toggleSaved('${m.id}', ${m.saved})"
+                          title="${m.saved ? 'Bỏ lưu' : 'Lưu'}">
+                        ${saveIcon}
+                    </span>
+                
                     <div class="hearts-list" style="display: flex; gap: 5px; margin-top: 5px;">
                         ${m.hearts.map(h => `
                             <div class="heart-user" onclick="goToProfile(${h.user.id})" title="${h.user.userFullName}">
@@ -314,5 +342,26 @@ async function toggleHeart(momentId, isHearted) {
 }
 
 window.toggleHeart = toggleHeart;
+
+async function toggleSaved(momentId, isSaved) {
+    const query = isSaved
+        ? DELETE_SAVED_MUTATION
+        : CREATE_SAVED_MUTATION;
+
+    try {
+        const res = await graphqlRequest(query, { momentId });
+
+        if (res.errors) {
+            console.error(res.errors);
+            alert("Có lỗi khi lưu moment");
+        } else {
+            loadProfile(); // reload lại list để sync saved
+        }
+    } catch (error) {
+        console.error("Error toggling saved:", error);
+    }
+}
+
+window.toggleSaved = toggleSaved;
 
 loadProfile();

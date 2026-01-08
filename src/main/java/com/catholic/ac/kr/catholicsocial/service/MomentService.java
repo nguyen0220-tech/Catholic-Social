@@ -1,10 +1,8 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDetailDTO;
-import com.catholic.ac.kr.catholicsocial.projection.MomentProjection;
-import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDetailDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentUpdateRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.Active;
@@ -12,12 +10,15 @@ import com.catholic.ac.kr.catholicsocial.entity.model.Image;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.MomentMapper;
+import com.catholic.ac.kr.catholicsocial.projection.MomentProjection;
 import com.catholic.ac.kr.catholicsocial.repository.ActiveRepository;
 import com.catholic.ac.kr.catholicsocial.repository.MomentRepository;
+import com.catholic.ac.kr.catholicsocial.repository.SavedRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.status.ImageType;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +40,10 @@ public class MomentService {
     private final UserRepository userRepository;
     private final UploadFileHandler uploadFileHandler;
     private final ActiveRepository activeRepository;
+    private final SavedRepository savedRepository;
 
     public Moment getMoment(Long id) {
-        return EntityUtils.getOrThrow(momentRepository.findById(id),"Moment");
+        return EntityUtils.getOrThrow(momentRepository.findById(id), "Moment");
     }
 
     public MomentDetailDTO getMomentDetail(Long id) {
@@ -61,27 +65,44 @@ public class MomentService {
         return momentRepository.findByUser_IdIn(userIds);
     }
 
-    public ApiResponse<List<MomentDTO>> getAllMoments(Long userId,int page, int size) {
+    //moments in home
+    public ApiResponse<List<MomentDTO>> getAllMoments(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        List<Moment> moments = momentRepository.findAllMomentFollowAndPublic(userId,pageable);
+        List<Moment> moments = momentRepository.findAllMomentFollowAndPublic(userId, pageable);
 
-        List<MomentDTO> momentDTOS = MomentMapper.toListDTO(moments);
-
-        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Get all moments", momentDTOS);    }
-
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ApiResponse<List<MomentDTO>> getAllMomentsByUserId(Long userId, int page, int size) {
-
-        Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
-
-        List<Moment> moments = momentRepository.findByUserId(userId,pageable);
-
-        List<MomentDTO> momentDTOS = MomentMapper.toListDTO(moments);
+        List<MomentDTO> momentDTOS = convertDTO(userId, moments);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Get all moments", momentDTOS);
+    }
+
+    //moments in profile
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ApiResponse<List<MomentDTO>> getAllMomentsByUserId(Long userId, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        List<Moment> moments = momentRepository.findByUserId(userId, pageable);
+
+        List<MomentDTO> momentDTOS = convertDTO(userId, moments);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Get all moments", momentDTOS);
+    }
+
+    private List<MomentDTO> convertDTO(Long userId, List<Moment> moments) {
+        List<Long> momentIds = moments.stream()
+                .map(Moment::getId)
+                .toList();
+
+        Set<Long> savedMomentIds = new HashSet<>(savedRepository.findSavedMomentIds(userId, momentIds)); //moments in list saved
+
+        List<MomentDTO> rs = MomentMapper.toListDTO(moments);
+
+        rs.forEach(momentDTO -> momentDTO.setSaved(savedMomentIds.contains(momentDTO.getId())));
+
+        return rs;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
@@ -130,7 +151,7 @@ public class MomentService {
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ApiResponse<String> updateMoment(Long userId, MomentUpdateRequest request) {
-        Moment moment = getMoment(userId,request.getMomentId());
+        Moment moment = getMoment(userId, request.getMomentId());
 
         moment.setContent(request.getContent());
         moment.setShare(request.getShare());
@@ -142,7 +163,7 @@ public class MomentService {
     }
 
     public ApiResponse<String> deleteMoment(Long userId, Long momentId) {
-        Moment moment = getMoment(userId,momentId);
+        Moment moment = getMoment(userId, momentId);
         momentRepository.delete(moment);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),

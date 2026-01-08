@@ -68,6 +68,7 @@ type MomentUserDTO{
     imgUrls:[String]!
     createdAt:String!
     share:String!
+    saved:Boolean
     comments:[CommentDTO]!
     hearts:[HeartDTO]!
 }

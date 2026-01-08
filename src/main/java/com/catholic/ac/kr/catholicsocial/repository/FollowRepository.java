@@ -36,4 +36,11 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
     int countFollowByUserIdAndState(Long userId, FollowState state);
 
     int countFollowByFollowerIdAndState(Long followerId, FollowState state);
+
+    @Query("""
+            SELECT f.user.id FROM Follow f WHERE f.follower.id = :userId AND f.state = 'BLOCKED'
+            UNION
+            SELECT f.follower.id FROM Follow f WHERE f.user.id = :userId AND f.state = 'BLOCKED'
+            """)
+    List<Long> findUserIdsBlocked(Long userId);
 }

@@ -14,8 +14,6 @@ async function graphqlRequest(query, variables = {}) {
     return await res.json();
 }
 
-/* ================= Query ================= */
-
 const QUERY_MOMENT_DETAIL = `
 query ($momentId: ID!) {
   momentDetail(momentId: $momentId) {
@@ -33,6 +31,7 @@ query ($momentId: ID!) {
       createdAt
       share
       imgUrls
+      saved
       comments {
         comment
         commentDate
@@ -54,7 +53,23 @@ query ($momentId: ID!) {
 }
 `;
 
-/* ================= Load ================= */
+const MUTATION_CREATE_SAVED = `
+mutation ($momentId: ID!) {
+  createSaved(momentId: $momentId) {
+    success
+    message
+  }
+}
+`;
+
+const MUTATION_DELETE_SAVED = `
+mutation ($momentId: ID!) {
+  deleteSaved(momentId: $momentId) {
+    success
+    message
+  }
+}
+`;
 
 const container = document.getElementById("moment-detail");
 const params = new URLSearchParams(window.location.search);
@@ -80,6 +95,7 @@ async function loadMomentDetail(momentId) {
 
 function renderMomentDetail(data) {
     const {actor, actorId, isHeart, isFollowing, mySelf, moment} = data;
+    const saveIcon = moment.saved ? "🔖" : "📑";
 
     container.innerHTML = `
         <div class="moment-card">
@@ -87,7 +103,7 @@ function renderMomentDetail(data) {
             <!-- Header -->
             <div class="moment-header">
                 <div class="actor-info clickable" onclick="goToUser(${actorId})">
-                    <img class="avatar"src="${actor.avatarUrl || '/icon/default-avatar.png'}"  alt=""/>
+                    <img class="avatar" src="${actor.avatarUrl || '/icon/default-avatar.png'}"  alt=""/>
                     <div>
                         <div class="actor-name">${actor.userFullName}</div>
                         <div class="moment-meta">${formatDate(moment.createdAt)} · ${moment.share}</div>
@@ -111,11 +127,18 @@ function renderMomentDetail(data) {
 
             <div class="moment-actions">
                 <button style="border: none; background-color: #ffffff; cursor: pointer"
-                  class="heart-btn ${isHeart ? "active" : ""}"
-                  onclick="toggleHeart(${momentId}, ${isHeart})">
+                    class="heart-btn ${isHeart ? "active" : ""}"
+                    onclick="toggleHeart(${momentId}, ${isHeart})">
                     ❤️ ${moment.hearts.length}
                 </button>
-
+            
+                <button style="border: none; background-color: #ffffff; cursor: pointer"
+                    class="save-btn ${moment.saved ? "active" : ""}"
+                    onclick="toggleSaved(${momentId}, ${moment.saved})"
+                    title="${moment.saved ? "Bỏ lưu" : "Lưu"}">
+                    ${saveIcon}
+                </button>
+            
                 <span>💬 ${moment.comments.length}</span>
             </div>
 
@@ -208,7 +231,7 @@ function renderHeartUsers(hearts = []) {
                 <img class="avatar-sm clickable"
                      title="${h.user.userFullName}"
                      onclick="goToUser(${h.user.id})"
-                     src="${h.user.avatarUrl || '/icon/default-avatar.png'}" />
+                     src="${h.user.avatarUrl || '/icon/default-avatar.png'}"  alt=""/>
             `).join("")}
             ${hearts.length > 5 ? `<span>+${hearts.length - 5}</span>` : ""}
         </div>
@@ -220,7 +243,7 @@ function renderComment(comment) {
         <div class="comment-item">
             <img class="avatar-sm clickable"
                  onclick="goToUser(${comment.user.id})"
-                 src="${comment.user.avatarUrl || '/icon/default-avatar.png'}" />
+                 src="${comment.user.avatarUrl || '/icon/default-avatar.png'}"  alt=""/>
 
             <div class="comment-body">
                 <div class="comment-header">
@@ -327,6 +350,31 @@ async function toggleHeart(momentId, isHeart) {
     }
 }
 window.toggleHeart = toggleHeart;
+
+async function toggleSaved(momentId, isSaved) {
+    try {
+        const res = await graphqlRequest(
+            isSaved ? MUTATION_DELETE_SAVED : MUTATION_CREATE_SAVED,
+            { momentId }
+        );
+
+        const data = isSaved
+            ? res.data.deleteSaved
+            : res.data.createSaved;
+
+        if (!data.success) {
+            alert(data.message);
+            return;
+        }
+
+        loadMomentDetail(momentId); // reload để sync saved
+
+    } catch (e) {
+        console.error(e);
+        alert("Không thể lưu moment");
+    }
+}
+window.toggleSaved = toggleSaved;
 
 function goToUser(userId) {
     if (!userId) return;

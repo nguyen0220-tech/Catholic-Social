@@ -19,6 +19,7 @@ import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenS
 import com.catholic.ac.kr.catholicsocial.status.Sex;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
+import graphql.GraphQLException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -243,7 +244,8 @@ public class UserService {
     }
 
     public UserProfileDTO getUserProfileDTO(Long userId) {
-        UserProjection userProjection = userRepository.findUserProjectionById(userId);
+        UserProjection userProjection = userRepository.findUserProjectionById(userId)
+                .orElseThrow(() -> new GraphQLException("User not found"));
         return UserMapper.toUserProfileDTO(userProjection);
     }
 
