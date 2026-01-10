@@ -131,6 +131,8 @@ function renderMomentDetail(data) {
                     onclick="toggleHeart(${momentId}, ${isHeart})">
                     ❤️ ${moment.hearts.length}
                 </button>
+                
+                <span>💬 ${moment.comments.length}</span>
             
                 <button style="border: none; background-color: #ffffff; cursor: pointer"
                     class="save-btn ${moment.saved ? "active" : ""}"
@@ -138,8 +140,6 @@ function renderMomentDetail(data) {
                     title="${moment.saved ? "Bỏ lưu" : "Lưu"}">
                     ${saveIcon}
                 </button>
-            
-                <span>💬 ${moment.comments.length}</span>
             </div>
 
             ${renderHeartUsers(moment.hearts)}
