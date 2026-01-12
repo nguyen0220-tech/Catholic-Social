@@ -65,6 +65,14 @@ query ($userId: ID!) {
 }
 `;
 
+const CREATED_AT_QUERY = `
+query ($userId: ID!) {
+  profile(userId: $userId) {
+    createdAt
+  }
+}
+`;
+
 const CREATE_SAVED_MUTATION = `
 mutation ($momentId: ID!) {
   createSaved(momentId: $momentId) {
@@ -97,6 +105,7 @@ function renderProfile(profile) {
 
     let followBtn = "";
     let blockBtn = "";
+    let infoBtn = "";
 
     if (!isMe) {
         if (profile.isBlocked) {
@@ -128,6 +137,11 @@ function renderProfile(profile) {
                 `;
             }
         }
+        infoBtn = `
+            <button class="btn info" onclick="showAccountInfo(${userId})">
+                Giới thiệu tài khoản này
+            </button>
+        `;
     }
 
     document.getElementById("profile").innerHTML = `
@@ -158,12 +172,50 @@ function renderProfile(profile) {
                 <div class="profile-actions">
                     ${followBtn}
                     ${blockBtn}
+                    ${infoBtn}
                 </div>
             </div>
         </div>
     </div>
     `;
 }
+
+async function showAccountInfo(userId) {
+    try {
+        const res = await graphqlRequest(CREATED_AT_QUERY, { userId });
+
+        if (res.errors) {
+            console.error(res.errors);
+            alert("Không thể lấy thông tin tài khoản");
+            return;
+        }
+
+        const createdAt = res.data.profile.createdAt;
+        const createdDate = new Date(createdAt).toLocaleDateString("vi-VN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+
+        openAccountInfoModal(createdDate);
+
+    } catch (e) {
+        console.error("showAccountInfo error", e);
+    }
+}
+
+window.showAccountInfo = showAccountInfo;
+
+function openAccountInfoModal(createdDate) {
+    document.getElementById("accountCreatedAt").innerText = createdDate;
+    document.getElementById("accountInfoModal").classList.remove("hidden");
+}
+
+function closeAccountInfoModal() {
+    document.getElementById("accountInfoModal").classList.add("hidden");
+}
+
+window.closeAccountInfoModal = closeAccountInfoModal;
 
 function renderMoments(moments) {
     const container = document.getElementById("moments");

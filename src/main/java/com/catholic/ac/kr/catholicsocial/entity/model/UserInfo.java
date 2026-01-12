@@ -54,8 +54,4 @@ public class UserInfo {
         this.createdAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    protected void update() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

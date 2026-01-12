@@ -47,6 +47,7 @@ type UserProfileDTO{
     numOfMoments:Int!
     numOfFollowers:Int!
     numOfFollowing:Int!
+    createdAt:String!
     isFollowing:Boolean!
     isBlocked:Boolean!
     user:UserInfo!

@@ -4,6 +4,8 @@ import com.catholic.ac.kr.catholicsocial.wrapper.MomentConnection;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 /*
 trang cá nhân hiển thị của mỗi user gồm thông tin và các moment
  */
@@ -13,6 +15,7 @@ public class UserProfileDTO {
     private int numOfMoments; //FK resolver
     private int numOfFollowers; //FK resolver
     private int numOfFollowing; //FK resolver
+    private LocalDateTime createdAt; //FK resolver
     private boolean isFollowing; //FK resolver
     private boolean isBlocked; //FK resolver
     private UserInfoDTO user; //FK resolver

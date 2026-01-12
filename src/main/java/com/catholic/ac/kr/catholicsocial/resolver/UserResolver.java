@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,14 @@ public class UserResolver {
         return followService.getCountFollowing(userId);
     }
 
+    @SchemaMapping
+    public LocalDateTime createdAt(UserProfileDTO user) {
+        Long userId = user.getId();
+
+        User thisUser = userService.getUser(userId);
+
+        return thisUser.getUserInfo().getCreatedAt();
+    }
 
     @SchemaMapping(typeName = "UserProfileDTO", field = "isFollowing")
     public boolean isFollowing(

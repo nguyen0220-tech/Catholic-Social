@@ -255,6 +255,44 @@
             font-size: 13px;
         }
 
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .modal-content button {
+            margin-top: 16px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: #EE82EE;
+            color: #00fb00;
+        }
+
     </style>
 </head>
 <body>
@@ -271,6 +309,20 @@
     <div id="profile"></div>
     <div id="moments" class="moments"></div>
 </div>
+
+<div id="accountInfoModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Giới thiệu về tài khoản này</h3>
+
+        <p>
+            📅 <b>Tham gia từ:</b>
+            <span id="accountCreatedAt"></span>
+        </p>
+
+        <button onclick="closeAccountInfoModal()">Đóng</button>
+    </div>
+</div>
+
 
 <script type="module" src="auth-utils.js"></script>
 <script type="module" src="user.js"></script>
