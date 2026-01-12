@@ -43,4 +43,11 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
             SELECT f.follower.id FROM Follow f WHERE f.user.id = :userId AND f.state = 'BLOCKED'
             """)
     List<Long> findUserIdsBlocked(Long userId);
+
+    @Query("""
+            SELECT f.user.id
+            FROM Follow f
+            WHERE f.follower.id = :followerId AND f.user.id IN :userIds AND f.state = 'FOLLOWING'
+            """)
+    List<Long> findUserIdsFollowing(Long followerId, List<Long> userIds);
 }

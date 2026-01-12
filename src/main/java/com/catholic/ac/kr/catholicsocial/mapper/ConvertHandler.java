@@ -18,6 +18,23 @@ public class ConvertHandler {
         return userGQLDTO;
     }
 
+    public static NotificationFollowerDTO convertToNotificationFollowerDTO(User user) {
+        NotificationFollowerDTO notificationFollowerDTO = new NotificationFollowerDTO();
+
+        notificationFollowerDTO.setFollowerId(user.getId());
+
+        return notificationFollowerDTO;
+    }
+
+    public static NotificationCommentDTO convertToNotificationCommentDTO(Comment comment) {
+        NotificationCommentDTO notificationCommentDTO = new NotificationCommentDTO();
+
+        notificationCommentDTO.setMomentComment(comment.getComment());
+        notificationCommentDTO.setMomentId(comment.getMoment().getId());
+
+        return notificationCommentDTO;
+    }
+
     public static MomentUserDTO convertMomentUserDTO(Moment moment) {
         MomentUserDTO momentUserDTO = new MomentUserDTO();
 

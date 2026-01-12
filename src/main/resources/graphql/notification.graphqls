@@ -1,0 +1,41 @@
+extend type Query {
+    notifications(page:Int!, size:Int!):ListResponse_NotificationDTO
+    unreadCount: Int!
+}
+
+extend type Mutation {
+    maskAsRead(notificationId:ID!):GraphqlResponse_String
+    deleteNotification(notificationId:ID!):GraphqlResponse_String
+}
+
+type ListResponse_NotificationDTO{
+    data:[NotificationDTO]
+    pageInfo:PageInfo
+}
+
+union NotificationTarget = MomentGQLDTO | NotificationFollowerDTO | NotificationCommentDTO
+
+type NotificationFollowerDTO{
+    followerId:ID!
+
+    reverseFollowed:Boolean!
+}
+
+type NotificationCommentDTO{
+    momentId:ID!
+    momentComment:String
+
+    moment:MomentGQLDTO
+}
+
+type NotificationDTO{
+    id:ID!
+    userId:ID!
+    entityId:ID!
+    type:String!
+    isRead:Boolean!
+    createdAt:String!
+
+    actor:UserDTO!
+    target:NotificationTarget
+}

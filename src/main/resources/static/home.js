@@ -8,6 +8,7 @@ const postBtn = document.getElementById("postMomentBtn");
 const currentUserId = Number(localStorage.getItem("userId"));
 
 const GRAPHQL_URL = `${URL_BASE}/graphql`;
+
 async function graphqlRequest(query, variables = {}) {
     const res = await fetch(GRAPHQL_URL, {
         method: "POST",
@@ -15,7 +16,7 @@ async function graphqlRequest(query, variables = {}) {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify({ query, variables })
+        body: JSON.stringify({query, variables})
     });
     return await res.json();
 }
@@ -376,9 +377,9 @@ momentsContainer.addEventListener("click", async (e) => {
 
     let res;
     if (liked) {
-        res = await graphqlRequest(DELETE_HEART, { momentId });
+        res = await graphqlRequest(DELETE_HEART, {momentId});
     } else {
-        res = await graphqlRequest(ADD_HEART, { momentId });
+        res = await graphqlRequest(ADD_HEART, {momentId});
     }
 
     if (res.errors?.length) {
@@ -450,7 +451,7 @@ logoutBtn.addEventListener("click", async () => {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ refreshToken })
+            body: JSON.stringify({refreshToken})
         });
 
         const json = await res.json();
@@ -513,8 +514,8 @@ momentsContainer.addEventListener("click", async (e) => {
     let res;
     try {
         res = isSaved
-            ? await graphqlRequest(DELETE_SAVED, { momentId })
-            : await graphqlRequest(CREATE_SAVED, { momentId });
+            ? await graphqlRequest(DELETE_SAVED, {momentId})
+            : await graphqlRequest(CREATE_SAVED, {momentId});
 
         const result = isSaved
             ? res.data?.deleteSaved
@@ -534,5 +535,32 @@ momentsContainer.addEventListener("click", async (e) => {
     }
 });
 
+const QUERY_UNREAD_COUNT = `
+query {
+  unreadCount
+}
+`;
 
+async function loadUnreadCount() {
+    try {
+        const res = await graphqlRequest(QUERY_UNREAD_COUNT);
+
+        const count = res.data.unreadCount;
+        const badge = document.getElementById("unreadCountBadge");
+
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.textContent = count;
+            badge.classList.remove("hidden");
+        } else {
+            badge.classList.add("hidden");
+        }
+
+    } catch (e) {
+        console.error("Load unreadCount error", e);
+    }
+}
+
+loadUnreadCount();
 fetchMoments();

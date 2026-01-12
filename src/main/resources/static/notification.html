@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title>Notification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #fafafa;
+            margin: 0;
+        }
+
+        .top-nav {
+            background: white;
+            padding: 14px 20px;
+            border-bottom: 1px solid #e5e5e5;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .top-nav a {
+            text-decoration: none;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        h2 {
+            margin: 16px;
+            font-size: 18px;
+        }
+
+        #notification-list {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .notification {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .notification:last-child {
+            border-bottom: none;
+        }
+
+        .notification:hover{
+            cursor: pointer;
+        }
+
+        .notification.unread {
+            background: #f0f5ff;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .content {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .actor-name {
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .moment {
+            margin-top: 6px;
+            color: #555;
+        }
+
+        .moment-content {
+            margin-top: 4px;
+            font-size: 14px;
+            color: #262626;
+            line-height: 1.4;
+        }
+
+        /* Images */
+        .images {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .images img {
+            width: 64px;
+            height: 64px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid #eee;
+        }
+
+        /* Follow button */
+        button {
+            margin-top: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: none;
+            background: #0095f6;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1877f2;
+        }
+
+        .followed {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 13px;
+            color: #8e8e8e;
+        }
+
+        .delete-btn {
+            font-size: 16px;
+            cursor: pointer;
+            opacity: 0.4;
+            padding: 4px;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time {
+            font-size: 12px;
+            color: #8e8e8e;
+            white-space: nowrap;
+        }
+
+    </style>
+</head>
+<body>
+<div class="top-nav">
+    <a href="home.html">🏠 Trang chủ</a>
+</div>
+<h2>Notifications</h2>
+<div id="notification-list"></div>
+
+<script type="module" src="notification.js"></script>
+</body>
+</html>

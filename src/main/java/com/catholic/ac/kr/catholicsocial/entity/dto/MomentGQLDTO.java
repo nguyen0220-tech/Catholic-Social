@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
-    class chứa thông tin moment lấy các comment, heart
+    class chứa thông tin moment lấy các comment, heart / thông báo cho heart
  */
 @Getter @Setter
 public class MomentGQLDTO {

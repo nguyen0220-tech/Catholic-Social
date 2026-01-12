@@ -13,6 +13,7 @@ import com.catholic.ac.kr.catholicsocial.repository.*;
 import com.catholic.ac.kr.catholicsocial.status.ActiveType;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.status.MomentShare;
+import com.catholic.ac.kr.catholicsocial.status.NotifyType;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import graphql.GraphQLException;
@@ -34,6 +35,7 @@ public class CommentService {
     private final MomentRepository momentRepository;
     private final FollowRepository followRepository;
     private final ActiveRepository activeRepository;
+    private final NotificationService notificationService;
 
     public List<Comment> getCommentsByMomentIds(List<Long> momentIds) {
         return commentRepository.findAllByMoment_IdIn(momentIds);
@@ -105,6 +107,9 @@ public class CommentService {
                 .build();
 
         activeRepository.save(newActive);
+
+        if (!(userId.equals(moment.getUser().getId())))
+            notificationService.createNotification(moment.getUser(), currentUser, comment.getId(), NotifyType.COMMENT_MOMENT);
 
         return GraphqlResponse.success("comment success", null);
     }

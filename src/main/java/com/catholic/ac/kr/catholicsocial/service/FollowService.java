@@ -1,6 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
+import com.catholic.ac.kr.catholicsocial.status.NotifyType;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.FollowDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Follow;
@@ -29,6 +30,11 @@ import java.util.stream.Collectors;
 public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+    public List<Long> getUserIdsFollowing(Long followerId, List<Long> userIds) {
+        return followRepository.findUserIdsFollowing(followerId, userIds);
+    }
 
     public List<Long> getUserIdsBlocked(Long myId) {
         return followRepository.findUserIdsBlocked(myId);
@@ -154,6 +160,8 @@ public class FollowService {
 
             followRepository.save(newFollow);
 
+            notificationService.createNotification(user, follower, followerId, NotifyType.FOLLOW);
+
             return ApiResponse.success(HttpStatus.CREATED.value(), HttpStatus.CREATED.getReasonPhrase(),
                     "Đã theo dõi thành công");
         }
@@ -163,6 +171,8 @@ public class FollowService {
         follow.setState(FollowState.FOLLOWING);
 
         followRepository.save(follow);
+
+        notificationService.createNotification(user, follower, followerId, NotifyType.FOLLOW);
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Đã theo dõi thành công");

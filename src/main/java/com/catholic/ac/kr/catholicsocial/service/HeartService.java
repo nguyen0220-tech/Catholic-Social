@@ -10,6 +10,7 @@ import com.catholic.ac.kr.catholicsocial.mapper.HeartMapper;
 import com.catholic.ac.kr.catholicsocial.projection.HeartProjection;
 import com.catholic.ac.kr.catholicsocial.repository.*;
 import com.catholic.ac.kr.catholicsocial.status.ActiveType;
+import com.catholic.ac.kr.catholicsocial.status.NotifyType;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import graphql.GraphQLException;
@@ -30,6 +31,7 @@ public class HeartService {
     private final MomentRepository momentRepository;
     private final ActiveRepository activeRepository;
     private final FollowRepository followRepository;
+    private final NotificationService notificationService;
 
     public List<Object[]> getCountHeart(List<Long> momentIds) {
         return heartRepository.countByMoment_IdIn(momentIds);
@@ -83,6 +85,9 @@ public class HeartService {
                 .build();
 
         activeRepository.save(newActive);
+
+        if (!(userId.equals(moment.getUser().getId())))
+            notificationService.createNotification(moment.getUser(), user, momentId, NotifyType.HEART_MOMENT);
 
         return GraphqlResponse.success("Add heart success", null);
     }
