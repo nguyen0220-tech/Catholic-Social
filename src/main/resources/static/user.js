@@ -24,6 +24,9 @@ const PROFILE_QUERY = `
 query ($userId: ID!) {
   profile(userId: $userId) {
     id
+    numOfMoments
+    numOfFollowers
+    numOfFollowing
     isFollowing
     isBlocked
     user {
@@ -128,16 +131,37 @@ function renderProfile(profile) {
     }
 
     document.getElementById("profile").innerHTML = `
-        <div class="profile-header">
-            <img src="${profile.user.avatarUrl}">
-            <div>
-                <h2>${profile.user.fullName}</h2>
+    <div class="profile-header">
+        <img src="${profile.user.avatarUrl}" class="profile-avatar">
+    
+        <div class="profile-info">
+            <h2>${profile.user.fullName}</h2>
+    
+            <div class="profile-meta-row">
+                <div class="profile-stats">
+                    <div class="stat">
+                        <b>${profile.numOfMoments}</b>
+                        <span>Moments</span>
+                    </div>
+    
+                    <div class="stat" onclick="goToFollowers(${userId})">
+                        <b>${profile.numOfFollowers}</b>
+                        <span>Followers</span>
+                    </div>
+    
+                    <div class="stat" onclick="goToFollowing(${userId})">
+                        <b>${profile.numOfFollowing}</b>
+                        <span>Following</span>
+                    </div>
+                </div>
+    
                 <div class="profile-actions">
                     ${followBtn}
                     ${blockBtn}
                 </div>
             </div>
         </div>
+    </div>
     `;
 }
 

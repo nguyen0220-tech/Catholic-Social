@@ -44,6 +44,9 @@ type MomentGQLDTO {
 
 type UserProfileDTO{
     id: ID!
+    numOfMoments:Int!
+    numOfFollowers:Int!
+    numOfFollowing:Int!
     isFollowing:Boolean!
     isBlocked:Boolean!
     user:UserInfo!

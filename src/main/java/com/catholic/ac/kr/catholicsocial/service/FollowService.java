@@ -40,6 +40,14 @@ public class FollowService {
         return followRepository.findUserIdsBlocked(myId);
     }
 
+    public int getCountFollowing(Long followerId) {
+        return followRepository.countFollowByFollowerIdAndState(followerId, FollowState.FOLLOWING);
+    }
+
+    public int getCountFollowers(Long userId) {
+        return followRepository.countFollowByUserIdAndState(userId, FollowState.FOLLOWING);
+    }
+
     public boolean isFollowing(Long currentUserId, Long userId) {
         User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId), "User");
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");

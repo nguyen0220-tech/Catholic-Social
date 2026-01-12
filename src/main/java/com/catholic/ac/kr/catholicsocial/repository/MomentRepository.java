@@ -39,4 +39,6 @@ public interface MomentRepository extends JpaRepository<Moment, Long> {
             WHERE m.id = :id
             """)
     MomentProjection findByMomentId(@Param("id") Long id);
+
+    int countByUser_Id(Long userId);
 }

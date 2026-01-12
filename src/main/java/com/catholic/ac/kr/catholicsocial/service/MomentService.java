@@ -42,6 +42,10 @@ public class MomentService {
     private final ActiveRepository activeRepository;
     private final SavedRepository savedRepository;
 
+    public int getCountMoment(Long userId) {
+        return momentRepository.countByUser_Id(userId);
+    }
+
     public Moment getMoment(Long id) {
         return EntityUtils.getOrThrow(momentRepository.findById(id), "Moment");
     }

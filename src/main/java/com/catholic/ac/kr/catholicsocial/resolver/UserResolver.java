@@ -41,6 +41,25 @@ public class UserResolver {
         return userService.getUserProfileDTO(userId);
     }
 
+    @SchemaMapping
+    public int numOfMoments(UserProfileDTO user) {
+        Long userId = user.getId();
+        return momentService.getCountMoment(userId);
+    }
+
+    @SchemaMapping
+    public int numOfFollowers(UserProfileDTO user) {
+        Long userId = user.getId();
+        return followService.getCountFollowers(userId);
+    }
+
+    @SchemaMapping
+    public int numOfFollowing(UserProfileDTO user) {
+        Long userId = user.getId();
+        return followService.getCountFollowing(userId);
+    }
+
+
     @SchemaMapping(typeName = "UserProfileDTO", field = "isFollowing")
     public boolean isFollowing(
             UserProfileDTO user,
@@ -216,29 +235,3 @@ public class UserResolver {
                 ));
     }
 }
-
-/*.
- @BatchMapping(typeName = "UserProfileDTO", field = "moments")
-    public Map<UserProfileDTO, List<MomentUserDTO>> getMomentUsers(List<UserProfileDTO> profiles) {
-
-        List<Long> userIds = profiles.stream()
-                .map(UserProfileDTO::getId)
-                .distinct()
-                .toList();
-        System.out.println("CHECK BATCH Moment.user: " + userIds);
-
-        List<Moment> moments = momentService.findAllByUserIds(userIds);
-
-        Map<Long, List<MomentUserDTO>> momentMap = moments.stream()
-                .collect(Collectors.groupingBy(
-                        n -> n.getUser().getId(), //Group theo userId
-                        Collectors.mapping(ConvertHandler::convertMomentUserDTO, Collectors.toList())
-                ));
-
-        return profiles.stream()
-                .collect(Collectors.toMap(
-                        p -> p,
-                        p -> momentMap.getOrDefault(p.getId(), List.of())
-                ));
-    }
- */
