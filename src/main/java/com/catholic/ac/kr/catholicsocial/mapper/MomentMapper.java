@@ -15,6 +15,7 @@ public class MomentMapper {
         MomentDTO momentDTO = new MomentDTO();
 
         momentDTO.setId(moment.getId());
+        momentDTO.setUserId(moment.getUser().getId());
         momentDTO.setUserFullName(moment.getUser().getUserInfo().getFirstName() + " " + moment.getUser().getUserInfo().getLastName());
         momentDTO.setUserAvatar(moment.getUser().getUserInfo().getAvatarUrl());
         momentDTO.setContent(moment.getContent());

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter @Setter
 public class FollowerDTO {
     private Long userId;
-    private String userFullName;
-    private String userAvatarUrl;
+
+    private UserGQLDTO user;
     private boolean isFollowed;
 }

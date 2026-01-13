@@ -1,8 +1,10 @@
 package com.catholic.ac.kr.catholicsocial.mapper;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.FollowDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.FollowerDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Follow;
+import com.catholic.ac.kr.catholicsocial.projection.FollowerProjection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,5 +50,19 @@ public class FollowMapper {
         followDTO.setUsers(userGQLDTOList);
 
         return followDTO;
+    }
+
+    public static FollowerDTO followerDTO(FollowerProjection projection) {
+        FollowerDTO followerDTO = new FollowerDTO();
+
+        followerDTO.setUserId(projection.getUserId());
+
+        return followerDTO;
+    }
+
+    public static List<FollowerDTO> followerDTOList(List<FollowerProjection> projections) {
+        return projections.stream()
+                .map(FollowMapper::followerDTO)
+                .toList();
     }
 }

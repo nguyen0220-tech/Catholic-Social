@@ -2,10 +2,13 @@ package com.catholic.ac.kr.catholicsocial.repository;
 
 import com.catholic.ac.kr.catholicsocial.entity.model.Follow;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
+import com.catholic.ac.kr.catholicsocial.projection.FollowerProjection;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -50,4 +53,43 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
             WHERE f.follower.id = :followerId AND f.user.id IN :userIds AND f.state = 'FOLLOWING'
             """)
     List<Long> findUserIdsFollowing(Long followerId, List<Long> userIds);
+
+    @Query("""
+                SELECT f.follower.id AS userId
+                FROM Follow f
+                WHERE f.user.id = :userId
+                  AND f.state = 'FOLLOWING'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM Follow b
+                      WHERE b.state = 'BLOCKED'
+                        AND (
+                            (b.user.id = :viewerId AND b.follower.id = f.follower.id)
+                         OR (b.user.id = f.follower.id AND b.follower.id = :viewerId)
+                        )
+                  )
+            """)
+    Page<FollowerProjection> findFollowersByUserId(
+            @Param("userId") Long userId,
+            @Param("viewerId") Long viewerId,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT f.user.id AS userId
+            FROM Follow f
+            WHERE f.follower.id = :userId
+              AND f.state = 'FOLLOWING'
+              AND NOT EXISTS (
+                  SELECT 1 FROM Follow b
+                  WHERE b.state = 'BLOCKED'
+                    AND (
+                        (b.user.id = :viewerId AND b.follower.id = f.user.id)
+                     OR (b.user.id = f.user.id AND b.follower.id = :viewerId)
+                    )
+              )
+            """)
+    Page<FollowerProjection> findFollowingByUserId(
+            @Param("userId") Long userId,
+            @Param("viewerId") Long viewerId,
+            Pageable pageable);
 }

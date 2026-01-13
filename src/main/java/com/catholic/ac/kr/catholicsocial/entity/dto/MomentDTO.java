@@ -9,6 +9,7 @@ import java.util.List;
 @Getter @Setter
 public class MomentDTO {
     private Long id;
+    private Long userId;
     private String userFullName;
     private String userAvatar;
     private String content;

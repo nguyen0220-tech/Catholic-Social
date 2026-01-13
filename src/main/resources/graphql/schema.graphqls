@@ -47,11 +47,25 @@ type UserProfileDTO{
     numOfMoments:Int!
     numOfFollowers:Int!
     numOfFollowing:Int!
+    followers(page:Int!, size:Int!):ListResponse_FollowDTO
+    following(page:Int!, size:Int!):ListResponse_FollowDTO
     createdAt:String!
     isFollowing:Boolean!
     isBlocked:Boolean!
     user:UserInfo!
     moments(page:Int, size:Int):MomentConnection
+}
+
+type ListResponse_FollowDTO{
+    data:[FollowerDTO]
+    pageInfo:PageInfo
+}
+
+type FollowerDTO{
+    userId:ID!
+
+    user:UserDTO
+    isFollowed:Boolean!
 }
 
 type MomentConnection{

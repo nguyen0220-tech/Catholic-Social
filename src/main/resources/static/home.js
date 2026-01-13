@@ -102,14 +102,21 @@ function renderMoment(moment) {
     const editedText = moment.edited ? `<span style="color:#777; font-style:italic;">(Đã chỉnh sửa)</span>` : "";
 
     item.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px; cursor:pointer;"
+             onclick="goToProfile(${moment.userId})">
+    
             <img src="${
-        moment.userAvatar
-            ? (moment.userAvatar.startsWith('http') ? moment.userAvatar : URL_BASE + moment.userAvatar)
-            : 'icon/default-avatar.png'
-    }"
-            style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid #ccc;" alt="">
-            <strong>${moment.userFullName}</strong>
+            moment.userAvatar
+                ? (moment.userAvatar.startsWith('http')
+                    ? moment.userAvatar
+                    : URL_BASE + moment.userAvatar)
+                : 'icon/default-avatar.png'
+        }"
+            style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid #ccc;" alt="">
+    
+            <strong style="font-size:15px;">
+                ${moment.userFullName}
+            </strong>
         </div>
 
         <div style="margin-bottom:6px;">${moment.content || ''}</div>
@@ -263,7 +270,7 @@ async function renderComments(momentId) {
                 ? (c.user.avatarUrl.startsWith('http') ? c.user.avatarUrl : URL_BASE + c.user.avatarUrl)
                 : 'icon/default-avatar.png'
         }" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;" 
-           onclick="goToProfile(${c.user.id})">
+           onclick="goToProfile(${c.user.id})" alt="">
 
             <div style="background:#fff;padding:6px 8px;border-radius:6px;flex:1;">
                 <strong style="font-size:13px;cursor:pointer;" onclick="goToProfile(${c.user.id})">

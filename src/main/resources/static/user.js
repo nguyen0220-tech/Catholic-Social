@@ -65,6 +65,50 @@ query ($userId: ID!) {
 }
 `;
 
+const FOLLOWERS_QUERY = `
+query ($userId: ID!, $page: Int!, $size: Int!) {
+  profile(userId: $userId) {
+    followers(page: $page, size: $size) {
+      data {
+        userId
+        user {
+          userFullName
+          avatarUrl
+        }
+        isFollowed
+      }
+      pageInfo {
+        page
+        size
+        hasNext
+      }
+    }
+  }
+}
+`;
+
+const FOLLOWING_QUERY = `
+query ($userId: ID!, $page: Int!, $size: Int!) {
+  profile(userId: $userId) {
+    following(page: $page, size: $size) {
+      data {
+        userId
+        user {
+          userFullName
+          avatarUrl
+        }
+        isFollowed
+      }
+      pageInfo {
+        page
+        size
+        hasNext
+      }
+    }
+  }
+}
+`;
+
 const CREATED_AT_QUERY = `
 query ($userId: ID!) {
   profile(userId: $userId) {
@@ -146,7 +190,7 @@ function renderProfile(profile) {
 
     document.getElementById("profile").innerHTML = `
     <div class="profile-header">
-        <img src="${profile.user.avatarUrl}" class="profile-avatar">
+        <img src="${profile.user.avatarUrl}" class="profile-avatar" alt="">
     
         <div class="profile-info">
             <h2>${profile.user.fullName}</h2>
@@ -180,9 +224,84 @@ function renderProfile(profile) {
     `;
 }
 
+function goToFollowers(userId) {
+    openFollowModal("Followers");
+    loadFollowers(userId);
+}
+
+window.goToFollowers = goToFollowers
+
+function goToFollowing(userId) {
+    openFollowModal("Following");
+    loadFollowing(userId);
+}
+
+window.goToFollowing = goToFollowing
+
+async function loadFollowers(userId, page = 0, size = 10) {
+    const res = await graphqlRequest(FOLLOWERS_QUERY, {userId, page, size});
+    renderFollowList(res.data.profile.followers.data);
+}
+
+async function loadFollowing(userId, page = 0, size = 10) {
+    const res = await graphqlRequest(FOLLOWING_QUERY, {userId, page, size});
+    renderFollowList(res.data.profile.following.data);
+}
+
+function renderFollowList(list) {
+    const container = document.getElementById("followList");
+    container.innerHTML = "";
+
+    const myId = Number(currentUserId);
+
+    list.forEach(u => {
+        const isMe = Number(u.userId) === myId;
+
+        container.innerHTML += `
+          <div class="follow-item" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <img src="${u.user.avatarUrl}" 
+                 style="width:40px;height:40px;border-radius:50%;cursor:pointer;"
+                 onclick="goToProfile(${u.userId})" alt="">
+
+            <span style="flex:1;cursor:pointer;"
+                  onclick="goToProfile(${u.userId})">
+                ${u.user.userFullName}
+            </span>
+
+            ${!isMe ? `
+                <button onclick="toggleFollow(${u.userId}, ${u.isFollowed})">
+                    ${u.isFollowed ? "Unfollow" : "Follow"}
+                </button>
+            ` : ""}
+          </div>
+        `;
+    });
+}
+
+function openFollowModal(title) {
+    document.getElementById("followModalTitle").innerText = title;
+    document.getElementById("followModal").classList.remove("hidden");
+}
+
+function closeFollowModal() {
+    document.getElementById("followModal").classList.add("hidden");
+}
+
+window.closeFollowModal = closeFollowModal
+
+async function toggleFollow(userId, isFollowed) {
+    if (isFollowed) {
+        await unfollowUser(userId);
+    } else {
+        await followUser(userId);
+    }
+}
+
+window.toggleFollow = toggleFollow
+
 async function showAccountInfo(userId) {
     try {
-        const res = await graphqlRequest(CREATED_AT_QUERY, { userId });
+        const res = await graphqlRequest(CREATED_AT_QUERY, {userId});
 
         if (res.errors) {
             console.error(res.errors);
@@ -234,7 +353,7 @@ function renderMoments(moments) {
 
                 ${m.imgUrls.length > 0 ? `
                 <div class="moment-images">
-                    ${m.imgUrls.map(url => `<img src="${url}">`).join("")}
+                    ${m.imgUrls.map(url => `<img src="${url}" alt="">`).join("")}
                 </div>` : ""}
 
                 <div class="createdAt">
@@ -258,7 +377,7 @@ function renderMoments(moments) {
                     <div class="hearts-list" style="display: flex; gap: 5px; margin-top: 5px;">
                         ${m.hearts.map(h => `
                             <div class="heart-user" onclick="goToProfile(${h.user.id})" title="${h.user.userFullName}">
-                                <img src="${h.user.avatarUrl}" style="width: 20px; height: 20px; border-radius: 50%;">
+                                <img src="${h.user.avatarUrl}" style="width: 20px; height: 20px; border-radius: 50%;" alt="">
                             </div>
                         `).join("")}
                     </div>
@@ -268,7 +387,7 @@ function renderMoments(moments) {
                     💬 ${m.comments.length}
                     ${m.comments.map(c => `
                         <div class="comment">
-                            <img src="${c.user.avatarUrl}" onclick="goToProfile(${c.user.id})">
+                            <img src="${c.user.avatarUrl}" onclick="goToProfile(${c.user.id})" alt="">
                             <b onclick="goToProfile(${c.user.id})">${c.user.userFullName}</b>
                             <span>${c.comment}</span>
                         </div>
@@ -406,7 +525,7 @@ async function toggleHeart(momentId, isHearted) {
     const query = isHearted ? DELETE_HEART_MUTATION : ADD_HEART_MUTATION;
 
     try {
-        const res = await graphqlRequest(query, { momentId });
+        const res = await graphqlRequest(query, {momentId});
         if (res.errors) {
             console.error(res.errors);
         } else {
@@ -425,7 +544,7 @@ async function toggleSaved(momentId, isSaved) {
         : CREATE_SAVED_MUTATION;
 
     try {
-        const res = await graphqlRequest(query, { momentId });
+        const res = await graphqlRequest(query, {momentId});
 
         if (res.errors) {
             console.error(res.errors);

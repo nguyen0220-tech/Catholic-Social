@@ -18,20 +18,20 @@ public class FollowController {
 
     //Đang theo dõi
     @GetMapping()
+    public ResponseEntity<ApiResponse<FollowDTO>> getFollowing(
+            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @RequestParam int page,
+            @RequestParam int size) {
+        return ResponseEntity.ok(followService.getAllFollowing(useDetails.getUser().getId(), page, size));
+    }
+
+    //Người theo dõi
+    @GetMapping("users")
     public ResponseEntity<ApiResponse<FollowDTO>> getFollowers(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(followService.getAllFollowers(useDetails.getUser().getId(), page, size));
-    }
-
-    //Người theo dõi
-    @GetMapping("users")
-    public ResponseEntity<ApiResponse<FollowDTO>> getUsersFollowing(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
-            @RequestParam int page,
-            @RequestParam int size) {
-        return ResponseEntity.ok(followService.getAllUsersFollowing(useDetails.getUser().getId(), page, size));
     }
 
     @GetMapping("find-blocked")

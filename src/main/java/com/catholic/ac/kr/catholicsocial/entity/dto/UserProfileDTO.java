@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /*
 trang cá nhân hiển thị của mỗi user gồm thông tin và các moment
@@ -12,9 +13,12 @@ trang cá nhân hiển thị của mỗi user gồm thông tin và các moment
 @Getter @Setter
 public class UserProfileDTO {
     private Long id;
+
     private int numOfMoments; //FK resolver
     private int numOfFollowers; //FK resolver
     private int numOfFollowing; //FK resolver
+    private List<FollowerDTO> followers; //FK resolver
+    private List<FollowerDTO> following; //FK resolver
     private LocalDateTime createdAt; //FK resolver
     private boolean isFollowing; //FK resolver
     private boolean isBlocked; //FK resolver

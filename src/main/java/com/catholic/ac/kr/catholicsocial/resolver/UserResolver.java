@@ -6,6 +6,7 @@ import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
+import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.MomentConnection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,71 @@ public class UserResolver {
     public int numOfFollowing(UserProfileDTO user) {
         Long userId = user.getId();
         return followService.getCountFollowing(userId);
+    }
+
+    @SchemaMapping
+    public ListResponse<FollowerDTO> followers(
+            UserProfileDTO user,
+            @AuthenticationPrincipal CustomUseDetails me,
+            @Argument int page,
+            @Argument int size) {
+
+        Long userId = user.getId();
+
+        return followService.getFollowers(userId, me.getUser().getId(), page, size);
+    }
+
+    @SchemaMapping
+    public ListResponse<FollowerDTO> following(
+            UserProfileDTO user,
+            @AuthenticationPrincipal CustomUseDetails me,
+            @Argument int page,
+            @Argument int size
+    ) {
+        Long userId = user.getId();
+
+        return followService.getFollowing(userId, me.getUser().getId(), page, size);
+    }
+
+    @BatchMapping
+    public Map<FollowerDTO, UserGQLDTO> user(List<FollowerDTO> followers) {
+        List<Long> userIds = followers.stream()
+                .map(FollowerDTO::getUserId)
+                .toList();
+
+        List<User> users = userService.getAllById(userIds);
+
+        Map<Long, UserGQLDTO> map = users.stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        ConvertHandler::convertToUserGQLDTO
+                ));
+
+        return followers.stream()
+                .collect(Collectors.toMap(
+                        f -> f,
+                        f -> map.get(f.getUserId())
+                ));
+    }
+
+    @BatchMapping
+    public Map<FollowerDTO, Boolean> isFollowed(
+            List<FollowerDTO> followers,
+            Principal principal) {
+
+        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+
+        List<Long> userIds = followers.stream()
+                .map(FollowerDTO::getUserId)
+                .toList();
+
+        Set<Long> userFollowIds = new HashSet<>(followService.getUserIdsFollowing(me.getUser().getId(), userIds));
+
+        return followers.stream()
+                .collect(Collectors.toMap(
+                        f -> f,
+                        f -> userFollowIds.contains(f.getUserId())
+                ));
     }
 
     @SchemaMapping

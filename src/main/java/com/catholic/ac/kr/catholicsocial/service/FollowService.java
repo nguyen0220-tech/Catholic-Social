@@ -1,6 +1,9 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
+import com.catholic.ac.kr.catholicsocial.entity.dto.FollowerDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
+import com.catholic.ac.kr.catholicsocial.projection.FollowerProjection;
 import com.catholic.ac.kr.catholicsocial.status.NotifyType;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.FollowDTO;
@@ -11,7 +14,9 @@ import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.status.ACTION;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
+import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,6 +36,32 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+
+    //get followers + filter block user in profile-view
+    public ListResponse<FollowerDTO> getFollowers(Long userId,Long viewerId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
+
+        Page<FollowerProjection> projectionPage = followRepository.findFollowersByUserId(userId,viewerId, pageable);
+
+        List<FollowerProjection> projectionList = projectionPage.getContent();
+
+        List<FollowerDTO> followerDTOS = FollowMapper.followerDTOList(projectionList);
+
+        return new ListResponse<>(followerDTOS, new PageInfo(page,size, projectionPage.hasNext()));
+    }
+
+    //get following + filter block user in profile-view
+    public ListResponse<FollowerDTO> getFollowing(Long userId,Long viewerId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
+
+        Page<FollowerProjection> projectionPage = followRepository.findFollowingByUserId(userId, viewerId, pageable);
+
+        List<FollowerProjection> projectionList = projectionPage.getContent();
+
+        List<FollowerDTO> followerDTOS = FollowMapper.followerDTOList(projectionList);
+
+        return new ListResponse<>(followerDTOS, new PageInfo(page,size, projectionPage.hasNext()));
+    }
 
     public List<Long> getUserIdsFollowing(Long followerId, List<Long> userIds) {
         return followRepository.findUserIdsFollowing(followerId, userIds);
@@ -64,7 +95,7 @@ public class FollowService {
 
     //Danh sách mình đang theo dõi người khác
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ApiResponse<FollowDTO> getAllFollowers(Long currentUserId, int page, int size) {
+    public ApiResponse<FollowDTO> getAllFollowing(Long currentUserId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
 
         List<Follow> follows = followRepository.findByFollowerIdAndState(currentUserId, FollowState.FOLLOWING, pageable);
@@ -78,7 +109,7 @@ public class FollowService {
     }
 
     //Danh sách người đang theo dõi mình
-    public ApiResponse<FollowDTO> getAllUsersFollowing(Long currentUserId, int page, int size) {
+    public ApiResponse<FollowDTO> getAllFollowers(Long currentUserId, int page, int size) {
         User currentUser = EntityUtils.getOrThrow(userRepository.findById(currentUserId), "User");
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());
