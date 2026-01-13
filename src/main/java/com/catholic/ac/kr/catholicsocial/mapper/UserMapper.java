@@ -5,7 +5,6 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.UserDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserProfileDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
-import org.springframework.context.annotation.Profile;
 
 import java.util.stream.Collectors;
 
@@ -39,6 +38,7 @@ public class UserMapper {
 
         profileDTO.setFirstName(user.getUserInfo().getFirstName());
         profileDTO.setLastName(user.getUserInfo().getLastName());
+        profileDTO.setBio(user.getUserInfo().getBio());
         profileDTO.setEmail(user.getUserInfo().getEmail());
         profileDTO.setPhone(user.getUserInfo().getPhone());
         profileDTO.setAddress(user.getUserInfo().getAddress());

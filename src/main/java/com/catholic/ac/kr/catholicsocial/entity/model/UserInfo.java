@@ -30,6 +30,8 @@ public class UserInfo {
     @Column(nullable = false)
     private String lastName;
 
+    private String bio;
+
     @Column(nullable = false,unique = true)
     private String email;
 

@@ -37,6 +37,18 @@ public class FollowService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
+    /*
+        viewerId following X, X following userId
+        => show X
+     */
+    public List<FollowerDTO> getMutualFollowers(Long userId, Long viewerId) {
+        Pageable pageable = PageRequest.of(0, 2, Sort.by("followedAt").descending());
+
+        List<FollowerProjection> projections = followRepository.findMutualFollowers( userId,viewerId,pageable);
+
+        return FollowMapper.followerDTOList(projections);
+    }
+
     //get followers + filter block user in profile-view
     public ListResponse<FollowerDTO> getFollowers(Long userId,Long viewerId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("followedAt").descending());

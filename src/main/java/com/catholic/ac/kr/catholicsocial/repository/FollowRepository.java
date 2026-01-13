@@ -55,6 +55,18 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
     List<Long> findUserIdsFollowing(Long followerId, List<Long> userIds);
 
     @Query("""
+            SELECT f2.follower.id AS userId
+            FROM Follow f1
+            JOIN Follow f2 ON f1.user.id = f2.follower.id
+            WHERE f1.follower.id = :meId
+              AND f1.state = 'FOLLOWING'
+              AND f2.user.id = :profileId
+              AND f2.state = 'FOLLOWING'
+            """)
+    List<FollowerProjection> findMutualFollowers(Long profileId, Long meId, Pageable pageable);
+
+
+    @Query("""
                 SELECT f.follower.id AS userId
                 FROM Follow f
                 WHERE f.user.id = :userId

@@ -208,6 +208,7 @@ public class UserService {
 
         user.getUserInfo().setFirstName(request.getFirstName());
         user.getUserInfo().setLastName(request.getLastName());
+        user.getUserInfo().setBio(request.getBio());
         user.getUserInfo().setPhone(request.getPhone() != null ? request.getPhone() : user.getUserInfo().getPhone());
         user.getUserInfo().setEmail(request.getEmail() != null ? request.getEmail() : user.getUserInfo().getEmail());
         user.getUserInfo().setBirthday(request.getBirthDate());

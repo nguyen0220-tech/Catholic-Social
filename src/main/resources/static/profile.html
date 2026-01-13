@@ -13,178 +13,212 @@
 
         body {
             margin: 0;
-            font-family: "Poppins", "Roboto", sans-serif;
-            background: linear-gradient(135deg, #c9d6ff, #e2e2e2);
+            font-family: "Poppins","Roboto",sans-serif;
+            background: linear-gradient(135deg,#c9d6ff,#e2e2e2);
+        }
+
+        nav {
+            background:#5d9bff;
+            padding:12px;
+        }
+
+        nav a {
+            color:white;
+            text-decoration:none;
+            font-weight:600;
         }
 
         .profile-card {
-            background: #fff;
-            padding: 2.5rem 3rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 430px;
-            max-width: 90%;
-            margin: 40px auto;
-            text-align: center;
-            transition: all 0.3s ease;
+            background:#fff;
+            width:430px;
+            max-width:92%;
+            margin:40px auto;
+            padding:2.2rem 2.8rem;
+            border-radius:22px;
+            box-shadow:0 12px 30px rgba(0,0,0,.12);
         }
 
-        .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 36px rgba(0,0,0,0.15);
-        }
-
-        h2 {
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            border-bottom: 3px solid #5d9bff;
-            display: inline-block;
-            padding-bottom: 6px;
-        }
-
+        /* ===== Avatar ===== */
         .avatar-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 1.5rem;
+            text-align:center;
+            margin-bottom:25px;
+        }
+
+        .avatar-wrapper {
+            position:relative;
+            width:120px;
+            height:120px;
+            margin:0 auto 10px;
+            cursor:pointer;
         }
 
         #avatarPreview {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 3px solid #5d9bff;
-            object-fit: cover;
-            margin-bottom: 10px;
-            transition: 0.3s;
+            width:100%;
+            height:100%;
+            border-radius:50%;
+            object-fit:cover;
+            border:3px solid #5d9bff;
+            transition:.3s;
         }
 
-        #avatarPreview:hover {
-            transform: scale(1.05);
+        .avatar-wrapper:hover #avatarPreview {
+            transform:scale(1.05);
         }
 
-        #uploadAvatarBtn, #updateInfoBtn, #toggleExtraBtn {
-            background: #EE82EE;
-            color: #00fb00;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 15px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background 0.3s;
+        .avatar-wrapper::after {
+            content:"📷";
+            position:absolute;
+            bottom:6px;
+            right:6px;
+            background:#3b7cf5;
+            color:#fff;
+            padding:6px;
+            border-radius:50%;
+            font-size:.75rem;
         }
 
-        #uploadAvatarBtn:hover {
-            background: #4b8ae7;
+        /* ===== Form ===== */
+        form { text-align:left; }
+
+        h4 {
+            margin:20px 0 10px;
+            color:#333;
         }
 
-        form {
-            text-align: left;
+        label {
+            font-weight:500;
+            display:block;
+            margin-top:10px;
+            margin-bottom:4px;
         }
 
-        form label {
-            font-weight: 500;
-            color: #444;
-            display: block;
-            margin-top: 10px;
-            margin-bottom: 4px;
+        input,select {
+            width:100%;
+            padding:10px;
+            border-radius:10px;
+            border:1px solid #ccc;
+            font-size:.95rem;
         }
 
-        form input, form select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
+        input:focus,select:focus {
+            outline:none;
+            border-color:#5d9bff;
+            box-shadow:0 0 6px rgba(93,155,255,.35);
         }
 
-        form input:focus, form select:focus {
-            border-color: #5d9bff;
-            box-shadow: 0 0 6px rgba(93,155,255,0.3);
-            outline: none;
+        /* ===== Buttons ===== */
+        button {
+            cursor:pointer;
+            border-radius:12px;
+            border:none;
+            font-weight:600;
+            transition:.25s;
         }
 
-        button[type="submit"] {
-            width: 100%;
-            padding: 12px;
-            margin-top: 1.8rem;
-            background: linear-gradient(135deg, #5d9bff, #3b7cf5);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
+        .btn-primary {
+            width:100%;
+            margin-top:20px;
+            padding:13px;
+            background:linear-gradient(135deg,#5d9bff,#3b7cf5);
+            color:#fff;
         }
 
-        button[type="submit"]:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(135deg, #4b8ae7, #2e6af2);
+        .btn-primary:hover {
+            transform:translateY(-2px);
+            box-shadow:0 8px 20px rgba(93,155,255,.45);
         }
 
+        .btn-outline {
+            width:100%;
+            padding:10px;
+            background:#f3f6ff;
+            color:#3b7cf5;
+            margin-top:12px;
+        }
+
+        .btn-outline:hover {
+            background:#e6ecff;
+        }
+
+        /* ===== Message ===== */
         #messageBox {
-            margin-top: 1rem;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 500;
-            text-align: center;
+            margin-top:15px;
+            padding:12px;
+            border-radius:12px;
+            font-size:.95rem;
+            text-align:center;
         }
 
         #messageBox.success {
-            color: #155724;
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
+            background:#d4edda;
+            color:#155724;
+            border:1px solid #c3e6cb;
         }
 
         #messageBox.error {
-            color: #721c24;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
+            background:#f8d7da;
+            color:#721c24;
+            border:1px solid #f5c6cb;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            resize: vertical;
+            font-family: inherit;
         }
     </style>
 </head>
 
 <body>
-<nav style="background-color:#5d9bff; padding:10px; text-align:left;">
-    <a href="home.html" style="color:white; text-decoration:none; font-weight:bold;">
-        ← Trang chủ
-    </a>
+<nav>
+    <a href="home.html">← Trang chủ</a>
 </nav>
 
 <div class="profile-card">
 
+    <!-- Avatar -->
     <div class="avatar-container">
-        <img id="avatarPreview" src="/icon/default-avatar.png" alt="Avatar">
-        <input type="file" id="avatarFile" accept="image/*" style="margin-top: 8px;">
-        <button type="button" id="uploadAvatarBtn">Tải ảnh đại diện</button>
+        <div class="avatar-wrapper" id="avatarClick">
+            <img id="avatarPreview" src="/icon/default-avatar.png">
+        </div>
+        <input type="file" id="avatarFile" accept="image/*" hidden>
     </div>
 
-    <!-- Bổ sung trong profile-card -->
     <form id="profileForm">
-        <label for="lastName">Họ:</label>
-        <input type="text" id="lastName" required>
+        <h4>Thông tin cơ bản</h4>
 
-        <label for="firstName">Tên:</label>
-        <input type="text" id="firstName" required>
+        <label>Họ</label>
+        <input id="lastName" required>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" required>
+        <label>Tên</label>
+        <input id="firstName" required>
 
-        <label for="phone">Số điện thoại:</label>
-        <input type="text" id="phone" required>
+        <label>Tiểu sử</label>
+        <textarea id="bio"
+                  rows="3"
+                  placeholder="Giới thiệu ngắn về bản thân..."></textarea>
 
-        <!-- Thông tin nâng cao mặc định ẩn -->
-        <div id="extraInfo" style="display:none;">
-            <label for="address">Địa chỉ:</label>
-            <input type="text" id="address">
+        <label>Email</label>
+        <input id="email" type="email" required>
 
-            <label for="birthDate">Ngày sinh:</label>
+        <label>Số điện thoại</label>
+        <input id="phone">
+
+        <button type="button" id="toggleExtraBtn" class="btn-outline">
+            ⌄ Thông tin nâng cao
+        </button>
+
+        <div id="extraInfo" style="display:none">
+            <label>Địa chỉ</label>
+            <input id="address">
+
+            <label>Ngày sinh</label>
             <input type="date" id="birthDate">
 
-            <label for="gender">Giới tính:</label>
+            <label>Giới tính</label>
             <select id="gender">
                 <option value="MALE">Nam</option>
                 <option value="FEMALE">Nữ</option>
@@ -192,13 +226,10 @@
             </select>
         </div>
 
-        <button type="button" id="toggleExtraBtn" style="margin-top:10px;">
-            Xem thêm thông tin
+        <button id="updateInfoBtn" class="btn-primary" type="submit">
+            💾 Cập nhật thông tin
         </button>
-
-        <button id="updateInfoBtn" type="submit" style="margin-top:15px;">💾 Cập nhật thông tin</button>
     </form>
-
 
     <div id="messageBox"></div>
 </div>

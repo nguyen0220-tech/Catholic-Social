@@ -153,6 +153,22 @@ public class UserResolver {
         return followService.isBlocked(me.getUser().getId(), user.getId());
     }
 
+    @SchemaMapping
+    public String bio(UserProfileDTO user) {
+        Long userId = user.getId();
+
+        User thisUser = userService.getUser(userId);
+
+        return thisUser.getUserInfo().getBio();
+    }
+
+    @SchemaMapping
+    public List<FollowerDTO> mutualFollowers(
+            UserProfileDTO user,
+            @AuthenticationPrincipal CustomUseDetails me) {
+        return followService.getMutualFollowers(user.getId(), me.getUser().getId());
+    }
+
     @SchemaMapping(typeName = "UserProfileDTO", field = "user")
     public UserInfoDTO user(UserProfileDTO userProfileDTO) {
         Long userId = userProfileDTO.getId();

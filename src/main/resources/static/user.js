@@ -29,6 +29,14 @@ query ($userId: ID!) {
     numOfFollowing
     isFollowing
     isBlocked
+    bio
+    mutualFollowers{
+      userId
+      user{
+        userFullName
+        avatarUrl
+      }
+    }
     user {
       fullName
       avatarUrl
@@ -194,7 +202,14 @@ function renderProfile(profile) {
     
         <div class="profile-info">
             <h2>${profile.user.fullName}</h2>
-    
+            
+                ${profile.bio ? `
+        <p class="profile-bio">
+            ${escapeHtml(profile.bio)}
+        </p>
+        ` : ""}
+        ${renderMutualFollowers(profile)}
+
             <div class="profile-meta-row">
                 <div class="profile-stats">
                     <div class="stat">
@@ -221,6 +236,80 @@ function renderProfile(profile) {
             </div>
         </div>
     </div>
+    `;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function renderMutualFollowers(profile) {
+    const list = profile.mutualFollowers || [];
+
+    if (list.length === 0) return "";
+
+    // Render avatars (tối đa 2 như BE trả)
+    const avatars = list.slice(0, 2).map((mf, index) => `
+        <img src="${mf.user.avatarUrl}"
+             class="mutual-avatar"
+             onclick="goToProfile(${mf.userId})"
+             style="
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border: 2px solid #fff;
+                position: relative;
+                left: ${index * -8}px;
+                cursor: pointer;
+             "
+             alt="">
+    `).join("");
+
+    // Render names
+    let text = "";
+    if (list.length === 1) {
+        text = `
+            Followed by
+            <span class="mutual-name" onclick="goToProfile(${list[0].userId})">
+                ${list[0].user.userFullName}
+            </span>
+        `;
+    } else {
+        text = `
+            Followed by
+            <span class="mutual-name" onclick="goToProfile(${list[0].userId})">
+                ${list[0].user.userFullName}
+            </span>
+            and
+            <span class="mutual-name" onclick="goToProfile(${list[1].userId})">
+                ${list[1].user.userFullName}
+            </span>
+        `;
+    }
+
+    const hasMore = list.length >= 3;
+
+    return `
+        <div class="mutual-followers"
+             style="display:flex; align-items:center; gap:6px; margin-top:6px; font-size:0.9rem; color:#666;">
+            
+            <div class="mutual-avatars" style="display:flex; padding-left:8px;">
+                ${avatars}
+            </div>
+
+            <div class="mutual-text">
+                ${text}
+                ${hasMore ? `
+                    <span class="mutual-more"
+                          onclick="goToFollowers(${profile.id})"
+                          style="font-weight:600; cursor:pointer;">
+                        · more
+                    </span>
+                ` : ""}
+            </div>
+        </div>
     `;
 }
 
