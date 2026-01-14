@@ -569,5 +569,28 @@ async function loadUnreadCount() {
     }
 }
 
+function expandMomentForm() {
+    document.getElementById("momentExtra").classList.remove("hidden");
+}
+
+document.addEventListener("click", function (e) {
+    const form = document.getElementById("momentForm");
+    const extra = document.getElementById("momentExtra");
+    const textarea = document.getElementById("momentContent");
+
+    if (!form.contains(e.target)) {
+        if (!textarea.value.trim()) {
+            extra.classList.add("hidden");
+        }
+    }
+});
+
+function resetMomentForm() {
+    document.getElementById("momentContent").value = "";
+    document.getElementById("momentFiles").value = "";
+    document.getElementById("momentShare").selectedIndex = 0;
+    document.getElementById("momentExtra").classList.add("hidden");
+}
+
 loadUnreadCount();
 fetchMoments();

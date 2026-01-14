@@ -204,12 +204,11 @@ function renderProfile(profile) {
             <h2>${profile.user.fullName}</h2>
             
                 ${profile.bio ? `
-        <p class="profile-bio">
-            ${escapeHtml(profile.bio)}
-        </p>
-        ` : ""}
-        ${renderMutualFollowers(profile)}
-
+                <p class="profile-bio">
+                    ${escapeHtml(profile.bio)}
+                </p>
+                ` : ""}
+            ${!isMe ? renderMutualFollowers(profile) : ""}
             <div class="profile-meta-row">
                 <div class="profile-stats">
                     <div class="stat">

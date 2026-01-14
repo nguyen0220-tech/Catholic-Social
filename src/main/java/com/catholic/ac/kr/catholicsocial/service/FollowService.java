@@ -42,7 +42,7 @@ public class FollowService {
         => show X
      */
     public List<FollowerDTO> getMutualFollowers(Long userId, Long viewerId) {
-        Pageable pageable = PageRequest.of(0, 2, Sort.by("followedAt").descending());
+        Pageable pageable = PageRequest.of(0, 3, Sort.by("followedAt").descending());
 
         List<FollowerProjection> projections = followRepository.findMutualFollowers( userId,viewerId,pageable);
 

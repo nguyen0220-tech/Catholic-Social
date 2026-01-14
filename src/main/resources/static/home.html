@@ -208,6 +208,20 @@
             display: none;
         }
 
+        .moment-placeholder {
+            padding: 12px;
+            border-radius: 20px;
+            background: #f0f2f5;
+            color: #555;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .moment-placeholder:hover {
+            background: #e4e6eb;
+        }
+
+
     </style>
 </head>
 <body>
@@ -245,15 +259,26 @@
     <div class="content">
         <!-- Post Form -->
         <div class="moment-form">
-            <textarea id="momentContent" placeholder="Bạn đang nghĩ gì...?"></textarea>
-            <input type="file" id="momentFiles" multiple accept="image/*,video/*">
-            <select id="momentShare">
-                <option value="" disabled selected>Chọn chế độ chia sẻ</option>
-                <option value="PUBLIC">Công khai</option>
-                <option value="FOLLOWER">Người theo dõi</option>
-                <option value="PRIVATE">Riêng tư</option>
-            </select>
-            <button id="postMomentBtn">Đăng khoảnh khắc</button>
+            <!-- Ô gợi ý ban đầu -->
+            <div id="momentPlaceholder" class="moment-placeholder">
+                Bạn đang nghĩ gì...?
+            </div>
+
+            <!-- Phần form chi tiết (ẩn ban đầu) -->
+            <div id="momentDetail" class="hidden">
+                <textarea id="momentContent" placeholder="Viết suy nghĩ của bạn..."></textarea>
+
+                <input type="file" id="momentFiles" multiple accept="image/*,video/*">
+
+                <select id="momentShare">
+                    <option value="" disabled selected>Chọn chế độ chia sẻ</option>
+                    <option value="PUBLIC">Công khai</option>
+                    <option value="FOLLOWER">Người theo dõi</option>
+                    <option value="PRIVATE">Riêng tư</option>
+                </select>
+
+                <button id="postMomentBtn">Đăng khoảnh khắc</button>
+            </div>
         </div>
 
         <!-- Moments list -->
@@ -261,6 +286,17 @@
         <div id="momentsLoading">Đang tải...</div>
     </div>
 </div>
+<script>
+    const placeholder = document.getElementById("momentPlaceholder");
+    const detail = document.getElementById("momentDetail");
+    const textarea = document.getElementById("momentContent");
+
+    placeholder.addEventListener("click", () => {
+        placeholder.classList.add("hidden");
+        detail.classList.remove("hidden");
+        textarea.focus();
+    });
+</script>
 
 <script type="module" src="/auth-utils.js"></script>
 <script type="module" src="home.js"></script>
