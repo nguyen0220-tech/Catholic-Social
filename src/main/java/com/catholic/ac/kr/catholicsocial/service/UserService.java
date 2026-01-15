@@ -10,6 +10,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.Role;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.entity.model.UserInfo;
 import com.catholic.ac.kr.catholicsocial.entity.model.VerificationToken;
+import com.catholic.ac.kr.catholicsocial.exception.AlreadyExistsException;
 import com.catholic.ac.kr.catholicsocial.mapper.UserMapper;
 import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
 import com.catholic.ac.kr.catholicsocial.repository.RoleRepository;
@@ -21,6 +22,7 @@ import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import graphql.GraphQLException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -83,7 +85,18 @@ public class UserService {
 
         newUser.setInfo(newUserInfo);
 
-        userRepository.save(newUser);
+        try {
+            userRepository.save(newUser);
+
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMostSpecificCause().getMessage().contains("user_info_email_key"))
+                throw new AlreadyExistsException("email" + request.getEmail());
+
+            if (e.getMostSpecificCause().getMessage().contains("user_info_phone_key"))
+                throw new AlreadyExistsException("phone" + request.getPhoneNumber());
+
+            throw e;
+        }
 
         return ApiResponse.success(HttpStatus.CREATED.value(), HttpStatus.CREATED.getReasonPhrase(),
                 "User created successfully", UserMapper.toUserDTO(newUser));
@@ -110,8 +123,14 @@ public class UserService {
             return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
                     "Đã gửi email , vui lòng kiểm tra lại email");
         }
-
-        verificationTokenService.sendUsernameForgot(user);
+        try {
+            verificationTokenService.sendUsernameForgot(user);
+        } catch (DataIntegrityViolationException e) {
+            // race condition fallback
+            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
+                    "Đã gửi email, vui lòng kiểm tra lại email"
+            );
+        }
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Find username successfully, verify your email");
@@ -192,20 +211,6 @@ public class UserService {
     public ApiResponse<String> updateProfile(Long userId, ProfileDTO request) {
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
 
-        boolean existsPhone = userRepository.existsUserByPhone(request.getPhone());
-
-        //chua hoat dong dung
-        if (existsPhone && !user.getUserInfo().getPhone().equals(request.getPhone())) {
-            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
-                    "Phone already exists");
-        }
-
-        boolean existsEmail = userRepository.existsUserByEmail(request.getEmail());
-        if (existsEmail && !user.getUserInfo().getEmail().equals(request.getEmail())) {
-            return ApiResponse.fail(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),
-                    "Email already exists");
-        }
-
         user.getUserInfo().setFirstName(request.getFirstName());
         user.getUserInfo().setLastName(request.getLastName());
         user.getUserInfo().setBio(request.getBio());
@@ -215,7 +220,18 @@ public class UserService {
         user.getUserInfo().setSex(Sex.valueOf(request.getGender()));
         user.getUserInfo().setAddress(request.getAddress());
 
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMostSpecificCause().getMessage().contains("user_info_email_key"))
+                throw new AlreadyExistsException("email" + request.getEmail());
+
+            if (e.getMostSpecificCause().getMessage().contains("user_info_phone_key"))
+                throw new AlreadyExistsException("phone" + request.getPhone());
+
+            throw e;
+        }
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Update profile success");

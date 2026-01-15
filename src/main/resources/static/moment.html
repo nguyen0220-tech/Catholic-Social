@@ -211,6 +211,23 @@
             cursor: pointer;
         }
 
+        .moment-placeholder {
+            padding: 12px;
+            border-radius: 20px;
+            background: #f0f2f5;
+            color: #555;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .moment-placeholder:hover {
+            background: #e4e6eb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
     </style>
 
 </head>
@@ -224,21 +241,45 @@
 <h2>Đăng bài viết</h2>
 
 <form id="momentForm">
-    <textarea id="content" name="content" rows="3" placeholder="Hôm nay bạn nghĩ gì?"></textarea>
-    <select id="share" name="share">
-        <option value="PUBLIC">Công khai</option>
-        <option value="FOLLOWER">Người theo dõi</option>
-        <option value="PRIVATE">Chỉ mình tôi</option>
-    </select>
-    <input type="file" id="files" name="files" multiple accept="image/*">
-    <div id="preview"></div>
-    <button type="submit">Đăng bài</button>
+    <!-- Placeholder ban đầu -->
+    <div id="momentPlaceholder" class="moment-placeholder">
+        Hôm nay bạn nghĩ gì?
+    </div>
+
+    <!-- Form chi tiết (ẩn ban đầu) -->
+    <div id="momentDetail" class="hidden">
+        <textarea id="content" name="content" rows="3"
+                  placeholder="Viết suy nghĩ của bạn..."></textarea>
+
+        <select id="share" name="share">
+            <option value="PUBLIC">Công khai</option>
+            <option value="FOLLOWER">Người theo dõi</option>
+            <option value="PRIVATE">Chỉ mình tôi</option>
+        </select>
+
+        <input type="file" id="files" name="files" multiple accept="image/*">
+
+        <div id="preview"></div>
+
+        <button type="submit">Đăng bài</button>
+    </div>
 </form>
 
 <div id="messageBox" class="message"></div>
 
 <h2>Bài viết của bạn</h2>
 <div id="momentsList"></div>
+<script>
+    const placeholder = document.getElementById("momentPlaceholder");
+    const detail = document.getElementById("momentDetail");
+    const textarea = document.getElementById("content");
+
+    placeholder.addEventListener("click", () => {
+        placeholder.classList.add("hidden");
+        detail.classList.remove("hidden");
+        textarea.focus();
+    });
+</script>
 
 <script type="module" src="auth-utils.js"></script>
 <script type="module" src="moment.js"></script>
