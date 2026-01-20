@@ -37,10 +37,16 @@ public class UserResolver {
     private final FollowService followService;
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
     private final SavedService savedService;
+    private final IntroVideoService introVideoService;
 
     @QueryMapping
     public UserProfileDTO profile(@Argument Long userId) {
         return userService.getUserProfileDTO(userId);
+    }
+
+    @SchemaMapping
+    public IntroVideoDTO intro(UserProfileDTO profile){
+        return introVideoService.getIntroVideo(profile.getId());
     }
 
     @SchemaMapping

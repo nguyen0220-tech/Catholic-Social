@@ -1,0 +1,19 @@
+extend type Query {
+    allVideosRestore(page:Int!, size:Int!):ListResponse_IntroDTO
+}
+
+type ListResponse_IntroDTO{
+    data:[IntroDetail]
+    pageInfo:PageInfo!
+}
+
+type IntroDetail{
+    id:ID!
+    content:IntroContent
+}
+
+type IntroContent{
+    url:String!
+    exp:String!
+    publicId:String!
+}

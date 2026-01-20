@@ -221,6 +221,32 @@
             background: #e4e6eb;
         }
 
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .link-profile a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .link-profile a:hover {
+            color: #007bff;
+        }
+
+        .link-profile img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
 
     </style>
 </head>
@@ -231,10 +257,15 @@
         <a class="logo" style="color: violet" href="home.html">Catholic</a>
     </div>
 
-    <button id="logoutBtn">
-        <img src="icon/logout.png" alt="logout">
-        <span>Đăng xuất</span>
-    </button>
+    <!-- RIGHT ACTIONS -->
+    <div class="nav-actions">
+        <div class="link-profile" id="profileLink"></div>
+
+        <button id="logoutBtn">
+            <img src="icon/logout.png" alt="logout">
+            <span>Đăng xuất</span>
+        </button>
+    </div>
 </nav>
 
 <div class="main">

@@ -24,4 +24,5 @@ public class ProfileDTO {
     private LocalDate birthDate;
     private String gender;
     private String avatarUrl;
+    private IntroVideoDTO intro;
 }

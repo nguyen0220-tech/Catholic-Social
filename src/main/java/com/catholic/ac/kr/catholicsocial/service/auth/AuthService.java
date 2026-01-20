@@ -1,7 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service.auth;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.TokenResponseDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LoginRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LogoutRequest;
@@ -17,6 +16,7 @@ import com.catholic.ac.kr.catholicsocial.security.systemservice.RefreshTokenUtil
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.JwtUtil;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenService;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -171,6 +174,8 @@ public class AuthService {
             TokenResponseDTO tokenResponseDTO = new TokenResponseDTO();
 
             tokenResponseDTO.setUserId(user.getId());
+            tokenResponseDTO.setUserName(user.getUserInfo().getFirstName() + " " + user.getUserInfo().getLastName());
+            tokenResponseDTO.setUserAvatar(user.getUserInfo().getAvatarUrl());
             tokenResponseDTO.setAccessToken(accessToken);
             tokenResponseDTO.setRefreshToken(refreshToken.getRefreshToken());
 
@@ -210,7 +215,7 @@ public class AuthService {
     }
 
     public ApiResponse<String> logout(LogoutRequest request) {
-        RefreshToken token = EntityUtils.getOrThrow(refreshTokenRepository.findByRefreshToken(request.getRefreshToken()),"Token ");
+        RefreshToken token = EntityUtils.getOrThrow(refreshTokenRepository.findByRefreshToken(request.getRefreshToken()), "Token ");
 
         if (!refreshTokenUtil.isValid(token)) {
             return ApiResponse.fail(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(),

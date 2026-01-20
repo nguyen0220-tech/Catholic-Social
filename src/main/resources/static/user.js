@@ -117,13 +117,18 @@ query ($userId: ID!, $page: Int!, $size: Int!) {
 }
 `;
 
-const CREATED_AT_QUERY = `
+const ACCOUNT_INFO_QUERY = `
 query ($userId: ID!) {
   profile(userId: $userId) {
     createdAt
+    intro {
+      id
+      url
+    }
   }
 }
 `;
+
 
 const CREATE_SAVED_MUTATION = `
 mutation ($momentId: ID!) {
@@ -389,22 +394,23 @@ window.toggleFollow = toggleFollow
 
 async function showAccountInfo(userId) {
     try {
-        const res = await graphqlRequest(CREATED_AT_QUERY, {userId});
+        const res = await graphqlRequest(ACCOUNT_INFO_QUERY, { userId });
 
-        if (res.errors) {
+        if (res.errors || !res.data.profile) {
             console.error(res.errors);
             alert("Không thể lấy thông tin tài khoản");
             return;
         }
 
-        const createdAt = res.data.profile.createdAt;
+        const { createdAt, intro } = res.data.profile;
+
         const createdDate = new Date(createdAt).toLocaleDateString("vi-VN", {
             year: "numeric",
             month: "long",
             day: "numeric"
         });
 
-        openAccountInfoModal(createdDate);
+        openAccountInfoModal(createdDate, intro);
 
     } catch (e) {
         console.error("showAccountInfo error", e);
@@ -413,8 +419,27 @@ async function showAccountInfo(userId) {
 
 window.showAccountInfo = showAccountInfo;
 
-function openAccountInfoModal(createdDate) {
+function openAccountInfoModal(createdDate, intro) {
     document.getElementById("accountCreatedAt").innerText = createdDate;
+
+    const introContainer = document.getElementById("accountIntro");
+
+    if (intro && intro.url) {
+        introContainer.innerHTML = `
+            <video controls
+                   style="width:100%; max-height:400px; border-radius:8px;">
+                <source src="${intro.url}">
+                Trình duyệt của bạn không hỗ trợ video.
+            </video>
+        `;
+    } else {
+        introContainer.innerHTML = `
+            <p style="color:#777; font-style:italic;">
+                Tài khoản này chưa có intro
+            </p>
+        `;
+    }
+
     document.getElementById("accountInfoModal").classList.remove("hidden");
 }
 

@@ -86,6 +86,16 @@ public class ConvertHandler {
 
         return heartDTO;
     }
+
+    public static IntroContentDTO convertToIntroContentDTO(IntroVideo introVideo) {
+        IntroContentDTO introContentDTO = new IntroContentDTO();
+
+        introContentDTO.setUrl(introVideo.getUrl());
+        introContentDTO.setExp(introVideo.getExp());
+        introContentDTO.setPublicId(introVideo.getPublicId());
+
+        return introContentDTO;
+    }
 }
 
 /*

@@ -569,5 +569,21 @@ async function loadUnreadCount() {
     }
 }
 
+const profileLink = document.getElementById("profileLink");
+
+const userId = localStorage.getItem("userId");
+const userName = localStorage.getItem("userName");
+const userAvatar = localStorage.getItem("userAvatar");
+
+if (userId && userName) {
+    profileLink.innerHTML = `
+        <a href="user.html?id=${userId}">
+            <img src="${userAvatar || '/icon/default-avatar.png'}" alt="avatar">
+            <span>${userName}</span>
+        </a>
+    `;
+}
+
+
 loadUnreadCount();
 fetchMoments();

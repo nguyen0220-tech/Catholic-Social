@@ -343,18 +343,21 @@
 </div>
 
 
-<div id="accountInfoModal" class="modal hidden">
+<div id="accountInfoModal" class="hidden modal">
     <div class="modal-content">
-        <h3>Giới thiệu về tài khoản này</h3>
+        <h3>Giới thiệu tài khoản</h3>
 
         <p>
-            📅 <b>Tham gia từ:</b>
+            📅 Tham gia:
             <span id="accountCreatedAt"></span>
         </p>
+
+        <div id="accountIntro" style="margin-top:12px;"></div>
 
         <button onclick="closeAccountInfoModal()">Đóng</button>
     </div>
 </div>
+
 
 
 <script type="module" src="auth-utils.js"></script>

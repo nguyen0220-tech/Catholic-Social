@@ -169,6 +169,40 @@
             resize: vertical;
             font-family: inherit;
         }
+
+        /* ===== Intro Video ===== */
+        .intro-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            background: #f3f6ff;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: .25s;
+        }
+
+        .intro-wrapper:hover {
+            background: #e6ecff;
+        }
+
+        #introPlaceholder {
+            color: #3b7cf5;
+            font-weight: 600;
+        }
+
+        .intro-wrapper::after {
+            content: "🎥";
+            position: absolute;
+            bottom: 10px;
+            right: 12px;
+            background: #3b7cf5;
+            color: #fff;
+            padding: 6px;
+            border-radius: 50%;
+            font-size: .8rem;
+        }
+
     </style>
 </head>
 
@@ -186,6 +220,58 @@
         </div>
         <input type="file" id="avatarFile" accept="image/*" hidden>
     </div>
+
+    <h4>Video giới thiệu</h4>
+
+    <div class="intro-container">
+
+        <!-- Click vào đây để mở upload -->
+        <div class="intro-wrapper" id="introClick">
+            <video id="introPreview"
+                   controls
+                   style="width:100%; border-radius:16px; display:none">
+            </video>
+
+            <!-- Placeholder khi chưa có video -->
+            <div id="introPlaceholder">
+                🎥 Nhấn để thêm video giới thiệu
+            </div>
+        </div>
+
+        <div id="introExpText"
+             style="margin-top:6px; font-size:0.9rem; color:#666; display:none">
+        </div>
+
+        <div id="introUploadPanel" style="display:none; margin-top:12px">
+            <input type="file" id="introFile" accept="video/*">
+
+            <label>Thời hạn (ngày)</label>
+            <input type="number" id="introExpDay" min="1" value="7">
+
+            <button type="button" id="uploadIntroBtn" class="btn-primary">
+                ⬆ Upload video giới thiệu
+            </button>
+
+            <button type="button"
+                    id="removeIntroBtn"
+                    class="btn-outline"
+                    style="display:none">
+                🗑 Xóa video giới thiệu
+            </button>
+        </div>
+
+    </div>
+
+    <hr style="margin:24px 0">
+
+    <button id="toggleRestoreIntroBtn" class="btn-outline">
+        📦 Video giới thiệu đã xóa
+    </button>
+
+    <div id="restoreIntroPanel" style="display:none; margin-top:12px">
+        <div id="restoreIntroList"></div>
+    </div>
+
 
     <form id="profileForm">
         <h4>Thông tin cơ bản</h4>

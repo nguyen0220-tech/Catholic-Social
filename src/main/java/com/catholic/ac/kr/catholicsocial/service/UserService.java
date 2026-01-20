@@ -6,17 +6,17 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UserRequest;
-import com.catholic.ac.kr.catholicsocial.entity.model.Role;
-import com.catholic.ac.kr.catholicsocial.entity.model.User;
-import com.catholic.ac.kr.catholicsocial.entity.model.UserInfo;
-import com.catholic.ac.kr.catholicsocial.entity.model.VerificationToken;
+import com.catholic.ac.kr.catholicsocial.entity.model.*;
 import com.catholic.ac.kr.catholicsocial.exception.AlreadyExistsException;
+import com.catholic.ac.kr.catholicsocial.mapper.IntroVideoMapper;
 import com.catholic.ac.kr.catholicsocial.mapper.UserMapper;
 import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
+import com.catholic.ac.kr.catholicsocial.repository.IntroVideoRepository;
 import com.catholic.ac.kr.catholicsocial.repository.RoleRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.repository.VerificationTokenRepository;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenService;
+import com.catholic.ac.kr.catholicsocial.status.IntroStatus;
 import com.catholic.ac.kr.catholicsocial.status.Sex;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
@@ -48,6 +48,7 @@ public class UserService {
     private final VerificationTokenService verificationTokenService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final UploadFileHandler uploadFileHandler;
+    private final IntroVideoRepository introVideoRepository;
 
     public List<User> getAllById(List<Long> ids) {
         return userRepository.findAllById(ids);
@@ -201,6 +202,15 @@ public class UserService {
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
 
         ProfileDTO profileDTO = UserMapper.toProfileDTO(user);
+
+        Optional<IntroVideo> introOpt = introVideoRepository.findByUser_IdAndStatus(userId, IntroStatus.ACTIVE);
+
+        if (introOpt.isPresent()) {
+            IntroVideo intro = introOpt.get();
+            IntroVideoDTO introVideoDTO = IntroVideoMapper.toIntroVideoDTO(intro);
+
+            profileDTO.setIntro(introVideoDTO);
+        }
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Get user profile success", profileDTO);

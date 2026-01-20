@@ -47,6 +47,8 @@ document.getElementById("loginBtn").addEventListener("click", async function () 
             localStorage.setItem("accessToken", result.data.accessToken);
             localStorage.setItem("refreshToken", result.data.refreshToken);
             localStorage.setItem("userId", result.data.userId);
+            localStorage.setItem("userName", result.data.userName);
+            localStorage.setItem("userAvatar", result.data.userAvatar);
             window.location.href = "home.html";
         } else {
             loginError.textContent = result.message || "Đăng nhập thất bại.";

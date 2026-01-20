@@ -44,6 +44,7 @@ type MomentGQLDTO {
 
 type UserProfileDTO{
     id: ID!
+    intro:IntroDTO
     numOfMoments:Int!
     numOfFollowers:Int!
     numOfFollowing:Int!
@@ -56,6 +57,11 @@ type UserProfileDTO{
     mutualFollowers:[FollowerDTO]
     user:UserInfo!
     moments(page:Int, size:Int):MomentConnection
+}
+
+type IntroDTO{
+    id:ID!
+    url:String
 }
 
 type ListResponse_FollowDTO{
