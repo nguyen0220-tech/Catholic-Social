@@ -17,9 +17,19 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             FROM ChatRoomMember crm
             JOIN ChatRoom cr ON crm.chatRoom.id = cr.id
             WHERE crm.user.id = :userId
+            ORDER BY cr.createdAt ASC
             """)
     Page<ChatRoomProjection> findByUserId(Long userId, Pageable pageable);
 
     boolean existsByUser_IdAndChatRoom_Id(Long userId, Long chatRoomId);
+
+    @Query("""
+                SELECT crm
+                FROM ChatRoomMember crm
+                JOIN FETCH crm.user u
+                JOIN FETCH u.userInfo
+                WHERE crm.chatRoom.id IN :chatRoomIds
+            """)
+    List<ChatRoomMember> findMembersByChatRoomIds(List<Long> chatRoomIds);
 
 }

@@ -4,6 +4,7 @@ import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
@@ -12,11 +13,13 @@ import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
 import com.catholic.ac.kr.catholicsocial.repository.ChatRoomMemberRepository;
 import com.catholic.ac.kr.catholicsocial.repository.ChatRoomRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +33,10 @@ public class ChatRoomMessageService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
+
+    public List<ChatRoomMember> getAllChatRoomMembers(List<Long> chatRoomIds) {
+        return chatRoomMemberRepository.findMembersByChatRoomIds(chatRoomIds);
+    }
 
     public List<ChatRoom> getAllChatRoomsByIds(List<Long> ids) {
         return chatRoomRepository.findAllById(ids);
@@ -59,7 +66,6 @@ public class ChatRoomMessageService {
         User otherUser = EntityUtils.getOrThrow(userRepository.findById(request.getRecipientId()), "User");
 
         ChatRoom newChatRoom = new ChatRoom();
-        newChatRoom.setRoomName(otherUser.getUserInfo().getFirstName() + " " + otherUser.getUserInfo().getLastName());
         newChatRoom.setLastMessagePreview(request.getMessage());
         newChatRoom.setLastMessageAt(LocalDateTime.now());
         chatRoomRepository.save(newChatRoom);
@@ -75,5 +81,21 @@ public class ChatRoomMessageService {
         chatRoomMemberRepository.saveAll(List.of(m1, m2));
 
         return newChatRoom;
+    }
+
+    public GraphqlResponse<String> updateChatRoom(Long userId, UpdateChatRoomRequest request) {
+        boolean roomExisting = chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, request.getChatRoomId());
+        if (!roomExisting) {
+            throw new AccessDeniedException("forbidden");
+        }
+
+        ChatRoom chatRoom = EntityUtils.getOrThrow(
+                chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
+
+        chatRoom.setRoomName(request.getChatRoomName());
+        chatRoom.setDescription(request.getChatRoomDescription());
+        chatRoomRepository.save(chatRoom);
+
+        return GraphqlResponse.success("updated success",null);
     }
 }

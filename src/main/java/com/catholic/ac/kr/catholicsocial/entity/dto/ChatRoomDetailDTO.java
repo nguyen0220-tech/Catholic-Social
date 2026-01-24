@@ -3,11 +3,15 @@ package com.catholic.ac.kr.catholicsocial.entity.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 public class ChatRoomDetailDTO {
     private String roomName;
     private String description;
+    private LocalDateTime lastMessageAt;
+    private String lastMessagePreview;
     List<UserGQLDTO> members;
 }

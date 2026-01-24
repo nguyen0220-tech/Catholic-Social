@@ -74,6 +74,8 @@ public class ConvertHandler {
 
         chatRoomDetailDTO.setRoomName(chatRoom.getRoomName());
         chatRoomDetailDTO.setDescription(chatRoom.getDescription());
+        chatRoomDetailDTO.setLastMessagePreview(chatRoom.getLastMessagePreview());
+        chatRoomDetailDTO.setLastMessageAt(chatRoom.getLastMessageAt());
 
         return chatRoomDetailDTO;
     }

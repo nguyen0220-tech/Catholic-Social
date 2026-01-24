@@ -1,6 +1,10 @@
 extend type Query {
-    roomsChat(userId:ID!, page:Int!, size:Int!):ListResponse_RoomChat
+    roomsChat(page:Int!, size:Int!):ListResponse_RoomChat
     messages(userId:ID!,chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
+}
+
+extend type Mutation {
+    updateChatRoom(request:UpdateChatRoomRequest!):GraphqlResponse_String
 }
 
 type ListResponse_RoomChat{
@@ -11,12 +15,14 @@ type ListResponse_RoomChat{
 type ChatRoom{
     chatRoomId:ID!
     detail:ChatRoomDetail
+    members:[UserDTO]!
 }
 
 type ChatRoomDetail{
-    roomName:String!
+    roomName:String
     description:String
-    members:UserDTO!
+    lastMessagePreview:String!
+    lastMessageAt:String!
 }
 
 type ListResponse_Message{
@@ -31,4 +37,10 @@ type Message{
 
     messageMedias:[String]
     user:UserDTO!
+}
+
+input UpdateChatRoomRequest{
+    chatRoomId:ID!
+    chatRoomName:String
+    chatRoomDescription:String
 }

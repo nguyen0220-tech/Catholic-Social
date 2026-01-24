@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
+    <link rel="manifest" href="icon/site.webmanifest">
+    <title>Message</title>
+    <style>
+        <style>
+        .room {
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+        .members {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .avatar {
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            background: #eee;
+        }
+
+        /* stack avatar */
+        .avatar-stack {
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar-stack .avatar {
+            margin-left: -8px;
+        }
+
+        .avatar.small {
+            width: 28px;
+            height: 28px;
+        }
+
+        .avatar.medium {
+            width: 36px;
+            height: 36px;
+        }
+
+        .avatar.large {
+            width: 44px;
+            height: 44px;
+        }
+
+        .more-count {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: -8px;
+            border: 2px solid #fff;
+        }
+
+        .message-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .last-message {
+            flex: 1;
+            color: #555;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<h2>💬 Danh sách phòng chat</h2>
+<div id="roomsContainer"></div>
+
+<div id="loading" style="display:none; text-align:center; padding:12px">
+    ⏳ Đang tải...
+</div>
+
+<div id="editRoomModal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    justify-content:center;
+    align-items:center;
+">
+    <div style="
+        background:#fff;
+        padding:16px;
+        border-radius:8px;
+        width:300px;
+    ">
+        <h3>✏️ Cập nhật phòng chat</h3>
+
+        <input id="roomNameInput" placeholder="Tên phòng"
+               style="width:100%; margin-bottom:8px">
+
+        <textarea id="roomDescInput" placeholder="Mô tả"
+                  style="width:100%; margin-bottom:8px"></textarea>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px">
+            <button onclick="closeEditRoom()">Huỷ</button>
+            <button onclick="submitUpdateRoom()">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="auth-utils.js"></script>
+<script type="module" src="message.js"></script>
+</body>
+
+</html>

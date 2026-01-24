@@ -23,6 +23,14 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
     boolean existsByFollowerAndUserAndState(User follower, User user, FollowState state);
 
     @Query("""
+            SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END
+            FROM Follow f
+            WHERE (f.follower.id = :user1Id AND f.user.id = :user2Id AND f.state = :state)
+               OR (f.user.id = :user1Id AND f.follower.id = :user2Id AND f.state = :state)
+            """)
+    boolean checkBlockTwoWay(Long user1Id, Long user2Id, FollowState state);
+
+    @Query("""
             SELECT f FROM Follow f
             WHERE f.follower = :follower AND f.user = :user AND f.state NOT IN ('BLOCKED','FOLLOWING')
             """)

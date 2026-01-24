@@ -10,13 +10,12 @@ import com.catholic.ac.kr.catholicsocial.entity.model.MessageMedia;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.MessageMapper;
 import com.catholic.ac.kr.catholicsocial.projection.MessageProjection;
-import com.catholic.ac.kr.catholicsocial.repository.ChatRoomMemberRepository;
-import com.catholic.ac.kr.catholicsocial.repository.ChatRoomRepository;
-import com.catholic.ac.kr.catholicsocial.repository.MessageRepository;
-import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.repository.*;
+import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
+import graphql.GraphQLException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +39,7 @@ public class MessageService {
     private final UploadFileHandler uploadFileHandler;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final FollowRepository followRepository;
 
     public ListResponse<MessageDTO> getMessages(Long userId, Long chatRoomId, int page, int size) {
         if (!chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, chatRoomId)) {
@@ -58,6 +58,15 @@ public class MessageService {
 
     @Transactional
     public ApiResponse<String> sendDirectMessage(Long userId, MessageRequest request) {
+        if (userId.equals(request.getRecipientId()))
+            throw new GraphQLException("Cannot send a direct message: send self");
+
+        boolean blockedRecipient = followRepository.checkBlockTwoWay(userId, request.getRecipientId(), FollowState.BLOCKED);
+
+        if (blockedRecipient) {
+            throw new GraphQLException("Cannot send a direct message:blocked recipient");
+        }
+
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
         ChatRoom room = chatRoomMessageService.getChatRoom(userId, request);
 
@@ -82,7 +91,7 @@ public class MessageService {
 
         messageRepository.save(message);
 
-        room.setLastMessagePreview(request.getMessage() != null ? request.getMessage() : " ");
+        room.setLastMessagePreview(request.getMessage() != null ? request.getMessage() : "[Link]");
         room.setLastMessageAt(message.getCreatedAt());
         chatRoomRepository.save(room);
 
