@@ -1,0 +1,34 @@
+extend type Query {
+    roomsChat(userId:ID!, page:Int!, size:Int!):ListResponse_RoomChat
+    messages(userId:ID!,chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
+}
+
+type ListResponse_RoomChat{
+    data:[ChatRoom]
+    pageInfo:PageInfo
+}
+
+type ChatRoom{
+    chatRoomId:ID!
+    detail:ChatRoomDetail
+}
+
+type ChatRoomDetail{
+    roomName:String!
+    description:String
+    members:UserDTO!
+}
+
+type ListResponse_Message{
+    data:[Message]
+    pageInfo:PageInfo
+}
+
+type Message{
+    id:ID!
+    text:String
+    createdAt:String!
+
+    messageMedias:[String]
+    user:UserDTO!
+}

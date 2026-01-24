@@ -65,6 +65,19 @@ public class ConvertHandler {
         return image.getImageUrl();
     }
 
+    public static String convertMediaUrl(MessageMedia media) {
+        return media.getUrl();
+    }
+
+    public static ChatRoomDetailDTO convertToChatRoomDetailDTO(ChatRoom chatRoom) {
+        ChatRoomDetailDTO chatRoomDetailDTO = new ChatRoomDetailDTO();
+
+        chatRoomDetailDTO.setRoomName(chatRoom.getRoomName());
+        chatRoomDetailDTO.setDescription(chatRoom.getDescription());
+
+        return chatRoomDetailDTO;
+    }
+
     public static CommentDTO convertToCommentDTO(Comment comment) {
         CommentDTO commentDTO = new CommentDTO();
 

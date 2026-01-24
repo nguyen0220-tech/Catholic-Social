@@ -5,6 +5,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
@@ -29,6 +30,7 @@ public class NotificationResolver {
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
     private final FollowService followService;
     private final CommentService commentService;
+    private final UserBatchLoader userBatchLoader;
 
     @QueryMapping
     public ListResponse<NotificationDTO> notifications(
@@ -64,13 +66,7 @@ public class NotificationResolver {
                 .distinct()
                 .toList();
 
-        List<User> actors = userService.getAllById(actorIds);
-
-        Map<Long, UserGQLDTO> map = actors.stream()
-                .collect(Collectors.toMap(
-                        User::getId,
-                        ConvertHandler::convertToUserGQLDTO
-                ));
+        Map<Long, UserGQLDTO> map = userBatchLoader.loadUserByIds(actorIds);
 
         return notifications.stream()
                 .collect(Collectors.toMap(

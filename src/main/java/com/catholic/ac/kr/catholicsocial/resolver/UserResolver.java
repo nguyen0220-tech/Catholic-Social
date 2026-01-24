@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.resolver;
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
@@ -38,6 +39,7 @@ public class UserResolver {
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
     private final SavedService savedService;
     private final IntroVideoService introVideoService;
+    private final UserBatchLoader userBatchLoader;
 
     @QueryMapping
     public UserProfileDTO profile(@Argument Long userId) {
@@ -97,14 +99,7 @@ public class UserResolver {
                 .map(FollowerDTO::getUserId)
                 .toList();
 
-        List<User> users = userService.getAllById(userIds);
-
-        Map<Long, UserGQLDTO> map = users.stream()
-                .collect(Collectors.toMap(
-                        User::getId,
-                        ConvertHandler::convertToUserGQLDTO
-                ));
-
+        Map<Long, UserGQLDTO> map = userBatchLoader.loadUserByIds(userIds);
         return followers.stream()
                 .collect(Collectors.toMap(
                         f -> f,
