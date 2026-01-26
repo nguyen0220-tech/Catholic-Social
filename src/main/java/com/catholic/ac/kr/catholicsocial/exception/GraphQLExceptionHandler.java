@@ -8,6 +8,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.NonNull;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +16,15 @@ public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter
 
     @Override
     protected GraphQLError resolveToSingleError(@NonNull Throwable ex, @NonNull DataFetchingEnvironment environment) {
+        if (ex instanceof AccessDeniedException) {
+            return GraphqlErrorBuilder.newError()
+                    .errorType(ErrorType.FORBIDDEN)
+                    .message(ex.getMessage())
+                    .path(environment.getExecutionStepInfo().getPath())
+                    .build();
+        }
+
+
         // Kiểm tra xem lỗi có phải là GraphQLException đã ném ra không
         if (ex instanceof GraphQLException) {
             return GraphqlErrorBuilder.newError()

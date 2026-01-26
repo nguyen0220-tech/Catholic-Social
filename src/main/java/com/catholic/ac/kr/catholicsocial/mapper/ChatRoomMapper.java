@@ -4,7 +4,6 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
 import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ChatRoomMapper {
     public static ChatRoomDTO chatRoomDTO(ChatRoomProjection projection) {

@@ -18,10 +18,7 @@ import com.catholic.ac.kr.catholicsocial.service.MessageService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.graphql.data.method.annotation.Argument;
-import org.springframework.graphql.data.method.annotation.BatchMapping;
-import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
@@ -51,7 +48,7 @@ public class ChatRoomMessageResolver {
     public GraphqlResponse<String> updateChatRoom(
             @AuthenticationPrincipal CustomUseDetails useDetails,
             @Argument UpdateChatRoomRequest request
-            ){
+    ) {
         return chatRoomMessageService.updateChatRoom(useDetails.getUser().getId(), request);
     }
 
@@ -110,11 +107,11 @@ public class ChatRoomMessageResolver {
 
     @QueryMapping
     public ListResponse<MessageDTO> messages(
-            @Argument Long userId,
+            @AuthenticationPrincipal CustomUseDetails useDetails,
             @Argument Long chatRoomId,
             @Argument int page,
             @Argument int size) {
-        return messageService.getMessages(userId, chatRoomId, page, size);
+        return messageService.getMessages(useDetails.getUser().getId(), chatRoomId, page, size);
     }
 
 
@@ -153,5 +150,14 @@ public class ChatRoomMessageResolver {
                         m -> m,
                         m -> map.get(m.getSenderId())
                 ));
+    }
+
+    @SchemaMapping(typeName = "Message", field = "isMine")
+    public Boolean isMine(MessageDTO messages, Principal principal) {
+        CustomUseDetails useDetails = userDetailsForBatchMapping.getCustomUseDetails(principal);
+
+        Long myId = useDetails.getUser().getId();
+
+        return myId.equals(messages.getSenderId());
     }
 }

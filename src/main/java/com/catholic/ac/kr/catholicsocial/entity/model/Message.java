@@ -1,7 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.entity.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -46,7 +46,7 @@ public class MessageService {
             throw new AccessDeniedException("forbidden");
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
 
         Page<MessageProjection> projections = messageRepository.findByChatRoomId(chatRoomId, pageable);
 
@@ -59,12 +59,12 @@ public class MessageService {
     @Transactional
     public ApiResponse<String> sendDirectMessage(Long userId, MessageRequest request) {
         if (userId.equals(request.getRecipientId()))
-            throw new GraphQLException("Cannot send a direct message: send self");
+            throw new IllegalStateException("Cannot send a direct message: send self");
 
         boolean blockedRecipient = followRepository.checkBlockTwoWay(userId, request.getRecipientId(), FollowState.BLOCKED);
 
         if (blockedRecipient) {
-            throw new GraphQLException("Cannot send a direct message:blocked recipient");
+            throw new IllegalStateException("Cannot send a direct message:blocked recipient");
         }
 
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");

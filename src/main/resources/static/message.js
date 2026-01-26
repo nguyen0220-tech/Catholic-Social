@@ -2,11 +2,17 @@ const URL_BASE = window.location.origin;
 const accessToken = localStorage.getItem("accessToken");
 const GRAPHQL_URL = `${URL_BASE}/graphql`;
 
+const urlParams = new URLSearchParams(window.location.search);
+const chatRoomId = urlParams.get("chatRoomId");
+
 let currentPage = 0;
-const pageSize = 5;
+const pageSize = 10;
 let hasNext = true;
 let isLoading = false;
 
+if (!chatRoomId) {
+    alert("Thiếu chatRoomId");
+}
 
 async function graphqlRequest(query, variables = {}) {
     const res = await fetch(GRAPHQL_URL, {
@@ -15,26 +21,24 @@ async function graphqlRequest(query, variables = {}) {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify({query, variables})
+        body: JSON.stringify({ query, variables })
     });
     return await res.json();
 }
 
-const ROOMS_QUERY = `
-query ($page: Int!, $size: Int!) {
-  roomsChat(page: $page, size: $size) {
+const MESSAGES_QUERY = `
+query ($chatRoomId: Int!, $page: Int!, $size: Int!) {
+  messages(chatRoomId: $chatRoomId, page: $page, size: $size) {
     data {
-      chatRoomId
-      detail {
-        roomName
-        description
-        lastMessagePreview
-        lastMessageAt
-      }
-      members {
+      id
+      text
+      createdAt
+      messageMedias
+      user {
         userFullName
         avatarUrl
       }
+      isMine
     }
     pageInfo {
       page
@@ -45,64 +49,49 @@ query ($page: Int!, $size: Int!) {
 }
 `;
 
-const UPDATE_ROOM_MUTATION = `
-mutation ($request: UpdateChatRoomRequest!) {
-  updateChatRoom(request: $request) {
-    success
-    message
-    data
-  }
-}
-`;
-
-
-async function loadRooms() {
+async function loadMessages() {
     if (!hasNext || isLoading) return;
 
     isLoading = true;
     document.getElementById("loading").style.display = "block";
 
-    const result = await graphqlRequest(ROOMS_QUERY, {
+    const result = await graphqlRequest(MESSAGES_QUERY, {
+        chatRoomId: Number(chatRoomId),
         page: currentPage,
         size: pageSize
     });
 
     if (result.errors) {
         console.error(result.errors);
-        isLoading = false;
         return;
     }
 
-    const response = result.data.roomsChat;
-    const rooms = response.data;
+    const response = result.data.messages;
+    const messages = response.data;
     hasNext = response.pageInfo.hasNext;
 
-    const container = document.getElementById("roomsContainer");
+    const container = document.getElementById("messagesContainer");
+    messages.forEach(msg => {
+        const div = document.createElement("div");
 
-    rooms.forEach(room => {
-        const roomDiv = document.createElement("div");
-        roomDiv.className = "room";
-        roomDiv.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <h3 style="margin:0; cursor:pointer; display:flex; align-items:center; gap:4px"
-                    onclick='openEditRoom(${JSON.stringify(room)})'>
-                    ${renderRoomTitle(room)}
-                </h3>
+        div.className = msg.isMine ? "message mine" : "message other";
 
-                <span style="font-size:12px; color:#888">
-                    ${formatTime(room.detail.lastMessageAt)}
-                </span>
+        div.innerHTML = `
+        ${!msg.isMine ? `
+            <img class="avatar" src="${msg.user.avatarUrl}" alt="">
+        ` : ""}
+
+        <div class="content">
+            <div class="bubble">
+                ${msg.text ? `<div class="message-text">${msg.text}</div>` : ""}
+                ${renderMessageMedias(msg.messageMedias)}
             </div>
-        
-            <div class="message-row">
-                ${renderMembers(room.members)}
-            
-                <div class="last-message">
-                    ${room.detail.lastMessagePreview ?? "<i>Chưa có tin nhắn</i>"}
-                </div>
-            </div>
-        `;
-        container.appendChild(roomDiv);
+
+            <div class="time">${formatTime(msg.createdAt)}</div>
+        </div>
+    `;
+
+        container.appendChild(div);
     });
 
     currentPage++;
@@ -112,86 +101,15 @@ async function loadRooms() {
 
 window.addEventListener("scroll", () => {
     const nearBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 150;
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 120;
 
     if (nearBottom) {
-        loadRooms();
+        loadMessages();
     }
 });
 
-function renderRoomTitle(room) {
-    const title = getRoomTitle(room);
-    const desc = room.detail.description;
-
-    if (desc && desc.trim() !== "") {
-        return `
-            <span>${title}</span>
-            <span style="font-size:12px; color:#888; margin-left:6px">
-                • ${desc}
-            </span>
-        `;
-    }
-
-    return `<span>${title}</span>`;
-}
-
-
-function getRoomTitle(room) {
-    const roomName = room.detail.roomName;
-
-    if (roomName && roomName.trim() !== "") {
-        return roomName;
-    }
-
-    if (!room.members || room.members.length === 0) {
-        return "Phòng chat";
-    }
-
-    const maxNames = 2;
-    const names = room.members.map(m => m.userFullName);
-
-    const visible = names.slice(0, maxNames);
-    const remaining = names.length - maxNames;
-
-    return remaining > 0
-        ? `${visible.join(", ")}, +${remaining}`
-        : visible.join(", ");
-}
-
-function renderMembers(members) {
-    if (!members || members.length === 0) return "";
-
-    const maxVisible = 4;
-    const visibleMembers = members.slice(0, maxVisible);
-    const remaining = members.length - maxVisible;
-
-    const sizeClass =
-        members.length === 1 ? "large" :
-            members.length <= 3 ? "medium" :
-                "small";
-
-    return `
-        <div class="avatar-stack">
-            ${visibleMembers.map(m => `
-                <img
-                    src="${m.avatarUrl}"
-                    class="avatar ${sizeClass}"
-                    alt=""
-                >
-            `).join("")}
-
-            ${remaining > 0
-        ? `<div class="more-count">+${remaining}</div>`
-        : ""}
-        </div>
-    `;
-}
-
-function formatTime(isoString) {
-    if (!isoString) return "";
-
-    const date = new Date(isoString);
-    return date.toLocaleString("vi-VN", {
+function formatTime(iso) {
+    return new Date(iso).toLocaleString("vi-VN", {
         hour: "2-digit",
         minute: "2-digit",
         day: "2-digit",
@@ -199,55 +117,20 @@ function formatTime(isoString) {
     });
 }
 
-//update room
-let editingRoomId = null;
+function renderMessageMedias(medias) {
+    if (!medias || medias.length === 0) return "";
 
-function openEditRoom(room) {
-    editingRoomId = room.chatRoomId;
-
-    document.getElementById("roomNameInput").value =
-        room.detail.roomName ?? "";
-
-    document.getElementById("roomDescInput").value =
-        room.detail.description ?? "";
-
-    document.getElementById("editRoomModal").style.display = "flex";
+    return `
+        <div class="media-list">
+            ${medias.map(url => `
+                <img
+                    src="${url}"
+                    class="message-image"
+                    onclick="window.open('${url}', '_blank')"
+                />
+            `).join("")}
+        </div>
+    `;
 }
 
-window.openEditRoom = openEditRoom
-
-function closeEditRoom() {
-    editingRoomId = null;
-    document.getElementById("editRoomModal").style.display = "none";
-}
-
-window.closeEditRoom = closeEditRoom
-
-async function submitUpdateRoom() {
-    const name = document.getElementById("roomNameInput").value.trim();
-    const desc = document.getElementById("roomDescInput").value.trim();
-
-    const result = await graphqlRequest(UPDATE_ROOM_MUTATION, {
-        request: {
-            chatRoomId: editingRoomId,
-            chatRoomName: name || null,
-            chatRoomDescription: desc || null
-        }
-    });
-
-    if (!result.data.updateChatRoom.success) {
-        alert(result.data.updateChatRoom.message);
-        return;
-    }
-
-    closeEditRoom();
-
-    // refresh UI nhẹ: clear + reload
-    document.getElementById("roomsContainer").innerHTML = "";
-    currentPage = 0;
-    hasNext = true;
-    loadRooms();
-}
-window.submitUpdateRoom=submitUpdateRoom
-
-loadRooms();
+loadMessages();

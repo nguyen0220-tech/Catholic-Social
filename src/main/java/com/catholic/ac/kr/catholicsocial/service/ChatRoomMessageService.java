@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
@@ -12,9 +13,12 @@ import com.catholic.ac.kr.catholicsocial.mapper.ChatRoomMapper;
 import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
 import com.catholic.ac.kr.catholicsocial.repository.ChatRoomMemberRepository;
 import com.catholic.ac.kr.catholicsocial.repository.ChatRoomRepository;
+import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
+import graphql.GraphQLException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +37,7 @@ public class ChatRoomMessageService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final FollowRepository followRepository;
 
     public List<ChatRoomMember> getAllChatRoomMembers(List<Long> chatRoomIds) {
         return chatRoomMemberRepository.findMembersByChatRoomIds(chatRoomIds);
@@ -96,6 +101,37 @@ public class ChatRoomMessageService {
         chatRoom.setDescription(request.getChatRoomDescription());
         chatRoomRepository.save(chatRoom);
 
-        return GraphqlResponse.success("updated success",null);
+        return GraphqlResponse.success("updated success", null);
+    }
+
+    public GraphqlResponse<String> addMemberToChatRoom(Long userId, AddMemberRequest request) {
+        boolean roomExisting = chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, request.getChatRoomId());
+        if (!roomExisting) {
+            throw new AccessDeniedException("forbidden");
+        }
+
+        if (userId.equals(request.getMemberId()))
+            throw new GraphQLException("Cannot send a direct message: send self");
+
+        boolean blockedRecipient = followRepository.checkBlockTwoWay(userId, request.getMemberId(), FollowState.BLOCKED);
+
+        if (blockedRecipient) {
+            throw new IllegalStateException("Cannot send a direct message:blocked recipient");
+        }
+
+        if (chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(request.getMemberId(), request.getChatRoomId())) {
+            throw new GraphQLException("Already have a member");
+        }
+
+        ChatRoom chatRoom = EntityUtils.getOrThrow(chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
+        User member = EntityUtils.getOrThrow(userRepository.findById(request.getMemberId()), "User");
+
+        ChatRoomMember chatRoomMember = new ChatRoomMember();
+        chatRoomMember.setChatRoom(chatRoom);
+        chatRoomMember.setUser(member);
+
+        chatRoomMemberRepository.save(chatRoomMember);
+
+        return GraphqlResponse.success("added success", null);
     }
 }

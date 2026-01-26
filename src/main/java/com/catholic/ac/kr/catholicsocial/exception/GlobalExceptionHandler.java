@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
 
     //check input
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String,String>>> handleValidationException(
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
             MethodArgumentNotValidException exception,
             WebRequest request) {
         Map<String, String> errors = new HashMap<>();
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         }
 
-        ApiResponse<Map<String,String>> apiError =  ApiResponse.exception(
+        ApiResponse<Map<String, String>> apiError = ApiResponse.exception(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "BAD_REQUEST",
@@ -106,7 +106,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handlerGeneralException(Exception e, WebRequest request) {
 
-        ApiResponse<Void> exception =  ApiResponse.exception(
+        ApiResponse<Void> exception = ApiResponse.exception(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 "Lỗi hệ thống: " + e.getMessage(),

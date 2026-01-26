@@ -1,6 +1,6 @@
 extend type Query {
     roomsChat(page:Int!, size:Int!):ListResponse_RoomChat
-    messages(userId:ID!,chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
+    messages(chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
 }
 
 extend type Mutation {
@@ -37,6 +37,7 @@ type Message{
 
     messageMedias:[String]
     user:UserDTO!
+    isMine:Boolean!
 }
 
 input UpdateChatRoomRequest{
