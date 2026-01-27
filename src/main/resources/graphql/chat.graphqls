@@ -1,11 +1,12 @@
 extend type Query {
     roomsChat(page:Int!, size:Int!):ListResponse_RoomChat
     messages(chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
-    userForAddRoomChat(userId:ID!, keyword:String!, page:Int!, size:Int!):ListResponse_UserForAddChatRoom
+    userForAddRoomChat(chatRoomId:ID!, keyword:String!, page:Int!, size:Int!):ListResponse_UserForAddChatRoom
 }
 
 extend type Mutation {
     updateChatRoom(request:UpdateChatRoomRequest!):GraphqlResponse_String
+    addMemberForChatRoom(request:UserForAddChatRoomRequest):GraphqlResponse_String
 }
 
 type ListResponse_RoomChat{
@@ -55,7 +56,13 @@ type ListResponse_UserForAddChatRoom{
 
 type UserForAddChatRoom{
     userId:ID!
+    inRoom:Boolean!
 
     userForChatRoom:UserDTO!
     isFollowing:Boolean!
+}
+
+input UserForAddChatRoomRequest{
+    memberId:ID!
+    chatRoomId:ID!
 }

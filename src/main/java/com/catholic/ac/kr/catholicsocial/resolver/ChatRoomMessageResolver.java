@@ -1,6 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.resolver;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
@@ -32,6 +33,8 @@ public class ChatRoomMessageResolver {
     private final BatchLoaderHandler batchLoaderHandler;
     private final MessageMediaService messageMediaService;
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
+
+    //====Chat-Room====
 
     @QueryMapping
     public ListResponse<ChatRoomDTO> roomsChat(
@@ -102,14 +105,17 @@ public class ChatRoomMessageResolver {
                 ));
     }
 
+    //====Add Member For Chat Room From Chat Room====
+
     @QueryMapping
     public ListResponse<UserForAddRoomChatDTO> userForAddRoomChat(
-            @Argument Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Argument Long chatRoomId,
             @Argument String keyword,
             @Argument int page,
             @Argument int size
     ) {
-        return chatRoomMessageService.getUserForAddRoomChat(userId, keyword, page, size);
+        return chatRoomMessageService.getUserForAddRoomChat(userDetails.getUser().getId(), chatRoomId,keyword, page, size);
     }
 
 
@@ -125,6 +131,15 @@ public class ChatRoomMessageResolver {
         return batchLoaderHandler.batchLoadFollow(users, UserForAddRoomChatDTO::getUserId, principal);
     }
 
+    @MutationMapping
+    public GraphqlResponse<String> addMemberForChatRoom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Argument AddMemberRequest request
+    ) {
+        return chatRoomMessageService.addMemberToChatRoom(userDetails.getUser().getId(), request);
+    }
+
+    // ====Message=====
     @QueryMapping
     public ListResponse<MessageDTO> messages(
             @AuthenticationPrincipal CustomUserDetails useDetails,

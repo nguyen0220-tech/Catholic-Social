@@ -96,15 +96,109 @@
             object-fit: cover;
         }
 
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== SEARCH ===== */
+        .search-box {
+            display: flex;
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            padding: 8px 12px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            border: none;
+            background: #007bff;
+            color: white;
+            padding: 0 14px;
+            cursor: pointer;
+        }
+
+        .search-box button:hover {
+            background: #0069d9;
+        }
+
+        /* ===== ADD MEMBER PANEL ===== */
+        .add-member-panel {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+
+        /* user item (reuse JS inline style ok, nhưng override nhẹ) */
+        .add-user-item:hover {
+            background: #f5f7fa;
+        }
+
+        /* ===== LOADING ===== */
+        .loading {
+            text-align: center;
+            padding: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+
     </style>
 </head>
 <body>
+
+<!-- ===== TOP BAR ===== -->
+<div class="top-bar">
+    <button class="back-btn" onclick="goBack()">← Phòng chat</button>
+
+    <div class="search-box">
+        <input id="searchUserInput" placeholder="Tìm người dùng..." />
+        <button id="searchUserBtn">🔍</button>
+    </div>
+</div>
+
+<!-- ===== ADD MEMBER PANEL ===== -->
+<div class="add-member-panel">
+    <div id="addMemberContainer"></div>
+
+    <div id="addMemberLoading" class="loading">
+        ⏳ Đang tải...
+    </div>
+</div>
 
 <h3 id="roomTitle">💬 Chat</h3>
 
 <div id="messagesContainer"></div>
 
-<div id="loading" style="display:none; text-align:center">
+<div id="loading" class="loading">
     ⏳ Đang tải...
 </div>
 

@@ -29,8 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -105,12 +107,18 @@ public class ChatRoomMessageService {
         return GraphqlResponse.success("updated success", null);
     }
 
-    public ListResponse<UserForAddRoomChatDTO> getUserForAddRoomChat(Long userId, String keyword, int page, int size) {
+    public ListResponse<UserForAddRoomChatDTO> getUserForAddRoomChat(Long userId, Long chatRoomId, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<UserForAddRoomChatDTO> userPage = userRepository.findUserForAddRoomChatDTOByUserId(userId, keyword, pageable);
 
         List<UserForAddRoomChatDTO> rs = userPage.getContent();
+
+        Set<Long> userIdInRoomChat = new HashSet<>(chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId));
+
+        for (UserForAddRoomChatDTO user : rs) {
+            user.setInRoom(userIdInRoomChat.contains(user.getUserId()));
+        }
 
         return new ListResponse<>(rs, new PageInfo(page, size, userPage.hasNext()));
     }

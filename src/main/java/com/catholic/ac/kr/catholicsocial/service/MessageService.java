@@ -15,7 +15,6 @@ import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
-import graphql.GraphQLException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +41,7 @@ public class MessageService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final FollowRepository followRepository;
+    private final FollowService followService;
 
     public ListResponse<MessageDTO> getMessages(Long userId, Long chatRoomId, int page, int size) {
         if (!chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, chatRoomId)) {
@@ -50,9 +52,18 @@ public class MessageService {
 
         Page<MessageProjection> projections = messageRepository.findByChatRoomId(chatRoomId, pageable);
 
+        List<Long> userIdsBlock = followService.getUserIdsBlocked(userId);
+
+        Set<Long> setIdBlock = new HashSet<>(userIdsBlock);
+
         List<MessageProjection> projectionList = projections.getContent();
 
-        List<MessageDTO> messageDTOS = MessageMapper.toMessageDTOList(projectionList);
+        List<MessageProjection> rs = projectionList.stream()
+                .filter(m -> !setIdBlock.contains(m.getSenderId()))
+                .toList();
+
+        List<MessageDTO> messageDTOS = MessageMapper.toMessageDTOList(rs);
+
         return new ListResponse<>(messageDTOS, new PageInfo(page, size, projections.hasNext()));
     }
 
