@@ -1,16 +1,13 @@
 package com.catholic.ac.kr.catholicsocial.resolver;
 
-import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDetailDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
 import com.catholic.ac.kr.catholicsocial.entity.model.MessageMedia;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.BatchLoaderHandler;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.ChatRoomMessageService;
 import com.catholic.ac.kr.catholicsocial.service.MessageMediaService;
@@ -32,13 +29,13 @@ import java.util.stream.Collectors;
 public class ChatRoomMessageResolver {
     private final ChatRoomMessageService chatRoomMessageService;
     private final MessageService messageService;
-    private final UserBatchLoader userBatchLoader;
+    private final BatchLoaderHandler batchLoaderHandler;
     private final MessageMediaService messageMediaService;
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
 
     @QueryMapping
     public ListResponse<ChatRoomDTO> roomsChat(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
         return chatRoomMessageService.getChatRooms(useDetails.getUser().getId(), page, size);
@@ -46,7 +43,7 @@ public class ChatRoomMessageResolver {
 
     @MutationMapping
     public GraphqlResponse<String> updateChatRoom(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument UpdateChatRoomRequest request
     ) {
         return chatRoomMessageService.updateChatRoom(useDetails.getUser().getId(), request);
@@ -76,7 +73,7 @@ public class ChatRoomMessageResolver {
 
     @BatchMapping(typeName = "ChatRoom", field = "members")
     public Map<ChatRoomDTO, List<UserGQLDTO>> members(List<ChatRoomDTO> rooms, Principal principal) {
-        CustomUseDetails useDetails = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        CustomUserDetails useDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
         Long currentUserId = useDetails.getUser().getId();
 
@@ -106,8 +103,31 @@ public class ChatRoomMessageResolver {
     }
 
     @QueryMapping
+    public ListResponse<UserForAddRoomChatDTO> userForAddRoomChat(
+            @Argument Long userId,
+            @Argument String keyword,
+            @Argument int page,
+            @Argument int size
+    ) {
+        return chatRoomMessageService.getUserForAddRoomChat(userId, keyword, page, size);
+    }
+
+
+    @BatchMapping(typeName = "UserForAddChatRoom", field = "userForChatRoom")
+    public Map<UserForAddRoomChatDTO, UserGQLDTO> userForChatRoom(List<UserForAddRoomChatDTO> users) {
+
+        return batchLoaderHandler.batchLoadUser(users, UserForAddRoomChatDTO::getUserId);
+    }
+
+    @BatchMapping(typeName = "UserForAddChatRoom", field = "isFollowing")
+    public Map<UserForAddRoomChatDTO, Boolean> isFollowing(List<UserForAddRoomChatDTO> users, Principal principal) {
+
+        return batchLoaderHandler.batchLoadFollow(users, UserForAddRoomChatDTO::getUserId, principal);
+    }
+
+    @QueryMapping
     public ListResponse<MessageDTO> messages(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long chatRoomId,
             @Argument int page,
             @Argument int size) {
@@ -139,22 +159,13 @@ public class ChatRoomMessageResolver {
 
     @BatchMapping(typeName = "Message", field = "user")
     public Map<MessageDTO, UserGQLDTO> user(List<MessageDTO> messages) {
-        List<Long> senderIds = messages.stream()
-                .map(MessageDTO::getSenderId)
-                .toList();
 
-        Map<Long, UserGQLDTO> map = userBatchLoader.loadUserByIds(senderIds);
-
-        return messages.stream()
-                .collect(Collectors.toMap(
-                        m -> m,
-                        m -> map.get(m.getSenderId())
-                ));
+        return batchLoaderHandler.batchLoadUser(messages, MessageDTO::getSenderId);
     }
 
     @SchemaMapping(typeName = "Message", field = "isMine")
     public Boolean isMine(MessageDTO messages, Principal principal) {
-        CustomUseDetails useDetails = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        CustomUserDetails useDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
         Long myId = useDetails.getUser().getId();
 

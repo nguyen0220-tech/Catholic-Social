@@ -15,7 +15,7 @@ import com.catholic.ac.kr.catholicsocial.repository.VerificationTokenRepository;
 import com.catholic.ac.kr.catholicsocial.security.systemservice.RefreshTokenUtil;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.JwtUtil;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenService;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -154,7 +154,7 @@ public class AuthService {
                     )
             );
 
-            CustomUseDetails useDetails = (CustomUseDetails) authentication.getPrincipal();
+            CustomUserDetails useDetails = (CustomUserDetails) authentication.getPrincipal();
 
             Map<String, Object> claims = new HashMap<>();
 

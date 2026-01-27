@@ -1,6 +1,7 @@
 extend type Query {
     roomsChat(page:Int!, size:Int!):ListResponse_RoomChat
     messages(chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
+    userForAddRoomChat(userId:ID!, keyword:String!, page:Int!, size:Int!):ListResponse_UserForAddChatRoom
 }
 
 extend type Mutation {
@@ -44,4 +45,17 @@ input UpdateChatRoomRequest{
     chatRoomId:ID!
     chatRoomName:String
     chatRoomDescription:String
+}
+
+
+type ListResponse_UserForAddChatRoom{
+    data:[UserForAddChatRoom]
+    pageInfo:PageInfo!
+}
+
+type UserForAddChatRoom{
+    userId:ID!
+
+    userForChatRoom:UserDTO!
+    isFollowing:Boolean!
 }

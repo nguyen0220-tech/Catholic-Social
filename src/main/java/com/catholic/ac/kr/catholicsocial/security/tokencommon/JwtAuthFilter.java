@@ -2,7 +2,7 @@ package com.catholic.ac.kr.catholicsocial.security.tokencommon;
 
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +51,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     .orElseThrow(() -> new UsernameNotFoundException("user not foud: " + username));
 
             if (user != null) {
-                CustomUseDetails useDetails = new CustomUseDetails(user);
+                CustomUserDetails useDetails = new CustomUserDetails(user);
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         useDetails,
                         null,

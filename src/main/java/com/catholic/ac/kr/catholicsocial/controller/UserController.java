@@ -5,7 +5,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.FindUsernameRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.ResetPasswordRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UserRequest;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.UserService;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -67,27 +67,27 @@ public class UserController {
     }
 
     @GetMapping("profile")
-    public ResponseEntity<ApiResponse<ProfileDTO>> getUserProfile(@AuthenticationPrincipal CustomUseDetails useDetails) {
+    public ResponseEntity<ApiResponse<ProfileDTO>> getUserProfile(@AuthenticationPrincipal CustomUserDetails useDetails) {
         return ResponseEntity.ok(userService.getUserProfile(useDetails.getUser().getId()));
     }
 
     @PutMapping("update-profile")
     public ResponseEntity<ApiResponse<String>> updateUserProfile(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Valid @RequestBody ProfileDTO profileDTO) {
         return ResponseEntity.ok(userService.updateProfile(useDetails.getUser().getId(), profileDTO));
     }
 
     @PostMapping("upload-avatar")
     public ResponseEntity<ApiResponse<String>> uploadAvatar(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam("file") MultipartFile file){
         return ResponseEntity.ok(userService.uploadAvatar(useDetails.getUser().getId(), file));
     }
 
     @GetMapping("find-follow")
     public ResponseEntity<ApiResponse<List<UserFollowDTO>>> getUserFollow(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam String keyword,
             @RequestParam int page,
             @RequestParam int size) {
@@ -95,7 +95,7 @@ public class UserController {
     }
 
     @GetMapping("suggestion")
-    public ResponseEntity<ApiResponse<List<UserSuggestions>>> getUserSuggestions(@AuthenticationPrincipal CustomUseDetails useDetails) {
+    public ResponseEntity<ApiResponse<List<UserSuggestions>>> getUserSuggestions(@AuthenticationPrincipal CustomUserDetails useDetails) {
         return ResponseEntity.ok(userService.findUserSuggestions(useDetails.getUser().getId()));
     }
 }

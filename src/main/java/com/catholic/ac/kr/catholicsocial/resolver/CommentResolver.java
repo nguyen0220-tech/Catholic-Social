@@ -6,8 +6,8 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.CommentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.BatchLoaderHandler;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.CommentService;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
@@ -20,19 +20,18 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 @RequiredArgsConstructor
 public class CommentResolver {
     private final CommentService commentService;
-    private final UserBatchLoader userBatchLoader;
+    private final BatchLoaderHandler batchLoaderHandler;
     private final MomentService momentService;
 
     @QueryMapping
     public ListResponse<CommentDTO> comments(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Argument int page,
             @Argument int size,
             @Argument Long momentId) {
@@ -41,7 +40,7 @@ public class CommentResolver {
 
     @MutationMapping
     public GraphqlResponse<String> createComment(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long momentId,
             @Argument CommentRequest request) {
         return commentService.createComment(useDetails.getUser().getId(), momentId, request);
@@ -71,13 +70,7 @@ public class CommentResolver {
 
         log.info(">>> BATCH Comment.user {}",userIds);
 
-        Map<Long, UserGQLDTO> userMap = userBatchLoader.loadUserByIds(userIds);
-
-        return comments.stream()
-                .collect(Collectors.toMap(
-                        c -> c,
-                        c -> userMap.get(c.getUserId())
-                ));
+        return batchLoaderHandler.batchLoadUser(comments,CommentDTO::getUserId);
     }
 }
 

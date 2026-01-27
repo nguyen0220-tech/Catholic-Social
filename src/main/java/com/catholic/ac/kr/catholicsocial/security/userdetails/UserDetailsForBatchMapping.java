@@ -8,15 +8,15 @@ import java.security.Principal;
 @Component
 public class UserDetailsForBatchMapping {
 
-    public CustomUseDetails getCustomUseDetails(Principal principal) {
+    public CustomUserDetails getCustomUserDetails(Principal principal) {
 
-        CustomUseDetails customUseDetails;
+        CustomUserDetails customUserDetails;
 
         if (principal instanceof UsernamePasswordAuthenticationToken token
-                && token.getPrincipal() instanceof CustomUseDetails) {
-            customUseDetails = (CustomUseDetails) token.getPrincipal();
+                && token.getPrincipal() instanceof CustomUserDetails) {
+            customUserDetails = (CustomUserDetails) token.getPrincipal();
 
-            return customUseDetails;
+            return customUserDetails;
         }
         return null;
     }

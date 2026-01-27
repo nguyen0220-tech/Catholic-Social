@@ -4,7 +4,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.IntroContentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.IntroVideoDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.IntroVideo;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.IntroVideoService;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class IntroVideoResolver {
 
     @QueryMapping
     public ListResponse<IntroVideoDTO> allVideosRestore(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
         return introVideoService.getIntrosCanRestore(useDetails.getUser().getId(), page, size);

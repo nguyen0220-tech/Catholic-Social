@@ -1,8 +1,8 @@
 package com.catholic.ac.kr.catholicsocial.controller;
 
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.FollowDTO;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.FollowService;
 import com.catholic.ac.kr.catholicsocial.status.ACTION;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class FollowController {
     //Đang theo dõi
     @GetMapping()
     public ResponseEntity<ApiResponse<FollowDTO>> getFollowing(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(followService.getAllFollowing(useDetails.getUser().getId(), page, size));
@@ -28,7 +28,7 @@ public class FollowController {
     //Người theo dõi
     @GetMapping("users")
     public ResponseEntity<ApiResponse<FollowDTO>> getFollowers(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(followService.getAllFollowers(useDetails.getUser().getId(), page, size));
@@ -36,7 +36,7 @@ public class FollowController {
 
     @GetMapping("find-blocked")
     public ResponseEntity<ApiResponse<FollowDTO>> getBlockedFollowers(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(followService.getBlockedFollowers(useDetails.getUser().getId(), page, size));
@@ -44,7 +44,7 @@ public class FollowController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<String>> follow(
-            @AuthenticationPrincipal CustomUseDetails follower,
+            @AuthenticationPrincipal CustomUserDetails follower,
             @RequestParam Long userId) {
         ApiResponse<String> status = followService.createFollower(follower.getUser().getId(), userId);
         return ResponseEntity.status(status.getStatus()).body(status);
@@ -52,7 +52,7 @@ public class FollowController {
 
     @PutMapping
     public ResponseEntity<ApiResponse<String>> userAction(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam Long userId,
             @RequestParam ACTION action) {
         ApiResponse<String> status = followService.userAction(useDetails.getUser().getId(), userId, action);
@@ -61,7 +61,7 @@ public class FollowController {
 
     @PutMapping("block")
     public ResponseEntity<ApiResponse<String>> blockFollow(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam Long userId) {
         return ResponseEntity.ok(followService.blockUser(useDetails.getUser().getId(), userId));
     }

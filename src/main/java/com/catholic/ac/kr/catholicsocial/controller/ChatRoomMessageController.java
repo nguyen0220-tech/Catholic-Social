@@ -1,7 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.controller;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.MessageService;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public class ChatRoomMessageController {
 
     @PostMapping("send-direct")
     public ApiResponse<String> sendDirectMessage(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @ModelAttribute MessageRequest request
             ){
         return messageService.sendDirectMessage(useDetails.getUser().getId(), request);

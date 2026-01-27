@@ -3,8 +3,8 @@ package com.catholic.ac.kr.catholicsocial.resolver;
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.model.*;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.BatchLoaderHandler;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
@@ -39,7 +39,7 @@ public class UserResolver {
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
     private final SavedService savedService;
     private final IntroVideoService introVideoService;
-    private final UserBatchLoader userBatchLoader;
+    private final BatchLoaderHandler batchLoaderHandler;
 
     @QueryMapping
     public UserProfileDTO profile(@Argument Long userId) {
@@ -72,7 +72,7 @@ public class UserResolver {
     @SchemaMapping
     public ListResponse<FollowerDTO> followers(
             UserProfileDTO user,
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Argument int page,
             @Argument int size) {
 
@@ -84,7 +84,7 @@ public class UserResolver {
     @SchemaMapping
     public ListResponse<FollowerDTO> following(
             UserProfileDTO user,
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Argument int page,
             @Argument int size
     ) {
@@ -95,16 +95,7 @@ public class UserResolver {
 
     @BatchMapping
     public Map<FollowerDTO, UserGQLDTO> user(List<FollowerDTO> followers) {
-        List<Long> userIds = followers.stream()
-                .map(FollowerDTO::getUserId)
-                .toList();
-
-        Map<Long, UserGQLDTO> map = userBatchLoader.loadUserByIds(userIds);
-        return followers.stream()
-                .collect(Collectors.toMap(
-                        f -> f,
-                        f -> map.get(f.getUserId())
-                ));
+        return batchLoaderHandler.batchLoadUser(followers,FollowerDTO::getUserId);
     }
 
     @BatchMapping
@@ -112,7 +103,7 @@ public class UserResolver {
             List<FollowerDTO> followers,
             Principal principal) {
 
-        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        CustomUserDetails me = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
         List<Long> userIds = followers.stream()
                 .map(FollowerDTO::getUserId)
@@ -139,7 +130,7 @@ public class UserResolver {
     @SchemaMapping(typeName = "UserProfileDTO", field = "isFollowing")
     public boolean isFollowing(
             UserProfileDTO user,
-            @AuthenticationPrincipal CustomUseDetails me) {
+            @AuthenticationPrincipal CustomUserDetails me) {
         if (me == null) return false;
 
         return followService.isFollowing(me.getUser().getId(), user.getId());
@@ -148,7 +139,7 @@ public class UserResolver {
     @SchemaMapping(typeName = "UserProfileDTO", field = "isBlocked")
     public boolean isBlocked(
             UserProfileDTO user,
-            @AuthenticationPrincipal CustomUseDetails me) {
+            @AuthenticationPrincipal CustomUserDetails me) {
         if (me == null) return false;
 
         return followService.isBlocked(me.getUser().getId(), user.getId());
@@ -166,7 +157,7 @@ public class UserResolver {
     @SchemaMapping
     public List<FollowerDTO> mutualFollowers(
             UserProfileDTO user,
-            @AuthenticationPrincipal CustomUseDetails me) {
+            @AuthenticationPrincipal CustomUserDetails me) {
         return followService.getMutualFollowers(user.getId(), me.getUser().getId());
     }
 
@@ -226,7 +217,7 @@ public class UserResolver {
 
     @BatchMapping(typeName = "MomentUserDTO", field = "saved")
     public Map<MomentUserDTO, Boolean> saved(List<MomentUserDTO> moments, Principal principal) {
-        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        CustomUserDetails me = userDetailsForBatchMapping.getCustomUserDetails(principal);
         Long myId = me.getUser().getId();
 
         List<Long> momentIds = moments.stream()
@@ -258,7 +249,7 @@ public class UserResolver {
         }
          */
 
-        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        CustomUserDetails me = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
         List<Long> momentIds = moments.stream()
                 .map(MomentUserDTO::getId)
@@ -296,7 +287,7 @@ public class UserResolver {
 
     @BatchMapping(typeName = "MomentUserDTO", field = "hearts")
     public Map<MomentUserDTO, List<HeartDTO>> hearts(List<MomentUserDTO> moments, Principal principal) {
-        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
+        CustomUserDetails me = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
         List<Long> momentId = moments.stream()
                 .map(MomentUserDTO::getId)

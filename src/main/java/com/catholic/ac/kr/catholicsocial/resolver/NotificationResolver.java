@@ -5,8 +5,8 @@ import com.catholic.ac.kr.catholicsocial.entity.model.Comment;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.BatchLoaderHandler;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
 import com.catholic.ac.kr.catholicsocial.status.NotifyType;
@@ -30,49 +30,39 @@ public class NotificationResolver {
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
     private final FollowService followService;
     private final CommentService commentService;
-    private final UserBatchLoader userBatchLoader;
+    private final BatchLoaderHandler batchLoaderHandler;
 
     @QueryMapping
     public ListResponse<NotificationDTO> notifications(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
         return notificationService.getAllNotifications(useDetails.getUser().getId(), page, size);
     }
 
     @QueryMapping
-    public int unreadCount(@AuthenticationPrincipal CustomUseDetails useDetails) {
+    public int unreadCount(@AuthenticationPrincipal CustomUserDetails useDetails) {
         return notificationService.getCountNotifications(useDetails.getUser().getId());
     }
 
     @MutationMapping
     public GraphqlResponse<String> maskAsRead(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long notificationId) {
         return notificationService.maskAsRead(useDetails.getUser().getId(), notificationId);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteNotification(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long notificationId) {
         return notificationService.deleteNotification(useDetails.getUser().getId(), notificationId);
     }
 
     @BatchMapping(typeName = "NotificationDTO", field = "actor")
     public Map<NotificationDTO, UserGQLDTO> actor(List<NotificationDTO> notifications) {
-        List<Long> actorIds = notifications.stream()
-                .map(NotificationDTO::getActorId)
-                .distinct()
-                .toList();
 
-        Map<Long, UserGQLDTO> map = userBatchLoader.loadUserByIds(actorIds);
-
-        return notifications.stream()
-                .collect(Collectors.toMap(
-                        n -> n,
-                        n -> map.get(n.getActorId())
-                ));
+        return batchLoaderHandler.batchLoadUser(notifications, NotificationDTO::getActorId);
     }
 
     @BatchMapping(typeName = "NotificationDTO", field = "target")
@@ -131,20 +121,7 @@ public class NotificationResolver {
             List<NotificationFollowerDTO> followers,
             Principal principal) {
 
-        CustomUseDetails me = userDetailsForBatchMapping.getCustomUseDetails(principal);
-        Long myId = me.getUser().getId();
-
-        List<Long> followerIds = followers.stream()
-                .map(NotificationFollowerDTO::getFollowerId)
-                .toList();
-
-        Set<Long> userIdsFollowing = new HashSet<>(followService.getUserIdsFollowing(myId, followerIds)); //ds user mà user đang đăng nhập theo dõi
-
-        return followers.stream()
-                .collect(Collectors.toMap(
-                        f -> f,
-                        f -> userIdsFollowing.contains(f.getFollowerId())
-                ));
+        return batchLoaderHandler.batchLoadFollow(followers,NotificationFollowerDTO::getFollowerId, principal);
     }
 
     @BatchMapping

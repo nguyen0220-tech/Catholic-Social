@@ -1,9 +1,11 @@
 package com.catholic.ac.kr.catholicsocial.repository;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserFollowDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserForAddRoomChatDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserSuggestions;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.projection.UserProjection;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -88,4 +90,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
             
             """)
     List<UserSuggestions> findUserSuggestionsByUserId(Long userId);
+
+    @Query("""
+            SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.UserForAddRoomChatDTO(u.id)
+            FROM User u
+            WHERE u.id != :userId
+            AND CONCAT(u.userInfo.firstName,' ',u.userInfo.lastName) LIKE LOWER( CONCAT('%', :keyword,'%'))
+            AND NOT EXISTS (
+                    SELECT 1
+                            FROM Follow f
+                            WHERE f.state = 'BLOCKED' AND (( f.follower.id = :userId AND f.user.id = u.id)
+                                                             OR (f.user.id = :userId AND f.follower.id = u.id))
+                    )
+            """)
+    Page<UserForAddRoomChatDTO> findUserForAddRoomChatDTOByUserId(Long userId, String keyword, Pageable pageable);
 }

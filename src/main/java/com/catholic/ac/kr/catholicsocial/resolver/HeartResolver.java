@@ -5,8 +5,8 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.MomentGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.resolver.batchloader.UserBatchLoader;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.resolver.batchloader.BatchLoaderHandler;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.HeartService;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
@@ -19,19 +19,18 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 @RequiredArgsConstructor
 public class HeartResolver {
     private final HeartService heartService;
-    private final UserBatchLoader userBatchLoader;
+    private final BatchLoaderHandler batchLoaderHandler;
     private final MomentService momentService;
 
     @QueryMapping
     public ListResponse<HeartDTO> hearts(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Argument Long momentId,
             @Argument int page,
             @Argument int size) {
@@ -39,13 +38,13 @@ public class HeartResolver {
     }
 
     @MutationMapping
-    public GraphqlResponse<String> addHeart(@AuthenticationPrincipal CustomUseDetails useDetails, @Argument Long momentId) {
+    public GraphqlResponse<String> addHeart(@AuthenticationPrincipal CustomUserDetails useDetails, @Argument Long momentId) {
         return heartService.addHeart(useDetails.getUser().getId(), momentId);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteHeart(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long momentId) {
         return heartService.deleteHeart(useDetails.getUser().getId(), momentId);
     }
@@ -73,12 +72,7 @@ public class HeartResolver {
 
         log.info(">>> BATCH ids: {}", userIds);
 
-        Map<Long, UserGQLDTO> userGQLDTOMap = userBatchLoader.loadUserByIds(userIds);
 
-        return hearts.stream()
-                .collect(Collectors.toMap(
-                        h -> h,
-                        h -> userGQLDTOMap.get(h.getUserId())
-                ));
+        return batchLoaderHandler.batchLoadUser(hearts, HeartDTO::getUserId);
     }
 }

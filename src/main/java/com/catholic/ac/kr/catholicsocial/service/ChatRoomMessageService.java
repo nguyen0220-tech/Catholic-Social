@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
+import com.catholic.ac.kr.catholicsocial.entity.dto.UserForAddRoomChatDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
@@ -102,6 +103,16 @@ public class ChatRoomMessageService {
         chatRoomRepository.save(chatRoom);
 
         return GraphqlResponse.success("updated success", null);
+    }
+
+    public ListResponse<UserForAddRoomChatDTO> getUserForAddRoomChat(Long userId, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<UserForAddRoomChatDTO> userPage = userRepository.findUserForAddRoomChatDTOByUserId(userId, keyword, pageable);
+
+        List<UserForAddRoomChatDTO> rs = userPage.getContent();
+
+        return new ListResponse<>(rs, new PageInfo(page, size, userPage.hasNext()));
     }
 
     public GraphqlResponse<String> addMemberToChatRoom(Long userId, AddMemberRequest request) {

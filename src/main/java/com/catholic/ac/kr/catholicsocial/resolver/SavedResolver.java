@@ -4,7 +4,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.MomentGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.SavedDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.HeartService;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
 import com.catholic.ac.kr.catholicsocial.service.SavedService;
@@ -28,7 +28,7 @@ public class SavedResolver {
 
     @QueryMapping
     public ListResponse<SavedDTO> allSaved(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Argument int page,
             @Argument int size) {
         return savedService.getAllByUserId(me.getUser().getId(), page, size);
@@ -36,14 +36,14 @@ public class SavedResolver {
 
     @MutationMapping
     public GraphqlResponse<String> createSaved(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Argument Long momentId) {
         return savedService.save(me.getUser().getId(), momentId);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteSaved(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long momentId){
         return savedService.delete(useDetails.getUser().getId(), momentId);
     }

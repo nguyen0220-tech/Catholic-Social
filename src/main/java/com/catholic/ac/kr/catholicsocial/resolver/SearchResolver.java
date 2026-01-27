@@ -2,7 +2,7 @@ package com.catholic.ac.kr.catholicsocial.resolver;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.SearchDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.SearchRequest;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.SearchService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
@@ -21,7 +21,7 @@ public class SearchResolver {
 
     @QueryMapping
     public ListResponse<SearchDTO> searchHistory(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
         return searchService.getAllByUser(useDetails.getUser().getId(), page, size);
@@ -29,14 +29,14 @@ public class SearchResolver {
 
     @MutationMapping
     public GraphqlResponse<String> createSearch(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument SearchRequest request) {
         return searchService.createSearch(useDetails.getUser().getId(), request);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteSearch(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long searchId) {
         return searchService.deleteSearch(useDetails.getUser().getId(), searchId);
     }

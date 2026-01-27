@@ -6,7 +6,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.UserGQLDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.FollowService;
 import com.catholic.ac.kr.catholicsocial.service.HeartService;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
@@ -17,8 +17,6 @@ import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-
-import java.util.Objects;
 
 @Controller
 @RequiredArgsConstructor
@@ -53,7 +51,7 @@ public class MomentResolver {
 
     @SchemaMapping(typeName = "MomentDetail", field = "isHeart")
     public boolean isHeart(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             MomentDetailDTO detail) {
 
         Long momentId = detail.getId();
@@ -63,7 +61,7 @@ public class MomentResolver {
 
     @SchemaMapping(typeName = "MomentDetail", field = "isFollowing")
     public boolean isFollowing(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             MomentDetailDTO detail) {
 
         Long actorId = detail.getActorId();
@@ -73,7 +71,7 @@ public class MomentResolver {
 
     @SchemaMapping(typeName = "MomentDetail",field = "mySelf")
     public boolean mySelf(
-            @AuthenticationPrincipal CustomUseDetails me,
+            @AuthenticationPrincipal CustomUserDetails me,
             MomentDetailDTO detail) {
 
         Long meId = me.getUser().getId();

@@ -4,7 +4,7 @@ import com.catholic.ac.kr.catholicsocial.custom.CustomAuthenticationEntryPoint;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.JwtAuthFilter;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +47,7 @@ public class SecurityConfig {
             if (!user.isEnabled()) {
                 throw new DisabledException("user is disabled");
             }
-            return new CustomUseDetails(user);
+            return new CustomUserDetails(user);
         };
     }
 

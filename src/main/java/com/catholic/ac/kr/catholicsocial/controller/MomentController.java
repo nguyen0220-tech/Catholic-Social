@@ -1,10 +1,10 @@
 package com.catholic.ac.kr.catholicsocial.controller;
 
+import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MomentDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MomentUpdateRequest;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUseDetails;
 import com.catholic.ac.kr.catholicsocial.service.MomentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +22,15 @@ public class MomentController {
 
     @GetMapping("all")
     public ResponseEntity<ApiResponse<List<MomentDTO>>> getAllMoments(
-            @AuthenticationPrincipal CustomUseDetails customUseDetails,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam int page,
             @RequestParam int size) {
-        return ResponseEntity.ok(momentService.getAllMoments(customUseDetails.getUser().getId(), page, size));
+        return ResponseEntity.ok(momentService.getAllMoments(customUserDetails.getUser().getId(), page, size));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<MomentDTO>>> getAllMomentsByUserId(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
         return ResponseEntity.ok(momentService.getAllMomentsByUserId(useDetails.getUser().getId(), page, size));
@@ -38,7 +38,7 @@ public class MomentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<String>> postMoment(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @Valid @ModelAttribute MomentRequest request) {
 
         ApiResponse<String> response = momentService.uploadMoment(useDetails.getUser().getId(), request);
@@ -48,14 +48,14 @@ public class MomentController {
 
     @PutMapping
     public ResponseEntity<ApiResponse<String>> updateMoment(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestBody MomentUpdateRequest request) {
         return ResponseEntity.ok(momentService.updateMoment(useDetails.getUser().getId(), request));
     }
 
     @DeleteMapping("{momentId}")
     public ResponseEntity<ApiResponse<String>> deleteMoment(
-            @AuthenticationPrincipal CustomUseDetails useDetails,
+            @AuthenticationPrincipal CustomUserDetails useDetails,
             @PathVariable Long momentId) {
         return ResponseEntity.ok(momentService.deleteMoment(useDetails.getUser().getId(), momentId));
     }

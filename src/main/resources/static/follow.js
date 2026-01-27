@@ -337,10 +337,11 @@ async function blockUser(userId, itemElement) {
         alert("Không thể kết nối đến máy chủ!");
     }
 }
-
 function renderUserResults(users) {
     users.forEach((u) => {
-        const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Không tên";
+        const fullName =
+            `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Không tên";
+
         const avatarUrl =
             u.userAvatarUrl && u.userAvatarUrl.startsWith("http")
                 ? u.userAvatarUrl
@@ -351,36 +352,55 @@ function renderUserResults(users) {
         const item = document.createElement("div");
         item.classList.add("user-item");
         item.style.cssText = `
-            display:flex; align-items:center; justify-content:space-between; gap:10px;
-            border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:8px; background-color:#f9f9f9;`;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            padding:10px;
+            margin-bottom:8px;
+            background-color:#f9f9f9;
+        `;
 
         item.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div class="user-info"
+                 style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                 <img src="${avatarUrl}" alt="${fullName}"
-                     style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1px solid #ccc;">
-                <div><strong>${fullName}</strong></div>
+                     style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1px solid #ccc;">
+                <div>
+                    <strong>${fullName}</strong>
+                </div>
             </div>
+
+            <!-- ACTION -->
             <div style="display:flex; gap:6px;">
                 <button class="follow-btn"
-                        style="background:#EE82EE; color:#00fb00; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">
+                        style="background:#EE82EE;color:#00fb00;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
                     Theo dõi
                 </button>
                 <button class="block-btn"
-                        style="background:#dc3545; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">
+                        style="background:#dc3545;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;">
                     Chặn
                 </button>
             </div>
         `;
 
-        // Nút theo dõi
-        item.querySelector(".follow-btn").addEventListener("click", async () => {
-            await followUser(u.id, item.querySelector(".follow-btn"));
+        item.querySelector(".user-info").addEventListener("click", () => {
+            window.location.href = `user.html?id=${u.id}`;
         });
 
-        //  Nút chặn
-        item.querySelector(".block-btn").addEventListener("click", () =>
-            blockUser(u.id, item)
-        );
+        const followBtn = item.querySelector(".follow-btn");
+        followBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await followUser(u.id, followBtn);
+        });
+
+        const blockBtn = item.querySelector(".block-btn");
+        blockBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            blockUser(u.id, item);
+        });
 
         container.appendChild(item);
     });
