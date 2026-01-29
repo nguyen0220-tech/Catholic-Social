@@ -20,7 +20,7 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             FROM ChatRoomMember crm
             JOIN ChatRoom cr ON crm.chatRoom.id = cr.id
             WHERE crm.user.id = :userId AND crm.status = :status
-            ORDER BY cr.createdAt ASC
+            ORDER BY cr.createdAt DESC
             """)
     Page<ChatRoomProjection> findByUserId(Long userId, ChatRoomMemberStatus status, Pageable pageable);
 

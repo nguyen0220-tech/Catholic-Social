@@ -19,12 +19,14 @@
             height: 36px;
             border-radius: 50%;
         }
+
         .bubble {
             background: #f1f1f1;
             padding: 8px 12px;
             border-radius: 8px;
             max-width: 70%;
         }
+
         .time {
             font-size: 11px;
             color: #888;
@@ -170,6 +172,54 @@
             color: #666;
         }
 
+        .preview-container {
+            display: flex;
+            gap: 8px;
+            padding: 6px 10px;
+            overflow-x: auto;
+        }
+        .preview-container img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .send-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 6px;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        .send-bar input[type="text"],
+        #messageInput {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .file-btn {
+            cursor: pointer;
+            padding: 0 8px;
+            font-size: 20px;
+        }
+
+        #sendBtn {
+            padding: 8px 12px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+        }
 
     </style>
 </head>
@@ -180,7 +230,7 @@
     <button class="back-btn" onclick="goBack()">← Phòng chat</button>
 
     <div class="search-box">
-        <input id="searchUserInput" placeholder="Tìm người dùng..." />
+        <input id="searchUserInput" placeholder="Tìm người dùng..."/>
         <button id="searchUserBtn">🔍</button>
     </div>
 </div>
@@ -211,6 +261,28 @@
 
 <div id="loading" class="loading">
     ⏳ Đang tải...
+</div>
+
+<!-- ===== SEND MESSAGE BAR ===== -->
+<div id="previewContainer" class="preview-container"></div>
+
+<div class="send-bar">
+    <input
+            id="messageInput"
+            placeholder="Nhập tin nhắn..."
+            autocomplete="off"
+    />
+
+    <label class="file-btn">
+        📎
+        <input
+                id="mediaInput"
+                type="file"
+                multiple
+                style="display:none"
+        />
+    </label>
+    <button id="sendBtn">Gửi</button>
 </div>
 
 <script src="message.js"></script>

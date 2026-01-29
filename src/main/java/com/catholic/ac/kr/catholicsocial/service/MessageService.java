@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageForRoomChatRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.Message;
@@ -36,7 +37,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MessageService {
     private final MessageRepository messageRepository;
-    private final ChatRoomMessageService chatRoomMessageService;
+    private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
     private final UploadFileHandler uploadFileHandler;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
@@ -45,8 +46,7 @@ public class MessageService {
     private final FollowService followService;
 
     public ListResponse<MessageDTO> getMessages(Long userId, Long chatRoomId, int page, int size) {
-        if (!chatRoomMemberRepository
-                .existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE)) {
+        if (!chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE)) {
             throw new AccessDeniedException("forbidden");
         }
 
@@ -60,9 +60,7 @@ public class MessageService {
 
         List<MessageProjection> projectionList = projections.getContent();
 
-        List<MessageProjection> rs = projectionList.stream()
-                .filter(m -> !setIdBlock.contains(m.getSenderId()))
-                .toList();
+        List<MessageProjection> rs = projectionList.stream().filter(m -> !setIdBlock.contains(m.getSenderId())).toList();
 
         List<MessageDTO> messageDTOS = MessageMapper.toMessageDTOList(rs);
 
@@ -70,7 +68,27 @@ public class MessageService {
     }
 
     @Transactional
-    public ApiResponse<String> sendDirectMessage(Long userId, MessageRequest request) {
+    public ApiResponse<MessageDTO> sendMessageInRoom(Long userId, MessageForRoomChatRequest request) {
+        boolean existing = chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
+
+        if (!existing) {
+            throw new AccessDeniedException("forbidden");
+        }
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
+
+        ChatRoom room = EntityUtils.getOrThrow(chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
+
+        Message newMessage = createMessage(user, room, request.getMessage(), request.getMedias());
+
+        MessageDTO messageDTO = MessageMapper.toMessageDTO(newMessage);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Message sent successfully", messageDTO);
+
+    }
+
+    @Transactional
+    public ApiResponse<MessageDTO> sendDirectMessage(Long userId, MessageRequest request) {
         if (userId.equals(request.getRecipientId()))
             throw new IllegalStateException("Cannot send a direct message: send self");
 
@@ -81,21 +99,31 @@ public class MessageService {
         }
 
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
-        ChatRoom room = chatRoomMessageService.getChatRoom(userId, request);
+        ChatRoom room = chatRoomService.getChatRoom(userId, request);
 
+        Message newMessage = createMessage(user, room, request.getMessage(), request.getMedias());
+
+        MessageDTO messageDTO = MessageMapper.toMessageDTO(newMessage);
+
+        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
+                "Message sent successfully", messageDTO);
+
+    }
+
+    private Message createMessage(User sender, ChatRoom chatRoom, String text, List<MultipartFile> medias) {
         Message message = new Message();
-        message.setSender(user);
-        message.setChatRoom(room);
-        message.setText(request.getMessage());
+        message.setSender(sender);
+        message.setChatRoom(chatRoom);
+        message.setText(text);
 
-        if (!(request.getMedias().isEmpty())) {
+        if (!(medias.isEmpty())) {
             List<MessageMedia> list = new ArrayList<>();
 
-            for (MultipartFile media : request.getMedias()) {
+            for (MultipartFile media : medias) {
                 MessageMedia messageMedia = new MessageMedia();
                 messageMedia.setMessage(message);
-                messageMedia.setUser(user);
-                messageMedia.setUrl(uploadFileHandler.uploadFile(userId, media));
+                messageMedia.setUser(sender);
+                messageMedia.setUrl(uploadFileHandler.uploadFile(sender.getId(), media));
 
                 list.add(messageMedia);
             }
@@ -104,12 +132,14 @@ public class MessageService {
 
         messageRepository.save(message);
 
-        room.setLastMessagePreview(request.getMessage() != null ? request.getMessage() : "[Link]");
-        room.setLastMessageAt(message.getCreatedAt());
-        chatRoomRepository.save(room);
+        if (text.isBlank()) {
+            chatRoom.setLastMessagePreview("[Ảnh]");
+        } else
+            chatRoom.setLastMessagePreview(text);
 
-        return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
-                "Message sent successfully");
+        chatRoom.setLastMessageAt(message.getCreatedAt());
+        chatRoomRepository.save(chatRoom);
 
+        return message;
     }
 }

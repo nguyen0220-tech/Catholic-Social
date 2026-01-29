@@ -15,6 +15,7 @@ import com.catholic.ac.kr.catholicsocial.repository.ChatRoomRepository;
 import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
+import com.catholic.ac.kr.catholicsocial.status.ChatRoomType;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
@@ -35,7 +36,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class ChatRoomMessageService {
+public class ChatRoomService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
@@ -65,7 +66,7 @@ public class ChatRoomMessageService {
     @Transactional
     public ChatRoom getChatRoom(Long currentUserId, MessageRequest request) {
         Optional<ChatRoom> existingRoom = chatRoomRepository.
-                findExistingRoom(currentUserId, request.getRecipientId());
+                findExistingRoom(currentUserId, request.getRecipientId(), ChatRoomType.ONE_TO_ONE);
 
         if (existingRoom.isPresent()) {
             return existingRoom.get();
@@ -77,6 +78,7 @@ public class ChatRoomMessageService {
         ChatRoom newChatRoom = new ChatRoom();
         newChatRoom.setLastMessagePreview(request.getMessage());
         newChatRoom.setLastMessageAt(LocalDateTime.now());
+        newChatRoom.setType(ChatRoomType.ONE_TO_ONE);
         chatRoomRepository.save(newChatRoom);
 
         ChatRoomMember m1 = new ChatRoomMember();
@@ -162,6 +164,8 @@ public class ChatRoomMessageService {
 
         ChatRoom chatRoom = EntityUtils.getOrThrow(chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
         User member = EntityUtils.getOrThrow(userRepository.findById(request.getMemberId()), "User");
+
+        chatRoom.setType(ChatRoomType.GROUP);
 
         ChatRoomMember newChatRoomMember = new ChatRoomMember();
         newChatRoomMember.setChatRoom(chatRoom);

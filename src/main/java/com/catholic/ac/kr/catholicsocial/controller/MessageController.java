@@ -1,5 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.controller;
 
+import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageForRoomChatRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.service.MessageService;
@@ -11,11 +13,19 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("chat")
 @RequiredArgsConstructor
-public class ChatRoomMessageController {
+public class MessageController {
     private final MessageService messageService;
 
+    @PostMapping("send-in-zoom")
+    public ApiResponse<MessageDTO> sendMessageInRoom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @ModelAttribute MessageForRoomChatRequest request
+            ){
+        return messageService.sendMessageInRoom(userDetails.getUser().getId(), request);
+    }
+
     @PostMapping("send-direct")
-    public ApiResponse<String> sendDirectMessage(
+    public ApiResponse<MessageDTO> sendDirectMessage(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @ModelAttribute MessageRequest request
             ){

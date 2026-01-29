@@ -471,6 +471,95 @@ document.getElementById("toggleMembersBtn")
         loadMembers();
     });
 
+const sendBtn = document.getElementById("sendBtn");
+const messageInput = document.getElementById("messageInput");
+const mediaInput = document.getElementById("mediaInput");
+const previewContainer = document.getElementById("previewContainer");
+let selectedFiles = [];
+
+mediaInput.addEventListener("change", () => {
+    previewContainer.innerHTML = "";
+    selectedFiles = [];
+
+    [...mediaInput.files].forEach(file => {
+        selectedFiles.push(file);
+
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        previewContainer.appendChild(img);
+    });
+});
+
+sendBtn.addEventListener("click", sendMessage);
+messageInput.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+});
+
+async function sendMessage() {
+    const text = messageInput.value.trim();
+
+    if (!text && selectedFiles.length === 0) return;
+
+    const formData = new FormData();
+    formData.append("chatRoomId", chatRoomId);
+    formData.append("message", text);
+
+    selectedFiles.forEach(f => formData.append("medias", f));
+
+    sendBtn.disabled = true;
+
+    try {
+        const res = await fetch(`${URL_BASE}/chat/send-in-zoom`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            },
+            body: formData
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+            throw new Error(result.message || "Gửi thất bại");
+        }
+
+        // clear input
+        messageInput.value = "";
+        mediaInput.value = "";
+        previewContainer.innerHTML = "";
+        selectedFiles = [];
+
+
+        // reload message mới
+        prependMessage(result.data);
+
+    } catch (e) {
+        alert(e.message);
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+window.sendMessage=sendMessage
+
+function prependMessage(msg) {
+    const container = document.getElementById("messagesContainer");
+
+    const div = document.createElement("div");
+    div.className = "message mine";
+
+    div.innerHTML = `
+        <div class="content">
+            <div class="bubble">
+                ${msg.text ? `<div class="message-text">${msg.text}</div>` : ""}
+                ${renderMessageMedias(msg.media)}
+            </div>
+            <div class="time">${formatTime(msg.createdAt)}</div>
+        </div>
+    `;
+
+    container.appendChild(div);
+    window.scrollTo(0, document.body.scrollHeight);
+}
 
 function goBack() {
     window.location.href = "chat-room.html";

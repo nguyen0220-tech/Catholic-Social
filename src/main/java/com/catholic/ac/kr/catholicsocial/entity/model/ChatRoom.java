@@ -1,5 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.entity.model;
 
+import com.catholic.ac.kr.catholicsocial.status.ChatRoomType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +31,9 @@ public class ChatRoom {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    private ChatRoomType type;
 
     @PrePersist
     protected void create() {
