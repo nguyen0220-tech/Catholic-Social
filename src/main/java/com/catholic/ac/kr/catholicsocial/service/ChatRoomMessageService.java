@@ -1,9 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
-import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
-import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
-import com.catholic.ac.kr.catholicsocial.entity.dto.UserForAddRoomChatDTO;
+import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
@@ -16,6 +14,7 @@ import com.catholic.ac.kr.catholicsocial.repository.ChatRoomMemberRepository;
 import com.catholic.ac.kr.catholicsocial.repository.ChatRoomRepository;
 import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
@@ -53,7 +52,8 @@ public class ChatRoomMessageService {
     public ListResponse<ChatRoomDTO> getChatRooms(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<ChatRoomProjection> projections = chatRoomMemberRepository.findByUserId(userId, pageable);
+        Page<ChatRoomProjection> projections = chatRoomMemberRepository.
+                findByUserId(userId, ChatRoomMemberStatus.ACTIVE, pageable);
 
         List<ChatRoomProjection> chatRooms = projections.getContent();
 
@@ -64,7 +64,8 @@ public class ChatRoomMessageService {
     //    1:1
     @Transactional
     public ChatRoom getChatRoom(Long currentUserId, MessageRequest request) {
-        Optional<ChatRoom> existingRoom = chatRoomRepository.findExistingRoom(currentUserId, request.getRecipientId());
+        Optional<ChatRoom> existingRoom = chatRoomRepository.
+                findExistingRoom(currentUserId, request.getRecipientId());
 
         if (existingRoom.isPresent()) {
             return existingRoom.get();
@@ -92,7 +93,8 @@ public class ChatRoomMessageService {
     }
 
     public GraphqlResponse<String> updateChatRoom(Long userId, UpdateChatRoomRequest request) {
-        boolean roomExisting = chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, request.getChatRoomId());
+        boolean roomExisting = chatRoomMemberRepository
+                .existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
         if (!roomExisting) {
             throw new AccessDeniedException("forbidden");
         }
@@ -114,7 +116,7 @@ public class ChatRoomMessageService {
 
         List<UserForAddRoomChatDTO> rs = userPage.getContent();
 
-        Set<Long> userIdInRoomChat = new HashSet<>(chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId));
+        Set<Long> userIdInRoomChat = new HashSet<>(chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE));
 
         for (UserForAddRoomChatDTO user : rs) {
             user.setInRoom(userIdInRoomChat.contains(user.getUserId()));
@@ -124,7 +126,8 @@ public class ChatRoomMessageService {
     }
 
     public GraphqlResponse<String> addMemberToChatRoom(Long userId, AddMemberRequest request) {
-        boolean roomExisting = chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, request.getChatRoomId());
+        boolean roomExisting = chatRoomMemberRepository
+                .existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
         if (!roomExisting) {
             throw new AccessDeniedException("forbidden");
         }
@@ -138,19 +141,75 @@ public class ChatRoomMessageService {
             throw new IllegalStateException("Cannot send a direct message:blocked recipient");
         }
 
-        if (chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(request.getMemberId(), request.getChatRoomId())) {
+        if (chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(
+                request.getMemberId(),
+                request.getChatRoomId()
+                , ChatRoomMemberStatus.ACTIVE)) {
             throw new GraphQLException("Already have a member");
+        }
+
+        Optional<ChatRoomMember> chatRoomMemberOpt = chatRoomMemberRepository
+                .findByUser_IdAndChatRoom_Id(request.getMemberId(), request.getChatRoomId());
+
+        if (chatRoomMemberOpt.isPresent()) {
+            ChatRoomMember chatRoomMember = chatRoomMemberOpt.get();
+            chatRoomMember.setStatus(ChatRoomMemberStatus.ACTIVE);
+            chatRoomMember.setCreatedAt(LocalDateTime.now());
+            chatRoomMemberRepository.save(chatRoomMember);
+
+            return GraphqlResponse.success("added success", null);
         }
 
         ChatRoom chatRoom = EntityUtils.getOrThrow(chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
         User member = EntityUtils.getOrThrow(userRepository.findById(request.getMemberId()), "User");
 
-        ChatRoomMember chatRoomMember = new ChatRoomMember();
-        chatRoomMember.setChatRoom(chatRoom);
-        chatRoomMember.setUser(member);
+        ChatRoomMember newChatRoomMember = new ChatRoomMember();
+        newChatRoomMember.setChatRoom(chatRoom);
+        newChatRoomMember.setUser(member);
 
-        chatRoomMemberRepository.save(chatRoomMember);
+        chatRoomMemberRepository.save(newChatRoomMember);
 
         return GraphqlResponse.success("added success", null);
+    }
+
+    public ListResponse<MemberOfChatRoomDTO> getMembersOfChatRoom(Long userId, Long chatRoomId, int page, int size) {
+        boolean chatRoomMemberExisting = chatRoomMemberRepository
+                .existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE);
+        if (!chatRoomMemberExisting) {
+            throw new AccessDeniedException("forbidden");
+        }
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<MemberOfChatRoomDTO> chatRoomMemberPage = chatRoomMemberRepository.
+                findMembersByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE, pageable);
+
+        List<MemberOfChatRoomDTO> chatRoomMembers = chatRoomMemberPage.getContent();
+
+        Set<Long> userIdsBlock = new HashSet<>(followRepository.findUserIdsBlocked(userId));
+
+        List<MemberOfChatRoomDTO> rs = chatRoomMembers.stream()
+                .filter(u -> !userIdsBlock.contains(u.getUserId()))
+                .toList();
+
+        return new ListResponse<>(rs, new PageInfo(page, size, chatRoomMemberPage.hasNext()));
+    }
+
+    public GraphqlResponse<String> leaveChatRoom(Long userId, Long chatRoomId) {
+        boolean existing = chatRoomMemberRepository
+                .existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId,ChatRoomMemberStatus.ACTIVE);
+        if (!existing) {
+            throw new AccessDeniedException("forbidden");
+        }
+
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByUser_IdAndChatRoom_Id(userId, chatRoomId)
+                .orElseThrow(() -> new GraphQLException("Cannot find chat room member"));
+
+        if (chatRoomMember.getStatus().equals(ChatRoomMemberStatus.LEAVE))
+            throw new GraphQLException("Cannot leave chat room");
+
+        chatRoomMember.setStatus(ChatRoomMemberStatus.LEAVE);
+        chatRoomMemberRepository.save(chatRoomMember);
+
+        return GraphqlResponse.success("leave success", null);
     }
 }

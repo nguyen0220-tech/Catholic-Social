@@ -46,8 +46,14 @@ public class IntroVideoService {
     }
 
     public IntroVideoDTO getIntroVideo(Long userId) {
-        return introVideoRepository.findByUserIdAndStatus(userId, IntroStatus.ACTIVE)
-                .orElse(null);
+        Optional<IntroVideoDTO> introVideo = introVideoRepository.findByUserIdAndStatus(userId, IntroStatus.ACTIVE);
+
+        if (introVideo.isPresent()) {
+            if (introVideo.get().getExp().isAfter(LocalDateTime.now())) {
+                return introVideo.get();
+            }
+        }
+        return null;
     }
 
     public ListResponse<IntroVideoDTO> getIntrosCanRestore(Long userId, int page, int size) {

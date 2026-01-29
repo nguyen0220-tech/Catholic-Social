@@ -4,7 +4,7 @@ import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.entity.dto.FollowDTO;
 import com.catholic.ac.kr.catholicsocial.service.FollowService;
-import com.catholic.ac.kr.catholicsocial.status.ACTION;
+import com.catholic.ac.kr.catholicsocial.status.Action;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -54,7 +54,7 @@ public class FollowController {
     public ResponseEntity<ApiResponse<String>> userAction(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam Long userId,
-            @RequestParam ACTION action) {
+            @RequestParam Action action) {
         ApiResponse<String> status = followService.userAction(useDetails.getUser().getId(), userId, action);
         return ResponseEntity.status(status.getStatus()).body(status);
     }

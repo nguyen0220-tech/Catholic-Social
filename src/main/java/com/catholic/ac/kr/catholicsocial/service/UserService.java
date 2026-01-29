@@ -207,9 +207,12 @@ public class UserService {
 
         if (introOpt.isPresent()) {
             IntroVideo intro = introOpt.get();
-            IntroVideoDTO introVideoDTO = IntroVideoMapper.toIntroVideoDTO(intro);
 
-            profileDTO.setIntro(introVideoDTO);
+            if (intro.getExp().isAfter(LocalDateTime.now())) {
+                IntroVideoDTO introVideoDTO = IntroVideoMapper.toIntroVideoDTO(intro);
+
+                profileDTO.setIntro(introVideoDTO);
+            }
         }
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),

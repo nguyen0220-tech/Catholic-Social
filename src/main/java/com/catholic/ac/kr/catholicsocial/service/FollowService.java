@@ -12,7 +12,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.FollowMapper;
 import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
 import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
-import com.catholic.ac.kr.catholicsocial.status.ACTION;
+import com.catholic.ac.kr.catholicsocial.status.Action;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
@@ -231,14 +231,14 @@ public class FollowService {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ApiResponse<String> userAction(Long followerId, Long userId, ACTION action) {
+    public ApiResponse<String> userAction(Long followerId, Long userId, Action action) {
         User follower = getUserById(followerId);
 
         User user = getUserById(userId);
 
         Follow following = EntityUtils.getOrThrow(followRepository.findByFollowerAndUser_Action(follower, user), "Following");
 
-        if (ACTION.UNFOLLOW.equals(action) || ACTION.UNBLOCK.equals(action)) {
+        if (Action.UNFOLLOW.equals(action) || Action.UNBLOCK.equals(action)) {
             following.setState(FollowState.CANCELLED);
         }
 

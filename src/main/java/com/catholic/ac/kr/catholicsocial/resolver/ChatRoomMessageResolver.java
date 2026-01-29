@@ -115,7 +115,7 @@ public class ChatRoomMessageResolver {
             @Argument int page,
             @Argument int size
     ) {
-        return chatRoomMessageService.getUserForAddRoomChat(userDetails.getUser().getId(), chatRoomId,keyword, page, size);
+        return chatRoomMessageService.getUserForAddRoomChat(userDetails.getUser().getId(), chatRoomId, keyword, page, size);
     }
 
 
@@ -137,6 +137,31 @@ public class ChatRoomMessageResolver {
             @Argument AddMemberRequest request
     ) {
         return chatRoomMessageService.addMemberToChatRoom(userDetails.getUser().getId(), request);
+    }
+
+    // ====Members of Chat Room
+    @QueryMapping
+    public ListResponse<MemberOfChatRoomDTO> members(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Argument Long chatRoomId,
+            @Argument int page,
+            @Argument int size
+    ) {
+        return chatRoomMessageService.getMembersOfChatRoom(userDetails.getUser().getId(), chatRoomId, page, size);
+    }
+
+    @BatchMapping(typeName = "MemberOfChatRoom", field = "user")
+    public Map<MemberOfChatRoomDTO, UserGQLDTO> users(List<MemberOfChatRoomDTO> members) {
+
+        return batchLoaderHandler.batchLoadUser(members, MemberOfChatRoomDTO::getUserId);
+    }
+
+    @MutationMapping
+    public GraphqlResponse<String> leaveChatRoom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Argument Long chatRoomId
+    ) {
+        return chatRoomMessageService.leaveChatRoom(userDetails.getUser().getId(), chatRoomId);
     }
 
     // ====Message=====

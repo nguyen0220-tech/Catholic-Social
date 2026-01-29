@@ -106,6 +106,15 @@ async function loadRooms() {
                     >
                         ✏️
                     </button>
+                    
+                        <!-- LEAVE -->
+                    <button
+                        style="border:none; background:none; cursor:pointer; color:#dc3545"
+                        title="Thoát phòng"
+                        onclick="event.stopPropagation(); leaveChatRoom('${room.chatRoomId}')"
+                    >
+                        🚪
+                    </button>
                 </div>
             </div>
         
@@ -257,7 +266,6 @@ async function submitUpdateRoom() {
 
     closeEditRoom();
 
-    // refresh UI nhẹ: clear + reload
     document.getElementById("roomsContainer").innerHTML = "";
     currentPage = 0;
     hasNext = true;
@@ -269,5 +277,44 @@ function openChatRoom(chatRoomId) {
     window.location.href = `message.html?chatRoomId=${chatRoomId}`;
 }
 window.openChatRoom=openChatRoom
+
+const LEAVE_ROOM_MUTATION = `
+mutation ($chatRoomId: ID!) {
+  leaveChatRoom(chatRoomId: $chatRoomId) {
+    success
+    message
+    data
+  }
+}
+`;
+
+async function leaveChatRoom(chatRoomId) {
+    const ok = confirm("Bạn có chắc muốn thoát khỏi phòng chat này không?");
+    if (!ok) return;
+
+    const res = await graphqlRequest(LEAVE_ROOM_MUTATION, {
+        chatRoomId
+    });
+
+    if (res.errors || !res.data.leaveChatRoom.success) {
+        alert(res.errors?.[0]?.message || res.data.leaveChatRoom.message);
+        return;
+    }
+
+    const roomsContainer = document.getElementById("roomsContainer");
+    const roomDivs = [...roomsContainer.children];
+
+    const target = roomDivs.find(div =>
+        div.innerHTML.includes(chatRoomId)
+    );
+
+    if (target) target.remove();
+
+    currentPage = 0;
+    hasNext = true;
+    roomsContainer.innerHTML = "";
+    loadRooms();
+}
+window.leaveChatRoom = leaveChatRoom;
 
 loadRooms();

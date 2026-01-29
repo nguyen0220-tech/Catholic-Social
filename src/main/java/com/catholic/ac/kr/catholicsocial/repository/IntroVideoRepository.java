@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface IntroVideoRepository extends JpaRepository<IntroVideo, Long> {
 
     @Query("""
-            SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.IntroVideoDTO(it.id, it.url)
+            SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.IntroVideoDTO(it.id, it.url, it.exp)
             FROM IntroVideo it
             WHERE it.user.id = :userId AND it.status = :status
             """)

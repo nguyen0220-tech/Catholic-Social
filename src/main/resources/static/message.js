@@ -186,6 +186,8 @@ async function searchUserForAdd() {
     const keyword = document.getElementById("searchUserInput").value.trim();
     if (!keyword) return;
 
+    isViewingMembers = false;
+
     currentKeyword = keyword;
     addMemberPage = 0;
     addMemberHasNext = true;
@@ -297,7 +299,11 @@ addMemberPanel.addEventListener("scroll", () => {
         addMemberPanel.clientHeight >=
         addMemberPanel.scrollHeight - 80;
 
-    if (nearBottom) {
+    if (!nearBottom) return;
+
+    if (isViewingMembers) {
+        loadMembers();
+    } else {
         loadUserForAdd(currentKeyword);
     }
 });
@@ -358,6 +364,113 @@ async function followUser(userId, btn, statusTextEl) {
         btn.innerText = "Theo dõi";
     }
 }
+
+const MEMBERS_QUERY = `
+query ($chatRoomId: ID!, $page: Int!, $size: Int!) {
+  members(chatRoomId: $chatRoomId, page: $page, size: $size) {
+    data {
+      userId
+      createdAt
+      user {
+        userFullName
+        avatarUrl
+      }
+    }
+    pageInfo {
+      page
+      size
+      hasNext
+    }
+  }
+}
+`;
+
+let memberPage = 0;
+let memberHasNext = true;
+let memberLoading = false;
+let isViewingMembers = false;
+
+async function loadMembers() {
+    if (!memberHasNext || memberLoading) return;
+
+    memberLoading = true;
+    document.getElementById("addMemberLoading").style.display = "block";
+
+    const res = await graphqlRequest(MEMBERS_QUERY, {
+        chatRoomId: Number(chatRoomId),
+        page: memberPage,
+        size: 10
+    });
+
+    if (res.errors) {
+        console.error(res.errors);
+        memberLoading = false;
+        document.getElementById("addMemberLoading").style.display = "none";
+        return;
+    }
+
+    const response = res.data.members;
+    renderMembers(response.data);
+
+    memberHasNext = response.pageInfo.hasNext;
+    memberPage++;
+
+    memberLoading = false;
+    document.getElementById("addMemberLoading").style.display = "none";
+}
+
+function renderMembers(members) {
+    const container = document.getElementById("addMemberContainer");
+
+    members.forEach(m => {
+        const avatar = m.user?.avatarUrl || "/icon/default-avatar.png";
+        const fullName = m.user?.userFullName || "Unknown";
+
+        const div = document.createElement("div");
+        div.className = "member-item";
+        div.style.cssText = `
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px;
+            border-bottom:1px solid #eee;
+            cursor:pointer;
+        `;
+
+        div.innerHTML = `
+            <img src="${avatar}"
+                 style="width:40px;height:40px;border-radius:50%;object-fit:cover"  alt=""/>
+            <div>
+                <div style="font-weight:600">${fullName}</div>
+                <div style="font-size:12px;color:#666">
+                    Tham gia: ${formatTime(m.createdAt)}
+                </div>
+            </div>
+        `;
+
+        div.onclick = () => {
+            window.location.href = `user.html?id=${m.userId}`;
+        };
+
+        container.appendChild(div);
+    });
+}
+
+document.getElementById("toggleMembersBtn")
+    .addEventListener("click", () => {
+
+        isViewingMembers = true;
+
+        // reset state
+        memberPage = 0;
+        memberHasNext = true;
+
+        // clear list cũ
+        document.getElementById("addMemberContainer").innerHTML = "";
+
+        loadMembers();
+    });
+
 
 function goBack() {
     window.location.href = "chat-room.html";

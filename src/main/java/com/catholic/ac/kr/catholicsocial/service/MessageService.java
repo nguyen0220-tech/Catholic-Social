@@ -11,6 +11,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.MessageMapper;
 import com.catholic.ac.kr.catholicsocial.projection.MessageProjection;
 import com.catholic.ac.kr.catholicsocial.repository.*;
+import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
@@ -44,7 +45,8 @@ public class MessageService {
     private final FollowService followService;
 
     public ListResponse<MessageDTO> getMessages(Long userId, Long chatRoomId, int page, int size) {
-        if (!chatRoomMemberRepository.existsByUser_IdAndChatRoom_Id(userId, chatRoomId)) {
+        if (!chatRoomMemberRepository
+                .existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE)) {
             throw new AccessDeniedException("forbidden");
         }
 

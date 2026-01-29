@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.status;
 
-public enum ACTION {
+public enum Action {
     UNBLOCK,
     UNFOLLOW
 }
