@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
+import com.catholic.ac.kr.catholicsocial.entity.dto.RoomUpdateDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageForRoomChatRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
@@ -44,13 +45,14 @@ public class MessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final FollowRepository followRepository;
     private final FollowService followService;
+    private final SocketService socketService;
 
     public ListResponse<MessageDTO> getMessages(Long userId, Long chatRoomId, int page, int size) {
         if (!chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE)) {
             throw new AccessDeniedException("forbidden");
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<MessageProjection> projections = messageRepository.findByChatRoomId(chatRoomId, pageable);
 
@@ -81,6 +83,16 @@ public class MessageService {
         Message newMessage = createMessage(user, room, request.getMessage(), request.getMedias());
 
         MessageDTO messageDTO = MessageMapper.toMessageDTO(newMessage);
+
+        //Socket
+        List<Long> memberIds = chatRoomService.getMemberIdsByChatRoomId(messageDTO.getChatRoomId());
+        RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO(
+                messageDTO.getChatRoomId(),
+                messageDTO.getText() != null ? messageDTO.getText() : "[Ảnh]",
+                messageDTO.getCreatedAt());
+
+        socketService.sendNewMessage(messageDTO); //to member in room
+        socketService.updateRoomList(memberIds, roomUpdateDTO); //to list room
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Message sent successfully", messageDTO);

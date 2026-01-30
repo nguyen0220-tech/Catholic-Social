@@ -74,6 +74,7 @@ public class SecurityConfig {
                 .headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(
                         auth -> auth
+                                .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers(
                                         "/ws/**",
                                         "/auth/**",

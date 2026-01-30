@@ -8,7 +8,10 @@ import com.catholic.ac.kr.catholicsocial.service.MessageService;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("chat")
@@ -19,8 +22,7 @@ public class MessageController {
     @PostMapping("send-in-zoom")
     public ApiResponse<MessageDTO> sendMessageInRoom(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @ModelAttribute MessageForRoomChatRequest request
-            ){
+            @ModelAttribute MessageForRoomChatRequest request) {
         return messageService.sendMessageInRoom(userDetails.getUser().getId(), request);
     }
 
@@ -28,7 +30,7 @@ public class MessageController {
     public ApiResponse<MessageDTO> sendDirectMessage(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @ModelAttribute MessageRequest request
-            ){
+    ) {
         return messageService.sendDirectMessage(useDetails.getUser().getId(), request);
     }
 }

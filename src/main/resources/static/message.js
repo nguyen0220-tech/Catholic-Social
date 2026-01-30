@@ -8,6 +8,24 @@ document.getElementById("loading").style.display = "none";
 const urlParams = new URLSearchParams(window.location.search);
 const chatRoomId = urlParams.get("chatRoomId");
 
+function getUserIdFromToken(token) {
+    if (!token) return null;
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload).id;
+    } catch (e) {
+        console.error("Lỗi giải mã Token:", e);
+        return null;
+    }
+}
+
+const currentUserId = getUserIdFromToken(accessToken);
+console.log("My User ID:", currentUserId);
+
 let currentPage = 0;
 const pageSize = 10;
 let hasNext = true;
@@ -55,9 +73,9 @@ query ($chatRoomId: Int!, $page: Int!, $size: Int!) {
 
 async function loadMessages() {
     if (!hasNext || isLoading) return;
-
     isLoading = true;
-    document.getElementById("loading").style.display = "block";
+
+    const oldScrollHeight = document.body.scrollHeight;
 
     const result = await graphqlRequest(MESSAGES_QUERY, {
         chatRoomId: Number(chatRoomId),
@@ -65,53 +83,30 @@ async function loadMessages() {
         size: pageSize
     });
 
-    if (result.errors) {
-        console.error(result.errors);
-        isLoading = false;
-        document.getElementById("loading").style.display = "none";
-        return;
-    }
+    if (result.errors) { /* handle error */ return; }
 
-    const response = result.data.messages;
-    const messages = response.data;
-    hasNext = response.pageInfo.hasNext;
+    const messages = result.data.messages.data;
+    hasNext = result.data.messages.pageInfo.hasNext;
 
-    const container = document.getElementById("messagesContainer");
-    messages.forEach(msg => {
-        const div = document.createElement("div");
-        div.className = msg.isMine ? "message mine" : "message other";
+    const reversedMessages = [...messages].reverse();
 
-        div.innerHTML = `
-        ${!msg.isMine ? `
-            <img class="avatar" 
-                 src="${msg.user.avatarUrl || '/icon/default-avatar.png'}" 
-                 alt="" 
-                 style="cursor:pointer;" 
-                 onclick="window.location.href='user.html?id=${msg.user.id}'">
-        ` : ""}
-
-        <div class="content">
-            <div class="bubble">
-                ${msg.text ? `<div class="message-text">${msg.text}</div>` : ""}
-                ${renderMessageMedias(msg.messageMedias)}
-            </div>
-            <div class="time">${formatTime(msg.createdAt)}</div>
-        </div>
-    `;
-
-        container.appendChild(div);
+    reversedMessages.forEach(msg => {
+        appendMessageToUI(msg, true);
     });
+
+    if (currentPage === 0) {
+        window.scrollTo(0, document.body.scrollHeight);
+    } else {
+        const newScrollHeight = document.body.scrollHeight;
+        window.scrollTo(0, newScrollHeight - oldScrollHeight);
+    }
 
     currentPage++;
     isLoading = false;
-    document.getElementById("loading").style.display = "none";
 }
 
 window.addEventListener("scroll", () => {
-    const nearBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 120;
-
-    if (nearBottom) {
+    if (window.scrollY < 50 && !isLoading && hasNext) {
         loadMessages();
     }
 });
@@ -266,7 +261,6 @@ function renderUserForAdd(users) {
             </div>
         `;
 
-        // Logic xử lý Event (như cũ)
         div.querySelector(".user-info").addEventListener("click", () => {
             window.location.href = `user.html?id=${u.userId}`;
         });
@@ -497,13 +491,11 @@ messageInput.addEventListener("keypress", e => {
 
 async function sendMessage() {
     const text = messageInput.value.trim();
-
     if (!text && selectedFiles.length === 0) return;
 
     const formData = new FormData();
     formData.append("chatRoomId", chatRoomId);
     formData.append("message", text);
-
     selectedFiles.forEach(f => formData.append("medias", f));
 
     sendBtn.disabled = true;
@@ -511,28 +503,21 @@ async function sendMessage() {
     try {
         const res = await fetch(`${URL_BASE}/chat/send-in-zoom`, {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            },
+            headers: { "Authorization": `Bearer ${accessToken}` },
             body: formData
         });
 
         const result = await res.json();
 
-        if (!res.ok || !result.success) {
+        if (res.ok && result.success) {
+            messageInput.value = "";
+            mediaInput.value = "";
+            previewContainer.innerHTML = "";
+            selectedFiles = [];
+
+        } else {
             throw new Error(result.message || "Gửi thất bại");
         }
-
-        // clear input
-        messageInput.value = "";
-        mediaInput.value = "";
-        previewContainer.innerHTML = "";
-        selectedFiles = [];
-
-
-        // reload message mới
-        prependMessage(result.data);
-
     } catch (e) {
         alert(e.message);
     } finally {
@@ -541,28 +526,72 @@ async function sendMessage() {
 }
 window.sendMessage=sendMessage
 
-function prependMessage(msg) {
+function goBack() {
+    window.location.href = "chat-room.html";
+}
+
+let stompClient = null;
+function connectWebSocket() {
+    const socket = new SockJS(`${URL_BASE}/ws`);
+    stompClient = Stomp.over(socket);
+
+    const headers = {
+        'Authorization': `Bearer ${accessToken}`
+    };
+
+    console.log("Attempting to connect STOMP...");
+
+    stompClient.connect(headers, (frame) => {
+        console.log('<<< CONNECTED: ' + frame);
+
+        stompClient.subscribe(`/queue/message${chatRoomId}`, (messageOutput) => {
+            console.log("Received message from WS:", messageOutput.body);
+            const receivedMessage = JSON.parse(messageOutput.body);
+            handleIncomingMessage(receivedMessage);
+        });
+    }, (error) => {
+        console.error('STOMP ERROR CALLBACK:', error);
+    });
+}
+
+function handleIncomingMessage(msg) {
+    const existingMsg = document.getElementById(`msg-${msg.id}`);
+    if (existingMsg) return;
+
+    appendMessageToUI(msg);
+}
+
+function appendMessageToUI(msg, isInitialLoad = false) {
     const container = document.getElementById("messagesContainer");
+    if (document.getElementById(`msg-${msg.id}`)) return;
 
     const div = document.createElement("div");
-    div.className = "message mine";
+    const senderId = msg.user?.id || msg.senderId;
+    const isMine = (Number(senderId) === Number(currentUserId));
+    const avatar = msg.user?.avatarUrl || msg.avatarUrl || '/icon/default-avatar.png';
+    const mediaList = msg.messageMedias || msg.media || [];
 
+    div.className = isMine ? "message mine" : "message other";
+    div.id = `msg-${msg.id}`;
     div.innerHTML = `
+        ${!isMine ? `<img class="avatar" src="${avatar}" onclick="window.location.href='user.html?id=${senderId}'" alt="">` : ""}
         <div class="content">
             <div class="bubble">
                 ${msg.text ? `<div class="message-text">${msg.text}</div>` : ""}
-                ${renderMessageMedias(msg.media)}
+                ${renderMessageMedias(mediaList)}
             </div>
             <div class="time">${formatTime(msg.createdAt)}</div>
         </div>
     `;
 
-    container.appendChild(div);
-    window.scrollTo(0, document.body.scrollHeight);
+    if (isInitialLoad) {
+        container.prepend(div);
+    } else {
+        container.appendChild(div);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
 }
 
-function goBack() {
-    window.location.href = "chat-room.html";
-}
+connectWebSocket();
 
 loadMessages();

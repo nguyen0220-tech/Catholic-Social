@@ -82,50 +82,28 @@ async function loadRooms() {
     rooms.forEach(room => {
         const roomDiv = document.createElement("div");
         roomDiv.className = "room";
+        roomDiv.setAttribute("data-room-id", room.chatRoomId); // THÊM DÒNG NÀY
 
         roomDiv.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; cursor: pointer">
-                <!-- CLICK MỞ CHAT -->
-                <h3
-                    style="margin:0; cursor:pointer; display:flex; align-items:center; gap:4px"
-                    onclick="openChatRoom('${room.chatRoomId}')"
-                >
-                    ${renderRoomTitle(room)}
-                </h3>
-        
-                <div style="display:flex; align-items:center; gap:8px">
-                    <span style="font-size:12px; color:#888">
-                        ${formatTime(room.detail.lastMessageAt)}
-                    </span>
-        
-                    <!-- ICON EDIT -->
-                    <button
-                        style="border:none; background:none; cursor:pointer"
-                        title="Sửa phòng chat"
-                        onclick='event.stopPropagation(); openEditRoom(${JSON.stringify(room)})'
-                    >
-                        ✏️
-                    </button>
-                    
-                        <!-- LEAVE -->
-                    <button
-                        style="border:none; background:none; cursor:pointer; color:#dc3545"
-                        title="Thoát phòng"
-                        onclick="event.stopPropagation(); leaveChatRoom('${room.chatRoomId}')"
-                    >
-                        🚪
-                    </button>
-                </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor: pointer">
+            <h3 onclick="openChatRoom('${room.chatRoomId}')">
+                ${renderRoomTitle(room)}
+            </h3>
+            <div style="display:flex; align-items:center; gap:8px">
+                <span class="last-message-time" style="font-size:12px; color:#888">
+                    ${formatTime(room.detail.lastMessageAt)}
+                </span>
+                <button style="border: none; background-color: #ffffff" onclick='event.stopPropagation(); openEditRoom(${JSON.stringify(room)})'>✏️</button>
+                <button style="border: none; background-color: #ffffff" onclick="event.stopPropagation(); leaveChatRoom('${room.chatRoomId}')">🚪</button>
             </div>
-        
-            <div class="message-row" onclick="openChatRoom('${room.chatRoomId}')">
-                ${renderMembers(room.members)}
-                <div class="last-message">
-                    ${room.detail.lastMessagePreview ?? "<i>Chưa có tin nhắn</i>"}
-                </div>
+        </div>
+        <div class="message-row" onclick="openChatRoom('${room.chatRoomId}')">
+            ${renderMembers(room.members)}
+            <div class="last-message">
+                ${room.detail.lastMessagePreview ?? "<i>Chưa có tin nhắn</i>"}
             </div>
-        `;
-
+        </div>
+    `;
         container.appendChild(roomDiv);
     });
 
@@ -317,4 +295,55 @@ async function leaveChatRoom(chatRoomId) {
 }
 window.leaveChatRoom = leaveChatRoom;
 
+// --- 1. LẤY USER ID TỪ TOKEN ---
+function getUserIdFromToken(token) {
+    if (!token) return null;
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(jsonPayload).id;
+    } catch (e) { return null; }
+}
+const currentUserId = getUserIdFromToken(accessToken);
+
+// --- 2. KẾT NỐI WEBSOCKET ---
+let stompClient = null;
+function connectRoomWebSocket() {
+    const socket = new SockJS(`${URL_BASE}/ws`);
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({'Authorization': `Bearer ${accessToken}`}, () => {
+        console.log('Connected to Room List channel');
+
+        // Subscribe vào kênh cá nhân
+        stompClient.subscribe(`/queue/rooms-${currentUserId}`, (messageOutput) => {
+            const updateData = JSON.parse(messageOutput.body);
+            updateRoomUI(updateData);
+        });
+    });
+}
+
+function updateRoomUI(update) {
+    const container = document.getElementById("roomsContainer");
+    const roomDiv = document.querySelector(`[data-room-id="${update.chatRoomId}"]`);
+
+    if (roomDiv) {
+        const lastMsgEl = roomDiv.querySelector(".last-message");
+        const timeEl = roomDiv.querySelector(".last-message-time");
+
+        if (lastMsgEl) lastMsgEl.innerText = update.lastMessagePreview;
+        if (timeEl) timeEl.innerText = formatTime(update.lastMessageAt);
+
+        roomDiv.style.backgroundColor = "#e7f3ff";
+        setTimeout(() => roomDiv.style.backgroundColor = "transparent", 2000);
+
+        container.prepend(roomDiv);
+    } else {
+        console.log("Room not in list, refreshing...");
+    }
+}
+
+connectRoomWebSocket();
 loadRooms();

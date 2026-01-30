@@ -42,6 +42,10 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final FollowRepository followRepository;
 
+    public List<Long> getMemberIdsByChatRoomId(Long chatRoomId) {
+        return chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE);
+    }
+
     public List<ChatRoomMember> getAllChatRoomMembers(List<Long> chatRoomIds) {
         return chatRoomMemberRepository.findMembersByChatRoomIds(chatRoomIds);
     }

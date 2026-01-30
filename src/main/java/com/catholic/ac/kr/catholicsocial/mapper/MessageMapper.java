@@ -29,7 +29,9 @@ public class MessageMapper {
         MessageDTO messageDTO = new MessageDTO();
 
         messageDTO.setId(message.getId());
+        messageDTO.setChatRoomId(message.getChatRoom().getId());
         messageDTO.setSenderId(message.getSender().getId());
+        messageDTO.setAvatarUrl(message.getSender().getUserInfo().getAvatarUrl());
         messageDTO.setText(message.getText());
         messageDTO.setCreatedAt(message.getCreatedAt());
 

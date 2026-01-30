@@ -7,10 +7,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 public class MessageDTO {
     private Long id;
+    private Long chatRoomId;
     private Long senderId;
+    private String avatarUrl; //sender
     private String text;
     private LocalDateTime createdAt;
     private List<String> media = new ArrayList<>();
