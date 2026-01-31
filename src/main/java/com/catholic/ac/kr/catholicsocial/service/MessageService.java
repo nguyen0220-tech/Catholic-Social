@@ -86,13 +86,20 @@ public class MessageService {
 
         //Socket
         List<Long> memberIds = chatRoomService.getMemberIdsByChatRoomId(messageDTO.getChatRoomId());
+
+        Set<Long> userIdsBlock = new HashSet<>(followService.getUserIdsBlocked(userId));
+
+        List<Long> filterMemberIds = memberIds.stream()
+                .filter(id -> !userIdsBlock.contains(id))
+                .toList();
+
         RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO(
                 messageDTO.getChatRoomId(),
-                messageDTO.getText() != null ? messageDTO.getText() : "[Ảnh]",
+                (messageDTO.getText().isBlank()) ? "[Ảnh]" : messageDTO.getText(),
                 messageDTO.getCreatedAt());
 
         socketService.sendNewMessage(messageDTO); //to member in room
-        socketService.updateRoomList(memberIds, roomUpdateDTO); //to list room
+        socketService.updateRoomList(filterMemberIds, roomUpdateDTO); //to list room
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Message sent successfully", messageDTO);

@@ -2,6 +2,7 @@ package com.catholic.ac.kr.catholicsocial.resolver;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.GroupChatRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
@@ -13,7 +14,10 @@ import com.catholic.ac.kr.catholicsocial.service.ChatRoomService;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.graphql.data.method.annotation.*;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.BatchMapping;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
@@ -24,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
-public class ChatRoomMessageResolver {
+public class ChatRoomResolver {
     private final ChatRoomService chatRoomService;
     private final BatchLoaderHandler batchLoaderHandler;
     private final UserDetailsForBatchMapping userDetailsForBatchMapping;
@@ -37,8 +41,46 @@ public class ChatRoomMessageResolver {
         return chatRoomService.getChatRooms(useDetails.getUser().getId(), page, size);
     }
 
+    @QueryMapping
+    public List<UserRecentMessageDTO> usersRecentMessage(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return chatRoomService.getUsersRecentMessage(userDetails.getUser().getId());
+    }
+
+    @BatchMapping(typeName = "UserRecentMessage", field = "user")
+    public Map<UserRecentMessageDTO, UserGQLDTO> userRecent(List<UserRecentMessageDTO> users) {
+        return batchLoaderHandler.batchLoadUser(users, UserRecentMessageDTO::getId);
+    }
+
+    @QueryMapping
+    public ListResponse<UserForCreateRoomChatDTO> usersForCreateRoomChat(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Argument String keyword,
+            @Argument int page,
+            @Argument int size
+    ) {
+        return chatRoomService.getUsersForCreateRoom(userDetails.getUser().getId(), keyword, page, size);
+    }
+
+    @BatchMapping(typeName = "UserForCreateChatRoom", field = "user")
+    public Map<UserForCreateRoomChatDTO, UserGQLDTO> usersForCreate(List<UserForCreateRoomChatDTO> users) {
+        return batchLoaderHandler.batchLoadUser(users, UserForCreateRoomChatDTO::getUserId);
+    }
+
+    @BatchMapping(typeName = "UserForCreateChatRoom", field = "isFollowing")
+    public Map<UserForCreateRoomChatDTO, Boolean> isFollow(List<UserForCreateRoomChatDTO> users, Principal principal) {
+        return batchLoaderHandler.batchLoadFollow(users,UserForCreateRoomChatDTO::getUserId, principal);
+    }
+
     @MutationMapping
-    public GraphqlResponse<String> updateChatRoom(
+    public GraphqlResponse<RoomChatDTO> createGroupChat(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Argument GroupChatRequest request
+    ) {
+        return chatRoomService.createGroupChat(userDetails.getUser().getId(), request);
+    }
+
+    @MutationMapping
+    public GraphqlResponse<RoomChatDTO> updateChatRoom(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument UpdateChatRoomRequest request
     ) {
@@ -97,8 +139,6 @@ public class ChatRoomMessageResolver {
                         r -> map.getOrDefault(r.getChatRoomId(), List.of())
                 ));
     }
-
-    //====Add Member For Chat Room From Chat Room====
 
     @QueryMapping
     public ListResponse<UserForAddRoomChatDTO> userForAddRoomChat(

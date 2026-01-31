@@ -87,8 +87,10 @@
 
 </head>
 <body>
-
-<h2>💬 Message</h2>
+<div class="top-bar">
+    <h2>💬 Message</h2>
+    <button onclick="openCreateGroup()">➕ Tạo nhóm chat</button>
+</div>
 <div id="roomsContainer"></div>
 
 <div id="loading" style="display:none; text-align:center; padding:12px">
@@ -120,6 +122,45 @@
         <div style="display:flex; justify-content:flex-end; gap:8px">
             <button onclick="closeEditRoom()">Huỷ</button>
             <button onclick="submitUpdateRoom()">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<div id="createGroupModal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    justify-content:center;
+    align-items:center;
+">
+    <div style="
+        background:#fff;
+        padding:16px;
+        border-radius:8px;
+        width:320px;
+    ">
+        <h3>👥 Tạo nhóm chat</h3>
+
+        <input id="groupNameInput"
+               placeholder="Tên nhóm (tuỳ chọn)"
+               style="width:100%; margin-bottom:8px">
+
+        <textarea id="groupDescInput"
+                  placeholder="Mô tả"
+                  style="width:100%; margin-bottom:8px"></textarea>
+
+        <input id="userSearchInput" type="text" placeholder="🔍 Tìm kiếm user..."
+               style="width:100%; margin-bottom:12px; padding: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px;">
+
+
+        <div id="recentUsersContainer"
+             style="max-height:220px; overflow:auto; margin-bottom:12px">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px">
+            <button onclick="closeCreateGroup()">Huỷ</button>
+            <button onclick="submitCreateGroup()">Tạo</button>
         </div>
     </div>
 </div>

@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
+import com.catholic.ac.kr.catholicsocial.entity.dto.request.GroupChatRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
@@ -10,10 +11,7 @@ import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ChatRoomMapper;
 import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
-import com.catholic.ac.kr.catholicsocial.repository.ChatRoomMemberRepository;
-import com.catholic.ac.kr.catholicsocial.repository.ChatRoomRepository;
-import com.catholic.ac.kr.catholicsocial.repository.FollowRepository;
-import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+import com.catholic.ac.kr.catholicsocial.repository.*;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomType;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
@@ -24,15 +22,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +38,9 @@ public class ChatRoomService {
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final FollowRepository followRepository;
+    private final FollowService followService;
+    private final SocketService socketService;
+    private final MessageRepository messageRepository;
 
     public List<Long> getMemberIdsByChatRoomId(Long chatRoomId) {
         return chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE);
@@ -64,6 +64,78 @@ public class ChatRoomService {
 
         return new ListResponse<>(ChatRoomMapper.chatRoomDTOs(chatRooms),
                 new PageInfo(page, size, projections.hasNext()));
+    }
+
+    // current user send message to 10 other recent
+    public List<UserRecentMessageDTO> getUsersRecentMessage(Long userId) {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        return messageRepository.findRecentUsers(userId, pageable).stream()
+                .map(UserRecentMessageDTO::new)
+                .toList();
+    }
+
+    public ListResponse<UserForCreateRoomChatDTO> getUsersForCreateRoom(Long userId, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<UserForCreateRoomChatDTO> usersPage = userRepository.
+                findUserForCreateRoomChatDTOByUserId(userId, keyword, pageable);
+
+        List<UserForCreateRoomChatDTO> users = usersPage.getContent();
+
+        return new ListResponse<>(users, new PageInfo(page, size, usersPage.hasNext()));
+    }
+
+    @Transactional
+    public GraphqlResponse<RoomChatDTO> createGroupChat(Long userId, GroupChatRequest request) {
+        if (request.getMemberIds().isEmpty()) {
+            throw new GraphQLException("Invalid request: memberIds is empty");
+        }
+
+        List<Long> userIdsBlock = followService.getUserIdsBlocked(userId);
+        for (Long memberId : request.getMemberIds()) {
+            if (userIdsBlock.contains(memberId)) {
+                throw new GraphQLException("Cannot create group chat because user already block");
+            }
+        }
+
+        User currentUser = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
+        ChatRoom newChatRoom = new ChatRoom();
+        newChatRoom.setRoomName(request.getRoomName());
+        newChatRoom.setDescription(request.getRoomDescription());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        newChatRoom.setLastMessagePreview("[New Chat Room Created At: " + LocalDateTime.now().format(formatter) + "]");
+        newChatRoom.setLastMessageAt(LocalDateTime.now());
+        newChatRoom.setType(ChatRoomType.GROUP);
+        chatRoomRepository.save(newChatRoom);
+
+        List<ChatRoomMember> chatRoomMembers = new ArrayList<>();
+
+        ChatRoomMember myChatRoomMember = new ChatRoomMember();
+        myChatRoomMember.setChatRoom(newChatRoom);
+        myChatRoomMember.setUser(currentUser);
+
+        chatRoomMembers.add(myChatRoomMember);
+
+        for (Long memberId : request.getMemberIds()) {
+            User member = EntityUtils.getOrThrow(userRepository.findById(memberId), "User");
+
+            ChatRoomMember chatRoomMember = new ChatRoomMember();
+
+            chatRoomMember.setChatRoom(newChatRoom);
+            chatRoomMember.setUser(member);
+
+            chatRoomMembers.add(chatRoomMember);
+        }
+
+        chatRoomMemberRepository.saveAll(chatRoomMembers);
+
+        RoomChatDTO roomChatDTO = ChatRoomMapper.roomChatDTO(newChatRoom);
+
+        socketService.creatOrUpdateGroupChat(request.getMemberIds(), roomChatDTO); //socket to members
+        socketService.creatOrUpdateGroupChat(userId, roomChatDTO); //soket to current user
+        return GraphqlResponse.success("Created chat room success", roomChatDTO);
     }
 
     //    1:1
@@ -98,7 +170,7 @@ public class ChatRoomService {
         return newChatRoom;
     }
 
-    public GraphqlResponse<String> updateChatRoom(Long userId, UpdateChatRoomRequest request) {
+    public GraphqlResponse<RoomChatDTO> updateChatRoom(Long userId, UpdateChatRoomRequest request) {
         boolean roomExisting = chatRoomMemberRepository
                 .existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
         if (!roomExisting) {
@@ -112,7 +184,14 @@ public class ChatRoomService {
         chatRoom.setDescription(request.getChatRoomDescription());
         chatRoomRepository.save(chatRoom);
 
-        return GraphqlResponse.success("updated success", null);
+        //socket
+        RoomChatDTO roomChatDTO = ChatRoomMapper.roomChatDTO(chatRoom);
+
+        List<Long> memberIds = chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoom.getId(), ChatRoomMemberStatus.ACTIVE);
+
+        socketService.creatOrUpdateGroupChat(memberIds, roomChatDTO);
+
+        return GraphqlResponse.success("updated success", roomChatDTO);
     }
 
     public ListResponse<UserForAddRoomChatDTO> getUserForAddRoomChat(Long userId, Long chatRoomId, String keyword, int page, int size) {
@@ -186,7 +265,7 @@ public class ChatRoomService {
         if (!chatRoomMemberExisting) {
             throw new AccessDeniedException("forbidden");
         }
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<MemberOfChatRoomDTO> chatRoomMemberPage = chatRoomMemberRepository.
                 findMembersByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE, pageable);
@@ -204,7 +283,7 @@ public class ChatRoomService {
 
     public GraphqlResponse<String> leaveChatRoom(Long userId, Long chatRoomId) {
         boolean existing = chatRoomMemberRepository
-                .existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId,ChatRoomMemberStatus.ACTIVE);
+                .existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE);
         if (!existing) {
             throw new AccessDeniedException("forbidden");
         }

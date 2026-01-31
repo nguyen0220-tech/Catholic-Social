@@ -3,12 +3,15 @@ extend type Query {
     messages(chatRoomId:Int!,  page:Int!, size:Int!):ListResponse_Message
     userForAddRoomChat(chatRoomId:ID!, keyword:String!, page:Int!, size:Int!):ListResponse_UserForAddChatRoom
     members(chatRoomId:ID!, page:Int!, size:Int!):ListResponse_Member
+    usersRecentMessage:[UserRecentMessage]
+    usersForCreateRoomChat(keyword:String!, page:Int!, size:Int!):ListResponse_UserForCreateChatRoom
 }
 
 extend type Mutation {
     updateChatRoom(request:UpdateChatRoomRequest!):GraphqlResponse_String
     addMemberForChatRoom(request:UserForAddChatRoomRequest):GraphqlResponse_String
     leaveChatRoom(chatRoomId:ID!):GraphqlResponse_String
+    createGroupChat(request:GroupChatRequest):GroupChatResponse
 }
 
 type ListResponse_RoomChat{
@@ -79,4 +82,42 @@ type MemberOfChatRoom{
     createdAt:String!
 
     user:UserDTO
+}
+
+type UserRecentMessage{
+    id:ID!
+    user:UserDTO
+}
+
+type ListResponse_UserForCreateChatRoom{
+    data:[UserForCreateChatRoom]
+    pageInfo:PageInfo
+}
+
+type UserForCreateChatRoom{
+    userId:ID!
+
+    user:UserDTO
+    isFollowing:Boolean!
+}
+
+input GroupChatRequest{
+    memberIds:[ID]!
+    roomName:String
+    roomDescription:String
+}
+
+type GroupChat{
+    chatRoomId:ID!
+    roomName:String
+    roomDescription:String
+    lastMessagePreview:String
+    lastMessageAt:String
+}
+
+
+type GroupChatResponse {
+    success: Boolean!
+    message: String!
+    data: GroupChat
 }

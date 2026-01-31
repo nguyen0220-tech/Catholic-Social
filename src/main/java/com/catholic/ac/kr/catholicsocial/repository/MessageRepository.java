@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("""
@@ -19,4 +21,16 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             WHERE m.chatRoom.id = :chatRoomId
             """)
     Page<MessageProjection> findByChatRoomId(Long chatRoomId, Pageable pageable);
+
+    @Query("""
+                SELECT crm.user.id
+                FROM Message m
+                JOIN ChatRoomMember crm ON crm.chatRoom.id = m.chatRoom.id
+                WHERE m.sender.id = :userId
+                  AND crm.user.id <> :userId
+                GROUP BY crm.user.id
+                ORDER BY MAX(m.createdAt) DESC
+            """)
+    List<Long> findRecentUsers(Long userId, Pageable pageable);
+
 }

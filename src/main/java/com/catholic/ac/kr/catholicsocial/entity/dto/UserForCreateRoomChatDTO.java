@@ -5,16 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 /*
-    In room: add
+    When create
  */
-
 @AllArgsConstructor
 @Getter @Setter
-public class UserForAddRoomChatDTO {
+public class UserForCreateRoomChatDTO {
     private Long userId;
-    private Boolean inRoom;
-
-    public UserForAddRoomChatDTO(Long userId) {
-        this.userId = userId;
-    }
 }

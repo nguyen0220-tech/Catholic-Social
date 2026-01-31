@@ -83,14 +83,12 @@ async function loadMessages() {
         size: pageSize
     });
 
-    if (result.errors) { /* handle error */ return; }
+    if (result.errors) { return; }
 
     const messages = result.data.messages.data;
     hasNext = result.data.messages.pageInfo.hasNext;
 
-    const reversedMessages = [...messages].reverse();
-
-    reversedMessages.forEach(msg => {
+    messages.forEach(msg => {
         appendMessageToUI(msg, true);
     });
 

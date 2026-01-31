@@ -243,11 +243,6 @@ async function submitUpdateRoom() {
     }
 
     closeEditRoom();
-
-    document.getElementById("roomsContainer").innerHTML = "";
-    currentPage = 0;
-    hasNext = true;
-    loadRooms();
 }
 window.submitUpdateRoom=submitUpdateRoom
 
@@ -295,6 +290,222 @@ async function leaveChatRoom(chatRoomId) {
 }
 window.leaveChatRoom = leaveChatRoom;
 
+const USERS_RECENT_MESSAGE_QUERY = `
+query {
+  usersRecentMessage {
+    id
+    user {
+      id
+      userFullName
+      avatarUrl
+    }
+  }
+}
+`;
+
+async function loadRecentUsersForGroup() {
+    const container = document.getElementById("recentUsersContainer");
+    container.innerHTML = "⏳ Đang tải...";
+
+    const res = await graphqlRequest(USERS_RECENT_MESSAGE_QUERY);
+    if (res.errors) {
+        container.innerHTML = "❌ Không tải được danh sách";
+        return;
+    }
+
+    // Map lại data để giống cấu trúc của query Search cho dễ render
+    const formattedData = res.data.usersRecentMessage.map(item => ({
+        userId: item.user.id,
+        user: item.user
+    }));
+
+    renderUserList(formattedData);
+}
+
+const USERS_FOR_CREATE_ROOM_QUERY = `
+query ($keyword: String!, $page: Int!, $size: Int!) {
+  usersForCreateRoomChat(keyword: $keyword, page: $page, size: $size) {
+    data {
+      userId
+      user {
+        userFullName
+        avatarUrl
+      }
+      isFollowing
+    }
+    pageInfo {
+      hasNext
+    }
+  }
+}
+`;
+
+// Biến để lưu trữ trạng thái chọn user
+let selectedUserIds = new Set();
+
+// Hàm Debounce: Đợi người dùng dừng gõ 500ms mới gọi API
+function debounce(func, timeout = 500) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+}
+
+// Lắng nghe sự kiện gõ phím ở ô tìm kiếm
+document.getElementById("userSearchInput").addEventListener("input", debounce((e) => {
+    const keyword = e.target.value.trim();
+    if (keyword.length > 0) {
+        fetchUsers(keyword);
+    } else {
+        loadRecentUsersForGroup(); // Trở lại danh sách gần đây nếu ô search trống
+    }
+}));
+
+async function fetchUsers(keyword) {
+    const container = document.getElementById("recentUsersContainer");
+    container.innerHTML = "🔍 Đang tìm...";
+
+    const res = await graphqlRequest(USERS_FOR_CREATE_ROOM_QUERY, {
+        keyword: keyword,
+        page: 0,
+        size: 20
+    });
+
+    if (res.errors) {
+        container.innerHTML = "❌ Lỗi tìm kiếm";
+        return;
+    }
+
+    renderUserList(res.data.usersForCreateRoomChat.data);
+}
+
+function renderUserList(users) {
+    const container = document.getElementById("recentUsersContainer");
+
+    if (!users || users.length === 0) {
+        container.innerHTML = "<i style='padding:8px; display:block'>Không tìm thấy người dùng nào</i>";
+        return;
+    }
+
+    container.innerHTML = users.map(u => {
+        const uid = u.userId || u.user.id;
+        const isChecked = selectedUserIds.has(uid) ? "checked" : "";
+
+        // Tạo nhãn "Đang theo dõi" nếu isFollowing là true
+        const followingBadge = u.isFollowing
+            ? `<span style="
+                font-size: 10px; 
+                background: #e1f5fe; 
+                color: #039be5; 
+                padding: 2px 6px; 
+                border-radius: 10px; 
+                margin-left: 8px;
+                font-weight: 600;
+                border: 1px solid #b3e5fc;
+              ">Đang theo dõi</span>`
+            : "";
+
+        return `
+        <label style="
+            display:flex; 
+            align-items:center; 
+            gap:10px; 
+            padding:10px 8px; 
+            cursor:pointer; 
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        " onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            
+            <input type="checkbox" class="group-member-checkbox" value="${uid}" 
+                   ${isChecked} onchange="toggleUserSelection('${uid}')" 
+                   style="width: 16px; height: 16px; cursor: pointer;">
+            
+            <img src="${u.user.avatarUrl || '/icon/default-avatar.png'}" 
+                 style="width:38px; height:38px; border-radius:50%; object-fit: cover; border: 1px solid #eee;" alt="">
+            
+            <div style="display: flex; flex-direction: column; flex-grow: 1;">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-weight: 500; color: #333;">${u.user.userFullName}</span>
+                    ${followingBadge}
+                </div>
+                </div>
+        </label>
+        `;
+    }).join("");
+}
+
+// Cập nhật Set khi check/uncheck
+window.toggleUserSelection = function(userId) {
+    if (selectedUserIds.has(userId)) {
+        selectedUserIds.delete(userId);
+    } else {
+        selectedUserIds.add(userId);
+    }
+}
+
+const CREATE_GROUP_CHAT_MUTATION = `
+mutation ($request: GroupChatRequest!) {
+  createGroupChat(request: $request) {
+    success
+    message
+    data {
+      chatRoomId
+      roomName
+      roomDescription
+      lastMessagePreview
+      lastMessageAt
+    }
+  }
+}
+`;
+
+async function openCreateGroup() {
+    selectedUserIds.clear();
+    document.getElementById("userSearchInput").value = "";
+    document.getElementById("groupNameInput").value = "";
+    document.getElementById("createGroupModal").style.display = "flex";
+    loadRecentUsersForGroup();
+}
+window.openCreateGroup = openCreateGroup;
+
+
+function closeCreateGroup() {
+    document.getElementById("createGroupModal").style.display = "none";
+}
+window.closeCreateGroup = closeCreateGroup;
+
+async function submitCreateGroup() {
+    const name = document.getElementById("groupNameInput").value.trim();
+    const desc = document.getElementById("groupDescInput").value.trim();
+    const memberIds = Array.from(selectedUserIds); // Lấy từ Set
+
+    if (memberIds.length === 0) {
+        alert("Hãy chọn ít nhất 1 thành viên");
+        return;
+    }
+
+    const res = await graphqlRequest(CREATE_GROUP_CHAT_MUTATION, {
+        request: {
+            memberIds,
+            roomName: name || null,
+            roomDescription: desc || null
+        }
+    });
+
+    if (res.errors || !res.data.createGroupChat.success) {
+        alert("Lỗi: " + (res.errors?.[0]?.message || res.data.createGroupChat.message));
+        return;
+    }
+
+    closeCreateGroup();
+    // Có thể thêm logic: chuyển hướng vào phòng vừa tạo
+    if(res.data.createGroupChat.data.chatRoomId) {
+        openChatRoom(res.data.createGroupChat.data.chatRoomId);
+    }
+}
+window.submitCreateGroup=submitCreateGroup
+
 // --- 1. LẤY USER ID TỪ TOKEN ---
 function getUserIdFromToken(token) {
     if (!token) return null;
@@ -327,21 +538,68 @@ function connectRoomWebSocket() {
 
 function updateRoomUI(update) {
     const container = document.getElementById("roomsContainer");
-    const roomDiv = document.querySelector(`[data-room-id="${update.chatRoomId}"]`);
+    const roomDiv = document.querySelector(
+        `[data-room-id="${update.chatRoomId}"]`
+    );
 
     if (roomDiv) {
+        const titleEl = roomDiv.querySelector("h3");
+        if (titleEl) {
+            let html = `<span>${update.roomName ?? "Nhóm chat"}</span>`;
+
+            if (update.roomDescription && update.roomDescription.trim() !== "") {
+                html += `
+                    <span style="font-size:12px; color:#888; margin-left:6px">
+                        • ${update.roomDescription}
+                    </span>
+                `;
+            }
+
+            titleEl.innerHTML = html;
+        }
+
         const lastMsgEl = roomDiv.querySelector(".last-message");
+        if (lastMsgEl && update.lastMessagePreview !== undefined) {
+            lastMsgEl.innerHTML =
+                update.lastMessagePreview ?? "<i>Chưa có tin nhắn</i>";
+        }
+
         const timeEl = roomDiv.querySelector(".last-message-time");
-
-        if (lastMsgEl) lastMsgEl.innerText = update.lastMessagePreview;
-        if (timeEl) timeEl.innerText = formatTime(update.lastMessageAt);
-
-        roomDiv.style.backgroundColor = "#e7f3ff";
-        setTimeout(() => roomDiv.style.backgroundColor = "transparent", 2000);
+        if (timeEl && update.lastMessageAt) {
+            timeEl.innerText = formatTime(update.lastMessageAt);
+        }
 
         container.prepend(roomDiv);
-    } else {
-        console.log("Room not in list, refreshing...");
+    }
+    else {
+        const div = document.createElement("div");
+        div.className = "room";
+        div.setAttribute("data-room-id", update.chatRoomId);
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <h3 onclick="openChatRoom('${update.chatRoomId}')">
+                    <span>${update.roomName ?? "Nhóm chat"}</span>
+                    ${
+            update.roomDescription
+                ? `<span style="font-size:12px;color:#888;margin-left:6px">
+                                • ${update.roomDescription}
+                               </span>`
+                : ""
+        }
+                </h3>
+                <span class="last-message-time" style="font-size:12px;color:#888">
+                    ${formatTime(update.lastMessageAt)}
+                </span>
+            </div>
+            <div class="message-row" onclick="openChatRoom('${update.chatRoomId}')">
+                <div class="last-message">
+                    ${update.lastMessagePreview ?? "<i>Chưa có tin nhắn</i>"}
+                </div>
+            </div>
+        `;
+
+        container.prepend(div);
     }
 }
 

@@ -1,5 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
+import com.catholic.ac.kr.catholicsocial.entity.dto.RoomChatDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.RoomUpdateDTO;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +17,32 @@ public class SocketService {
 
     // Gửi tin nhắn mới vào phòng
     public void sendNewMessage(MessageDTO message) {
-        messagingTemplate.convertAndSend("/queue/message" + message.getChatRoomId(), message);
+        messagingTemplate.convertAndSend(
+                "/queue/message" + message.getChatRoomId(),
+                message);
     }
 
     // Cập nhật danh sách phòng cho tất cả thành viên
     @Async // Gửi bất đồng bộ để không chặn luồng chính
     public void updateRoomList(List<Long> memberIds, RoomUpdateDTO update) {
         for (Long memberId : memberIds) {
-            messagingTemplate.convertAndSend("/queue/rooms-" + memberId, update);
+            messagingTemplate.convertAndSend(
+                    "/queue/rooms-" + memberId,
+                    update);
+        }
+    }
+    public void creatOrUpdateGroupChat(Long myId, RoomChatDTO roomChatDTO) {
+        messagingTemplate.convertAndSend(
+                "/queue/rooms-" + myId,
+                roomChatDTO);
+    }
+
+    @Async
+    public void creatOrUpdateGroupChat(List<Long> memberIds, RoomChatDTO roomChatDTO) {
+        for (Long memberId : memberIds) {
+            messagingTemplate.convertAndSend(
+                    "/queue/rooms-" + memberId,
+                    roomChatDTO);
         }
     }
 }

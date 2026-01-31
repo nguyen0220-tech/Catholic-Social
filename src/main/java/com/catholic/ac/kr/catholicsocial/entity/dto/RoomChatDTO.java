@@ -1,18 +1,15 @@
 package com.catholic.ac.kr.catholicsocial.entity.dto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/*
-    Khi gửi message sẽ bắn Socket đến những member của phòng chat
- */
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter @Setter
-public class RoomUpdateDTO {
+public class RoomChatDTO {
     private Long chatRoomId;
+    private String roomName;
+    private  String roomDescription;
     private String lastMessagePreview;
-
     private LocalDateTime lastMessageAt;
 }
