@@ -8,6 +8,7 @@ import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.UpdateChatRoomRequest;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
+import com.catholic.ac.kr.catholicsocial.entity.model.LogChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ChatRoomMapper;
 import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
@@ -15,6 +16,7 @@ import com.catholic.ac.kr.catholicsocial.repository.*;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomType;
 import com.catholic.ac.kr.catholicsocial.status.FollowState;
+import com.catholic.ac.kr.catholicsocial.status.LogRoomContent;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
 import graphql.GraphQLException;
@@ -41,6 +43,7 @@ public class ChatRoomService {
     private final FollowService followService;
     private final SocketService socketService;
     private final MessageRepository messageRepository;
+    private final LogChatRoomRepository logChatRoomRepository;
 
     public List<Long> getMemberIdsByChatRoomId(Long chatRoomId) {
         return chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE);
@@ -131,6 +134,12 @@ public class ChatRoomService {
 
         chatRoomMemberRepository.saveAll(chatRoomMembers);
 
+        LogChatRoom log = new LogChatRoom();
+        log.setChatRoom(newChatRoom);
+        log.setActorId(userId);
+        log.setContent(LogRoomContent.CREATED_ROOM_CHAT);
+        logChatRoomRepository.save(log);
+
         RoomChatDTO roomChatDTO = ChatRoomMapper.roomChatDTO(newChatRoom);
 
         socketService.creatOrUpdateGroupChat(request.getMemberIds(), roomChatDTO); //socket to members
@@ -183,6 +192,12 @@ public class ChatRoomService {
         chatRoom.setRoomName(request.getChatRoomName());
         chatRoom.setDescription(request.getChatRoomDescription());
         chatRoomRepository.save(chatRoom);
+
+        LogChatRoom log = new LogChatRoom();
+        log.setChatRoom(chatRoom);
+        log.setContent(LogRoomContent.UPDATED_ROOM_CHAT);
+        log.setActorId(userId);
+        logChatRoomRepository.save(log);
 
         //socket
         RoomChatDTO roomChatDTO = ChatRoomMapper.roomChatDTO(chatRoom);
@@ -256,6 +271,12 @@ public class ChatRoomService {
 
         chatRoomMemberRepository.save(newChatRoomMember);
 
+        LogChatRoom log = new LogChatRoom();
+        log.setChatRoom(chatRoom);
+        log.setContent(LogRoomContent.ADDED_MEMBER_ROOM_CHAT);
+        log.setActorId(userId);
+        logChatRoomRepository.save(log);
+
         return GraphqlResponse.success("added success", null);
     }
 
@@ -296,6 +317,12 @@ public class ChatRoomService {
 
         chatRoomMember.setStatus(ChatRoomMemberStatus.LEAVE);
         chatRoomMemberRepository.save(chatRoomMember);
+
+        LogChatRoom log = new LogChatRoom();
+        log.setChatRoom(chatRoomMember.getChatRoom());
+        log.setContent(LogRoomContent.LEAVE_ROOM_CHAT);
+        log.setActorId(userId);
+        logChatRoomRepository.save(log);
 
         return GraphqlResponse.success("leave success", null);
     }
