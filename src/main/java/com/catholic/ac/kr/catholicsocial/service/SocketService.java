@@ -31,14 +31,14 @@ public class SocketService {
                     update);
         }
     }
-    public void creatOrUpdateGroupChat(Long myId, RoomChatDTO roomChatDTO) {
+    public void creatOrUpdateChat(Long myId, RoomChatDTO roomChatDTO) {
         messagingTemplate.convertAndSend(
                 "/queue/rooms-" + myId,
                 roomChatDTO);
     }
 
     @Async
-    public void creatOrUpdateGroupChat(List<Long> memberIds, RoomChatDTO roomChatDTO) {
+    public void creatOrUpdateChat(List<Long> memberIds, RoomChatDTO roomChatDTO) {
         for (Long memberId : memberIds) {
             messagingTemplate.convertAndSend(
                     "/queue/rooms-" + memberId,

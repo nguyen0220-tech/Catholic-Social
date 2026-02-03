@@ -22,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,6 +52,34 @@ public class ChatRoomResolver {
         return batchLoaderHandler.batchLoadUser(users, UserRecentMessageDTO::getId);
     }
 
+    @BatchMapping(typeName = "UserRecentMessage",field = "hasRoom")
+    public Map<UserRecentMessageDTO, ChatRoomDTO> hasRoomForRecent(
+            List<UserRecentMessageDTO> recipients
+            , Principal principal
+    ){
+
+        CustomUserDetails userDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
+
+        List<Long> userIds = recipients.stream()
+                .map(UserRecentMessageDTO::getId)
+                .toList();
+
+        Map<Long, ChatRoom> map = chatRoomService
+                .getAllChatRoomWithUsers(userIds, userDetails.getUser().getId());
+
+        Map<UserRecentMessageDTO, ChatRoomDTO> result = new HashMap<>();
+
+        for (UserRecentMessageDTO user : recipients) {
+            ChatRoom chatRoom = map.get(user.getId());
+            result.put(
+                    user,
+                    chatRoom != null ? ConvertHandler.convertToChatRoomDTO(chatRoom) : null
+            );
+        }
+
+        return result;
+    }
+
     @QueryMapping
     public ListResponse<UserForCreateRoomChatDTO> usersForCreateRoomChat(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -68,7 +97,35 @@ public class ChatRoomResolver {
 
     @BatchMapping(typeName = "UserForCreateChatRoom", field = "isFollowing")
     public Map<UserForCreateRoomChatDTO, Boolean> isFollow(List<UserForCreateRoomChatDTO> users, Principal principal) {
-        return batchLoaderHandler.batchLoadFollow(users,UserForCreateRoomChatDTO::getUserId, principal);
+        return batchLoaderHandler.batchLoadFollow(users, UserForCreateRoomChatDTO::getUserId, principal);
+    }
+
+
+    @BatchMapping(typeName = "UserForCreateChatRoom", field = "hasRoom")
+    public Map<UserForCreateRoomChatDTO, ChatRoomDTO> hasRoom(
+            List<UserForCreateRoomChatDTO> repicientList,
+            Principal principal) {
+
+        CustomUserDetails userDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
+
+        List<Long> userIds = repicientList.stream()
+                .map(UserForCreateRoomChatDTO::getUserId)
+                .toList();
+
+        Map<Long, ChatRoom> map = chatRoomService
+                .getAllChatRoomWithUsers(userIds, userDetails.getUser().getId());
+
+        Map<UserForCreateRoomChatDTO, ChatRoomDTO> result = new HashMap<>();
+
+        for (UserForCreateRoomChatDTO user : repicientList) {
+            ChatRoom chatRoom = map.get(user.getUserId());
+            result.put(
+                    user,
+                    chatRoom != null ? ConvertHandler.convertToChatRoomDTO(chatRoom) : null
+            );
+        }
+
+        return result;
     }
 
     @MutationMapping

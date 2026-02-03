@@ -111,6 +111,13 @@ public class ConvertHandler {
 
         return introContentDTO;
     }
+
+    public static ChatRoomDTO convertToChatRoomDTO(ChatRoom chatRoom) {
+        ChatRoomDTO chatRoomDTO = new ChatRoomDTO();
+        chatRoomDTO.setChatRoomId(chatRoom.getId() != null ? chatRoom.getId() : null);
+
+        return chatRoomDTO;
+    }
 }
 
 /*

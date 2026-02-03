@@ -3,6 +3,7 @@ package com.catholic.ac.kr.catholicsocial.service;
 import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
+import com.catholic.ac.kr.catholicsocial.entity.dto.RoomChatDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.RoomUpdateDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageForRoomChatRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.MessageRequest;
@@ -122,7 +123,19 @@ public class MessageService {
 
         Message newMessage = createMessage(user, room, request.getMessage(), request.getMedias());
 
+        //socket
         MessageDTO messageDTO = MessageMapper.toMessageDTO(newMessage);
+
+        RoomChatDTO roomUpdateDTO = new RoomChatDTO(
+                messageDTO.getChatRoomId(),
+                user.getUserInfo().getFirstName() + " " + user.getUserInfo().getLastName(),
+                room.getDescription(),
+                room.getLastMessagePreview(),
+                messageDTO.getCreatedAt()
+        );
+
+        socketService.creatOrUpdateChat(request.getRecipientId(), roomUpdateDTO);
+
 
         return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                 "Message sent successfully", messageDTO);

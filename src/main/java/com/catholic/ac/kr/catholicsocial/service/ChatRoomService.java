@@ -45,6 +45,18 @@ public class ChatRoomService {
     private final MessageRepository messageRepository;
     private final LogChatRoomRepository logChatRoomRepository;
 
+    public Map<Long, ChatRoom> getAllChatRoomWithUsers(List<Long> recipientIds, Long currentUserId) {
+        List<Object[]> chatRooms = chatRoomMemberRepository
+                .findAllByRecipientIdsAndUserId(recipientIds, currentUserId, ChatRoomType.ONE_TO_ONE);
+
+        Map<Long, ChatRoom> result = new HashMap<>();
+
+        for (Object[] row : chatRooms) {
+            result.put((Long) row[0], (ChatRoom) row[1]);
+        }
+        return result;
+    }
+
     public List<Long> getMemberIdsByChatRoomId(Long chatRoomId) {
         return chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoomId, ChatRoomMemberStatus.ACTIVE);
     }
@@ -142,8 +154,8 @@ public class ChatRoomService {
 
         RoomChatDTO roomChatDTO = ChatRoomMapper.roomChatDTO(newChatRoom);
 
-        socketService.creatOrUpdateGroupChat(request.getMemberIds(), roomChatDTO); //socket to members
-        socketService.creatOrUpdateGroupChat(userId, roomChatDTO); //soket to current user
+        socketService.creatOrUpdateChat(request.getMemberIds(), roomChatDTO); //socket to members
+        socketService.creatOrUpdateChat(userId, roomChatDTO); //soket to current user
         return GraphqlResponse.success("Created chat room success", roomChatDTO);
     }
 
@@ -204,7 +216,7 @@ public class ChatRoomService {
 
         List<Long> memberIds = chatRoomMemberRepository.findMemberIdsByChatRoomId(chatRoom.getId(), ChatRoomMemberStatus.ACTIVE);
 
-        socketService.creatOrUpdateGroupChat(memberIds, roomChatDTO);
+        socketService.creatOrUpdateChat(memberIds, roomChatDTO);
 
         return GraphqlResponse.success("updated success", roomChatDTO);
     }

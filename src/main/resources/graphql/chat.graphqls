@@ -20,9 +20,9 @@ type ListResponse_RoomChat{
 }
 
 type ChatRoom{
-    chatRoomId:ID!
+    chatRoomId:ID
     detail:ChatRoomDetail
-    members:[UserDTO]!
+    members:[UserDTO]
 }
 
 type ChatRoomDetail{
@@ -87,6 +87,7 @@ type MemberOfChatRoom{
 type UserRecentMessage{
     id:ID!
     user:UserDTO
+    hasRoom:ChatRoom #only ONE_TO_ONE
 }
 
 type ListResponse_UserForCreateChatRoom{
@@ -99,6 +100,8 @@ type UserForCreateChatRoom{
 
     user:UserDTO
     isFollowing:Boolean!
+
+    hasRoom:ChatRoom #only ONE_TO_ONE
 }
 
 input GroupChatRequest{

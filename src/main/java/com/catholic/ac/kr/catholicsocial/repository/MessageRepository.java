@@ -28,6 +28,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
                 JOIN ChatRoomMember crm ON crm.chatRoom.id = m.chatRoom.id
                 WHERE m.sender.id = :userId
                   AND crm.user.id <> :userId
+                  AND crm.chatRoom.type = 'ONE_TO_ONE'
                 GROUP BY crm.user.id
                 ORDER BY MAX(m.createdAt) DESC
             """)
