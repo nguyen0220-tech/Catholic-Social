@@ -166,6 +166,16 @@ public class ChatRoomService {
                 findExistingRoom(currentUserId, request.getRecipientId(), ChatRoomType.ONE_TO_ONE);
 
         if (existingRoom.isPresent()) {
+            List<ChatRoomMember> chatRoomMembers = chatRoomMemberRepository.findAllByChatRoom(existingRoom.get());
+            chatRoomMembers.forEach(
+                    m -> {
+                        if (m.getStatus().equals(ChatRoomMemberStatus.LEAVE)) {
+                            m.setStatus(ChatRoomMemberStatus.ACTIVE);
+                        }
+                    });
+
+            chatRoomMemberRepository.saveAll(chatRoomMembers);
+
             return existingRoom.get();
         }
 

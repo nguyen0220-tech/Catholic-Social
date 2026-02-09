@@ -221,6 +221,36 @@
             cursor: pointer;
         }
 
+        .more {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .add-member-panel,
+        .media-view {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .add-member-panel button,
+        .media-view button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #f1f1f1;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .add-member-panel button:hover,
+        .media-view button:hover {
+            background: #e6e6e6;
+        }
+
     </style>
 </head>
 <body>
@@ -235,25 +265,27 @@
     </div>
 </div>
 
-<!-- ===== ADD MEMBER PANEL ===== -->
-<div class="add-member-panel">
-    <button id="toggleMembersBtn" style="
-    width:100%;
-    padding:10px;
-    border:none;
-    background:#f1f1f1;
-    font-weight:600;
-    cursor:pointer;
-    ">
-        👥 Xem thành viên
-    </button>
+<div class="more">
 
-    <div id="addMemberContainer"></div>
+    <div class="add-member-panel">
+        <button id="toggleMembersBtn">
+            👥 Xem thành viên
+        </button>
 
-    <div id="addMemberLoading" class="loading">
-        ⏳ Đang tải...
+        <div id="addMemberContainer"></div>
+
+        <div id="addMemberLoading" class="loading">
+            ⏳ Đang tải...
+        </div>
+    </div>
+
+    <div class="media-view" style="">
+        <button>🖼 Xem ảnh/phương tiện</button>
+        <div id="mediaContainer"></div>
     </div>
 </div>
+
+
 
 <h3 id="roomTitle">💬 Chat</h3>
 

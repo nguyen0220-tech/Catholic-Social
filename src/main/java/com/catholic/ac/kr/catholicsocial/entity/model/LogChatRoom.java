@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,7 @@ public class LogChatRoom {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id", nullable = false)
+    @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private ChatRoom chatRoom;
 
     @Column(nullable = false)
@@ -36,6 +38,7 @@ public class LogChatRoom {
     @Column(nullable = false)
     private LocalDateTime created;
 
+    @PrePersist
     protected void create() {
         created = LocalDateTime.now();
     }

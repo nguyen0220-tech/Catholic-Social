@@ -1,6 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.repository;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.MemberOfChatRoomDTO;
+import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoomMember;
 import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
@@ -57,9 +58,12 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
             FROM ChatRoomMember m1
             JOIN ChatRoomMember m2 ON m1.chatRoom.id = m2.chatRoom.id
             WHERE m1.user.id IN :recipientIds AND m2.user.id = :currentUserId AND m2.chatRoom.type = :type
+                                              AND m1.status = 'ACTIVE' AND m2.status = 'ACTIVE'
             """)
     List<Object[]> findAllByRecipientIdsAndUserId(
             List<Long> recipientIds,
             Long currentUserId,
             ChatRoomType type);
+
+    List<ChatRoomMember> findAllByChatRoom(ChatRoom chatRoom);
 }
