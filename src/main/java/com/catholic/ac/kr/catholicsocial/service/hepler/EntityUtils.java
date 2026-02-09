@@ -1,4 +1,4 @@
-package com.catholic.ac.kr.catholicsocial.custom;
+package com.catholic.ac.kr.catholicsocial.service.hepler;
 
 import com.catholic.ac.kr.catholicsocial.exception.ResourceNotFoundException;
 

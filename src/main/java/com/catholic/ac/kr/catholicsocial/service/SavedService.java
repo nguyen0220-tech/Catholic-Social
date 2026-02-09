@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
-import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
+import com.catholic.ac.kr.catholicsocial.service.hepler.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
 import com.catholic.ac.kr.catholicsocial.entity.dto.SavedDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.Moment;

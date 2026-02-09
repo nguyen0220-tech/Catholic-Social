@@ -1,4 +1,4 @@
-package com.catholic.ac.kr.catholicsocial.service;
+package com.catholic.ac.kr.catholicsocial.service.hepler;
 
 import com.catholic.ac.kr.catholicsocial.entity.dto.RoomChatDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;

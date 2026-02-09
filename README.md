@@ -11,7 +11,7 @@ This project focuses on solving common backend challenges such as:
 - Spring GraphQL
 - Spring Security (JWT)
 - Postgresql
-- Hybrid API: REST (Auth, Upload) + GraphQL (Feed, Query)
+- Hybrid API: REST (Auth, Upload) + GraphQL (Feed, Query) + WebSocket (Notify, Message)
 
 ## Main Features
 - Post moments (image & text)
@@ -45,7 +45,8 @@ backend
  │   └── auth          # signup, login, refresh token
  ├── security          # JWT / OAuth2
  ├── status            # Enum definitions
- └── wrapper           # Unified API / REST, GraphQL response wrappers
+ ├── wrapper           # Unified API / REST, GraphQL response wrappers
+ └── ws                # WebSocket config
 
 frontend
  ├── static            # HTML, CSS, Vanilla JS

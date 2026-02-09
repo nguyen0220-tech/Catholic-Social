@@ -463,6 +463,107 @@ document.getElementById("toggleMembersBtn")
         loadMembers();
     });
 
+const MEDIA_QUERY = `
+query ($chatRoomId: ID!, $page: Int!, $size: Int!) {
+  messageMedias(chatRoomId: $chatRoomId, page: $page, size: $size) {
+    data {
+      id
+      url
+      user {
+        userFullName
+        avatarUrl
+      }
+    }
+    pageInfo {
+      page
+      size
+      hasNext
+    }
+  }
+}
+`;
+
+let mediaPage = 0;
+let mediaHasNext = true;
+let mediaLoading = false;
+let isMediaVisible = false;
+
+async function loadChatMedia() {
+    if (!mediaHasNext || mediaLoading) return;
+
+    mediaLoading = true;
+    document.getElementById("mediaLoading").style.display = "block";
+
+    try {
+        const res = await graphqlRequest(MEDIA_QUERY, {
+            chatRoomId: chatRoomId, // chatRoomId lấy từ URL params đã có ở code cũ
+            page: mediaPage,
+            size: 12 // Lấy mỗi lần 12 ảnh cho đẹp lưới
+        });
+
+        if (res.errors) {
+            console.error("Lỗi lấy media:", res.errors);
+            return;
+        }
+
+        const response = res.data.messageMedias;
+        renderMediaItems(response.data);
+
+        mediaHasNext = response.pageInfo.hasNext;
+        mediaPage++;
+    } catch (error) {
+        console.error("Lỗi kết nối:", error);
+    } finally {
+        mediaLoading = false;
+        document.getElementById("mediaLoading").style.display = "none";
+    }
+}
+
+function renderMediaItems(medias) {
+    const container = document.getElementById("mediaContainer");
+
+    medias.forEach(item => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "media-item-wrapper";
+        wrapper.title = `Gửi bởi: ${item.user.userFullName}`;
+
+        // Kiểm tra xem là ảnh hay video dựa vào đuôi file (đơn giản)
+        const isVideo = item.url.match(/\.(mp4|webm|ogg)$/i);
+
+        if (isVideo) {
+            wrapper.innerHTML = `<video src="${item.url}" style="width:100%; height:100%; object-fit:cover;"></video>`;
+        } else {
+            wrapper.innerHTML = `<img src="${item.url}" alt="media" loading="lazy">`;
+        }
+
+        wrapper.onclick = () => window.open(item.url, '_blank');
+        container.appendChild(wrapper);
+    });
+}
+
+// Lắng nghe sự kiện nút bấm
+document.getElementById("viewMediaBtn").addEventListener("click", () => {
+    const container = document.getElementById("mediaContainer");
+    isMediaVisible = !isMediaVisible;
+
+    if (isMediaVisible) {
+        // Nếu lần đầu mở hoặc container trống thì tải dữ liệu
+        if (container.innerHTML === "") {
+            loadChatMedia();
+        }
+        container.style.display = "grid";
+    } else {
+        container.style.display = "none";
+    }
+});
+
+document.querySelector(".media-view").addEventListener("scroll", (e) => {
+    const el = e.target;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
+        loadChatMedia();
+    }
+});
+
 const sendBtn = document.getElementById("sendBtn");
 const messageInput = document.getElementById("messageInput");
 const mediaInput = document.getElementById("mediaInput");

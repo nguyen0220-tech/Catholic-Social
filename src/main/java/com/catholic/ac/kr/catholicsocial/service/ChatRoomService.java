@@ -1,6 +1,5 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
-import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.*;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.AddMemberRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.GroupChatRequest;
@@ -13,9 +12,11 @@ import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ChatRoomMapper;
 import com.catholic.ac.kr.catholicsocial.projection.ChatRoomProjection;
 import com.catholic.ac.kr.catholicsocial.repository.*;
+import com.catholic.ac.kr.catholicsocial.service.hepler.EntityUtils;
+import com.catholic.ac.kr.catholicsocial.service.hepler.HelperService;
+import com.catholic.ac.kr.catholicsocial.service.hepler.SocketService;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomType;
-import com.catholic.ac.kr.catholicsocial.status.FollowState;
 import com.catholic.ac.kr.catholicsocial.status.LogRoomContent;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
@@ -44,6 +45,7 @@ public class ChatRoomService {
     private final SocketService socketService;
     private final MessageRepository messageRepository;
     private final LogChatRoomRepository logChatRoomRepository;
+    private final HelperService helperService;
 
     public Map<Long, ChatRoom> getAllChatRoomWithUsers(List<Long> recipientIds, Long currentUserId) {
         List<Object[]> chatRooms = chatRoomMemberRepository
@@ -202,11 +204,7 @@ public class ChatRoomService {
     }
 
     public GraphqlResponse<RoomChatDTO> updateChatRoom(Long userId, UpdateChatRoomRequest request) {
-        boolean roomExisting = chatRoomMemberRepository
-                .existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
-        if (!roomExisting) {
-            throw new AccessDeniedException("forbidden");
-        }
+        helperService.validateMember(userId, request.getChatRoomId());
 
         ChatRoom chatRoom = EntityUtils.getOrThrow(
                 chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
@@ -248,20 +246,9 @@ public class ChatRoomService {
     }
 
     public GraphqlResponse<String> addMemberToChatRoom(Long userId, AddMemberRequest request) {
-        boolean roomExisting = chatRoomMemberRepository
-                .existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
-        if (!roomExisting) {
-            throw new AccessDeniedException("forbidden");
-        }
+        helperService.validateMember(userId, request.getChatRoomId());
 
-        if (userId.equals(request.getMemberId()))
-            throw new GraphQLException("Cannot send a direct message: send self");
-
-        boolean blockedRecipient = followRepository.checkBlockTwoWay(userId, request.getMemberId(), FollowState.BLOCKED);
-
-        if (blockedRecipient) {
-            throw new IllegalStateException("Cannot send a direct message:blocked recipient");
-        }
+        helperService.validateDirectMessage(userId, request.getMemberId());
 
         if (chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(
                 request.getMemberId(),

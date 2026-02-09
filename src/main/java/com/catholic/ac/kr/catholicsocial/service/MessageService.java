@@ -1,6 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.service;
 
-import com.catholic.ac.kr.catholicsocial.custom.EntityUtils;
+import com.catholic.ac.kr.catholicsocial.service.hepler.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.MessageDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.PageInfo;
 import com.catholic.ac.kr.catholicsocial.entity.dto.RoomChatDTO;
@@ -14,8 +14,8 @@ import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.MessageMapper;
 import com.catholic.ac.kr.catholicsocial.projection.MessageProjection;
 import com.catholic.ac.kr.catholicsocial.repository.*;
-import com.catholic.ac.kr.catholicsocial.status.ChatRoomMemberStatus;
-import com.catholic.ac.kr.catholicsocial.status.FollowState;
+import com.catholic.ac.kr.catholicsocial.service.hepler.HelperService;
+import com.catholic.ac.kr.catholicsocial.service.hepler.SocketService;
 import com.catholic.ac.kr.catholicsocial.uploadfile.UploadFileHandler;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import com.catholic.ac.kr.catholicsocial.wrapper.ListResponse;
@@ -25,7 +25,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,16 +41,13 @@ public class MessageService {
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
     private final UploadFileHandler uploadFileHandler;
-    private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final FollowRepository followRepository;
     private final FollowService followService;
     private final SocketService socketService;
+    private final HelperService helperService;
 
     public ListResponse<MessageDTO> getMessages(Long userId, Long chatRoomId, int page, int size) {
-        if (!chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(userId, chatRoomId, ChatRoomMemberStatus.ACTIVE)) {
-            throw new AccessDeniedException("forbidden");
-        }
+        helperService.validateMember(userId, chatRoomId);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
@@ -72,11 +68,8 @@ public class MessageService {
 
     @Transactional
     public ApiResponse<MessageDTO> sendMessageInRoom(Long userId, MessageForRoomChatRequest request) {
-        boolean existing = chatRoomMemberRepository.existsByUser_IdAndChatRoom_IdAndStatus(userId, request.getChatRoomId(), ChatRoomMemberStatus.ACTIVE);
+        helperService.validateMember(userId, request.getChatRoomId());
 
-        if (!existing) {
-            throw new AccessDeniedException("forbidden");
-        }
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
 
         ChatRoom room = EntityUtils.getOrThrow(chatRoomRepository.findById(request.getChatRoomId()), "ChatRoom");
@@ -88,11 +81,7 @@ public class MessageService {
         //Socket
         List<Long> memberIds = chatRoomService.getMemberIdsByChatRoomId(messageDTO.getChatRoomId());
 
-        Set<Long> userIdsBlock = new HashSet<>(followService.getUserIdsBlocked(userId));
-
-        List<Long> filterMemberIds = memberIds.stream()
-                .filter(id -> !userIdsBlock.contains(id))
-                .toList();
+        List<Long> filterMemberIds = helperService.filterBlocked(userId, memberIds);
 
         RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO(
                 messageDTO.getChatRoomId(),
@@ -109,14 +98,7 @@ public class MessageService {
 
     @Transactional
     public ApiResponse<MessageDTO> sendDirectMessage(Long userId, MessageRequest request) {
-        if (userId.equals(request.getRecipientId()))
-            throw new IllegalStateException("Cannot send a direct message: send self");
-
-        boolean blockedRecipient = followRepository.checkBlockTwoWay(userId, request.getRecipientId(), FollowState.BLOCKED);
-
-        if (blockedRecipient) {
-            throw new IllegalStateException("Cannot send a direct message:blocked recipient");
-        }
+        helperService.validateDirectMessage(userId, request.getRecipientId());
 
         User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
         ChatRoom room = chatRoomService.getChatRoom(userId, request);

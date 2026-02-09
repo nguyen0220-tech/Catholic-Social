@@ -5,6 +5,7 @@ extend type Query {
     members(chatRoomId:ID!, page:Int!, size:Int!):ListResponse_Member
     usersRecentMessage:[UserRecentMessage]
     usersForCreateRoomChat(keyword:String!, page:Int!, size:Int!):ListResponse_UserForCreateChatRoom
+    messageMedias(chatRoomId:ID!, page:Int!, size:Int!):ListResponse_MessageMedia
 }
 
 extend type Mutation {
@@ -123,4 +124,17 @@ type GroupChatResponse {
     success: Boolean!
     message: String!
     data: GroupChat
+}
+
+type ListResponse_MessageMedia{
+    data:[MessageMedia]
+    pageInfo:PageInfo
+}
+
+type MessageMedia{
+    id:ID!
+    url:String!
+    senderId:ID!
+
+    user:UserDTO!
 }
