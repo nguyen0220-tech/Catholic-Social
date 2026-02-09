@@ -1,348 +1,250 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
     <link rel="manifest" href="icon/site.webmanifest">
     <title>Chat</title>
     <style>
+        :root {
+            --primary-color: #007bff;
+            --bg-light: #f5f7fa;
+            --border-color: #ddd;
+            --mine-bg: #dcf8c6;
+            --other-bg: #f1f1f1;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 12px;
-        }
-
-        .message img {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-        }
-
-        .bubble {
-            background: #f1f1f1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            max-width: 70%;
-        }
-
-        .time {
-            font-size: 11px;
-            color: #888;
-            margin-top: 2px;
-        }
-
-        .message {
             display: flex;
-            margin: 12px 0;
-            max-width: 75%;
+            height: 100vh;
+            background: var(--bg-light);
+            overflow: hidden;
         }
 
-        .message.other {
-            align-items: flex-start;
-        }
-
-        .message.mine {
-            justify-content: flex-end;
-            margin-left: auto;
-        }
-
-        .message .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .message .content {
+        /* ===== MAIN CHAT AREA ===== */
+        .chat-main {
+            flex: 1;
             display: flex;
             flex-direction: column;
+            position: relative;
+            background: #fff;
         }
 
-        .message .bubble {
-            padding: 8px 12px;
-            border-radius: 14px;
-            background: #f1f1f1;
-            word-break: break-word;
-        }
-
-        .message.mine .bubble {
-            background: #dcf8c6;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.other .bubble {
-            border-bottom-left-radius: 4px;
-        }
-
-        .message .time {
-            font-size: 11px;
-            color: #888;
-            margin-top: 4px;
-        }
-
-
-        .media-list {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-            flex-wrap: wrap;
-        }
-
-        .message-image {
-            max-width: 160px;
-            max-height: 160px;
-            border-radius: 8px;
-            cursor: pointer;
-            object-fit: cover;
-        }
-
-        /* ===== TOP BAR ===== */
+        /* ===== TOP BAR (Gộp Tiêu đề & Search cũ) ===== */
         .top-bar {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            padding: 10px 15px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
         }
 
         .back-btn {
             background: none;
             border: none;
-            color: #007bff;
-            font-weight: 600;
+            font-size: 20px;
             cursor: pointer;
-            font-size: 14px;
+            color: var(--primary-color);
         }
 
-        .back-btn:hover {
-            text-decoration: underline;
-        }
+        .room-info { flex: 1; }
+        .room-info h3 { margin: 0; font-size: 16px; color: #333; }
 
-        /* ===== SEARCH ===== */
-        .search-box {
-            display: flex;
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            overflow: hidden;
-            background: #fff;
-        }
+        .top-actions { display: flex; gap: 8px; }
 
-        .search-box input {
-            flex: 1;
+        .icon-btn {
+            background: #f0f2f5;
             border: none;
             padding: 8px 12px;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .search-box button {
-            border: none;
-            background: #007bff;
-            color: white;
-            padding: 0 14px;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
         }
+        .icon-btn:hover { background: #e4e6eb; }
 
-        .search-box button:hover {
-            background: #0069d9;
-        }
-
-        /* ===== ADD MEMBER PANEL ===== */
-        .add-member-panel {
-            max-height: 300px;
+        /* ===== MESSAGES AREA ===== */
+        #messagesContainer {
+            flex: 1;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-
-        /* user item (reuse JS inline style ok, nhưng override nhẹ) */
-        .add-user-item:hover {
-            background: #f5f7fa;
-        }
-
-        /* ===== LOADING ===== */
-        .loading {
-            text-align: center;
-            padding: 8px;
-            font-size: 13px;
-            color: #666;
-        }
-
-        .preview-container {
+            padding: 15px;
             display: flex;
-            gap: 8px;
-            padding: 6px 10px;
-            overflow-x: auto;
+            flex-direction: column;
         }
-        .preview-container img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #ddd;
+
+        .loading { text-align: center; padding: 10px; font-size: 13px; color: #888; }
+
+        .message { display: flex; margin: 8px 0; max-width: 80%; gap: 8px; }
+        .message.mine { align-self: flex-end; flex-direction: row-reverse; }
+        .message .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+        .message .content { display: flex; flex-direction: column; }
+        .message .bubble {
+            padding: 8px 14px; border-radius: 18px; font-size: 14px;
+            word-break: break-word; background: var(--other-bg);
         }
+        .message.mine .bubble { background: var(--mine-bg); border-bottom-right-radius: 4px; }
+        .message.other .bubble { border-bottom-left-radius: 4px; }
+        .message .time { font-size: 10px; color: #888; margin-top: 4px; }
+
+        /* Media in chat */
+        .media-list { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+        .message-image { max-width: 160px; max-height: 160px; border-radius: 8px; cursor: pointer; object-fit: cover; }
+
+        /* ===== RIGHT SIDEBAR ===== */
+        .sidebar {
+            width: 320px;
+            border-left: 1px solid var(--border-color);
+            background: #fff;
+            display: none; /* Sẽ được mở bởi JS */
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-content { padding: 15px; overflow-y: auto; flex: 1; }
+
+        /* Search in Sidebar */
+        .search-box-mini {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 4px 12px;
+            margin-bottom: 15px;
+        }
+        .search-box-mini input { border: none; outline: none; flex: 1; padding: 6px; font-size: 13px; }
+        .search-box-mini button { border: none; background: none; cursor: pointer; color: var(--primary-color); }
+
+        /* Grid Media in Sidebar */
+        .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .media-item-wrapper { aspect-ratio: 1; border-radius: 4px; overflow: hidden; }
+        .media-item-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ===== BOTTOM BAR ===== */
+        .bottom-section { padding: 10px; background: #fff; border-top: 1px solid var(--border-color); }
+        .preview-container { display: flex; gap: 8px; padding: 5px; overflow-x: auto; }
+        .preview-container img { width: 50px; height: 50px; border-radius: 6px; border: 1px solid var(--border-color); }
 
         .send-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
             display: flex;
-            gap: 6px;
-            padding: 10px;
-            background: #fff;
-            border-top: 1px solid #ddd;
-        }
-
-        .send-bar input[type="text"],
-        #messageInput {
-            flex: 1;
-            padding: 8px 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-
-        .file-btn {
-            cursor: pointer;
-            padding: 0 8px;
-            font-size: 20px;
-        }
-
-        #sendBtn {
-            padding: 8px 12px;
-            border: none;
-            background: #007bff;
-            color: #fff;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .more {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .add-member-panel,
-        .media-view {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .add-member-panel button,
-        .media-view button {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            background: #f1f1f1;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .add-member-panel button:hover,
-        .media-view button:hover {
-            background: #e6e6e6;
-        }
-
-        .media-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            align-items: center;
             gap: 8px;
-            padding: 10px 0;
+            background: #f0f2f5;
+            padding: 6px 15px;
+            border-radius: 25px;
         }
-        .media-item-wrapper {
-            position: relative;
-            aspect-ratio: 1 / 1;
-            overflow: hidden;
-            border-radius: 8px;
-            cursor: pointer;
+        #messageInput {
+            flex: 1; border: none; background: transparent;
+            padding: 8px; outline: none; font-size: 14px;
         }
-        .media-item-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.2s;
+        .file-btn { cursor: pointer; font-size: 20px; color: #666; }
+        #sendBtn {
+            background: none; border: none; color: var(--primary-color);
+            font-weight: 600; cursor: pointer; padding: 5px;
         }
-        .media-item-wrapper img:hover {
-            transform: scale(1.05);
-        }
+
+        .hidden { display: none !important; }
 
     </style>
 </head>
 <body>
 
-<!-- ===== TOP BAR ===== -->
-<div class="top-bar">
-    <button class="back-btn" onclick="goBack()">← Phòng chat</button>
-
-    <div class="search-box">
-        <input id="searchUserInput" placeholder="Thêm người dùng..."/>
-        <button id="searchUserBtn">🔍</button>
-    </div>
-</div>
-
-<div class="more">
-
-    <div class="add-member-panel">
-        <button id="toggleMembersBtn">
-            👥 Xem thành viên
-        </button>
-
-        <div id="addMemberContainer"></div>
-
-        <div id="addMemberLoading" class="loading">
-            ⏳ Đang tải...
+<div class="chat-main">
+    <div class="top-bar">
+        <button class="back-btn" onclick="goBack()">‹</button>
+        <div class="room-info">
+            <h3 id="roomTitle">💬 Chat</h3>
+        </div>
+        <div class="top-actions">
+            <button id="toggleMembersBtn" class="icon-btn" onclick="toggleSidebar('members')">👥 Thành viên</button>
+            <button id="viewMediaBtn" class="icon-btn" onclick="toggleSidebar('media')">🖼️ Media</button>
         </div>
     </div>
 
-    <div class="media-view">
-        <button id="viewMediaBtn">🖼️ Xem file phương tiện</button>
-        <div id="mediaContainer" class="media-grid"></div>
-        <div id="mediaLoading" class="loading" style="display: none;">⏳ Đang tải ảnh...</div>
+    <div id="messagesContainer">
+    </div>
+
+    <div id="loading" class="loading">⏳ Đang tải tin nhắn...</div>
+
+    <div class="bottom-section">
+        <div id="previewContainer" class="preview-container"></div>
+        <div class="send-bar">
+            <label class="file-btn" title="Gửi ảnh">
+                📎 <input id="mediaInput" type="file" multiple style="display:none">
+            </label>
+            <input id="messageInput" placeholder="Nhập tin nhắn..." autocomplete="off">
+            <button id="sendBtn">GỬI</button>
+        </div>
     </div>
 </div>
 
+<div id="rightSidebar" class="sidebar">
+    <div class="sidebar-header">
+        <span id="sidebarTitle">Thông tin</span>
+        <button onclick="toggleSidebar()" style="border:none; background:none; cursor:pointer; font-size: 18px;">✕</button>
+    </div>
 
+    <div class="sidebar-content">
+        <div id="membersSection" class="hidden">
+            <div class="search-box-mini">
+                <input id="searchUserInput" placeholder="Tìm người dùng...">
+                <button id="searchUserBtn">🔍</button>
+            </div>
+            <div id="addMemberContainer"></div>
+            <div id="addMemberLoading" class="loading">⏳ Đang tải thành viên...</div>
+        </div>
 
-<h3 id="roomTitle">💬 Chat</h3>
-
-<div id="messagesContainer"></div>
-
-<div id="loading" class="loading">
-    ⏳ Đang tải...
-</div>
-
-<!-- ===== SEND MESSAGE BAR ===== -->
-<div id="previewContainer" class="preview-container"></div>
-
-<div class="send-bar">
-    <input
-            id="messageInput"
-            placeholder="Nhập tin nhắn..."
-            autocomplete="off"
-    />
-
-    <label class="file-btn">
-        📎
-        <input
-                id="mediaInput"
-                type="file"
-                multiple
-                style="display:none"
-        />
-    </label>
-    <button id="sendBtn">Gửi</button>
+        <div id="mediaSection" class="hidden">
+            <div id="mediaContainer" class="media-grid"></div>
+            <div id="mediaLoading" class="loading">⏳ Đang tải ảnh...</div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="message.js"></script>
+
+<script>
+    // Hàm hỗ trợ UI mới để đóng mở Sidebar
+    function toggleSidebar(type) {
+        const sidebar = document.getElementById('rightSidebar');
+        const mSection = document.getElementById('membersSection');
+        const mediaSection = document.getElementById('mediaSection');
+        const title = document.getElementById('sidebarTitle');
+
+        if (!type || (sidebar.style.display === 'flex' && sidebar.dataset.current === type)) {
+            sidebar.style.display = 'none';
+            sidebar.dataset.current = '';
+        } else {
+            sidebar.style.display = 'flex';
+            sidebar.dataset.current = type;
+
+            if (type === 'members') {
+                title.innerText = "Thành viên";
+                mSection.classList.remove('hidden');
+                mediaSection.classList.add('hidden');
+            } else {
+                title.innerText = "File phương tiện";
+                mSection.classList.add('hidden');
+                mediaSection.classList.remove('hidden');
+            }
+        }
+    }
+
+    function goBack() {
+        window.location.href = "chat-room.html";
+    }
+</script>
 </body>
 </html>

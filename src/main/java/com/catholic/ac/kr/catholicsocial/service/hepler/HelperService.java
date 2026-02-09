@@ -32,6 +32,9 @@ public class HelperService {
         }
     }
 
+    /*
+        check validate: send direct message, add member to room chat...
+     */
     public void validateDirectMessage(Long senderId, Long recipientId) {
         if (senderId.equals(recipientId))
             throw new IllegalStateException("Cannot send to self");
@@ -44,6 +47,9 @@ public class HelperService {
             throw new IllegalStateException("Recipient blocked");
     }
 
+    /*
+        before socket: filter user blocked
+     */
     public List<Long> filterBlocked(Long userId, List<Long> memberIds) {
         Set<Long> blocked = new HashSet<>(followService.getUserIdsBlocked(userId));
 

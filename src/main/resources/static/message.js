@@ -2,12 +2,23 @@ const URL_BASE = window.location.origin;
 const accessToken = localStorage.getItem("accessToken");
 const GRAPHQL_URL = `${URL_BASE}/graphql`;
 
-document.getElementById("addMemberLoading").style.display = "none";
-document.getElementById("loading").style.display = "none";
+// Các phần tử DOM chính
+const msgContainer = document.getElementById("messagesContainer");
+const loadingEl = document.getElementById("loading");
+const sidebarContent = document.querySelector(".sidebar-content");
+const messageInput = document.getElementById("messageInput");
+const mediaInput = document.getElementById("mediaInput");
+const sendBtn = document.getElementById("sendBtn");
+const previewContainer = document.getElementById("previewContainer");
 
 const urlParams = new URLSearchParams(window.location.search);
 const chatRoomId = urlParams.get("chatRoomId");
 
+if (!chatRoomId) {
+    alert("Thiếu chatRoomId");
+}
+
+// Giải mã Token lấy ID cá nhân
 function getUserIdFromToken(token) {
     if (!token) return null;
     try {
@@ -24,17 +35,65 @@ function getUserIdFromToken(token) {
 }
 
 const currentUserId = getUserIdFromToken(accessToken);
-console.log("My User ID:", currentUserId);
 
+// --- QUERIES & MUTATIONS ---
+const MESSAGES_QUERY = `
+query ($chatRoomId: Int!, $page: Int!, $size: Int!) {
+  messages(chatRoomId: $chatRoomId, page: $page, size: $size) {
+    data { id text createdAt messageMedias user { id userFullName avatarUrl } isMine }
+    pageInfo { page size hasNext }
+  }
+}`;
+
+const USER_FOR_ADD_QUERY = `
+query ($chatRoomId: ID!, $keyword: String!, $page: Int!, $size: Int!) {
+  userForAddRoomChat(chatRoomId: $chatRoomId, keyword: $keyword, page: $page, size: $size) {
+    data { userId isFollowing inRoom userForChatRoom { id userFullName avatarUrl } }
+    pageInfo { page size hasNext }
+  }
+}`;
+
+const MEMBERS_QUERY = `
+query ($chatRoomId: ID!, $page: Int!, $size: Int!) {
+  members(chatRoomId: $chatRoomId, page: $page, size: $size) {
+    data { userId createdAt user { userFullName avatarUrl } }
+    pageInfo { page size hasNext }
+  }
+}`;
+
+const MEDIA_QUERY = `
+query ($chatRoomId: ID!, $page: Int!, $size: Int!) {
+  messageMedias(chatRoomId: $chatRoomId, page: $page, size: $size) {
+    data { id url user { userFullName avatarUrl } }
+    pageInfo { page size hasNext }
+  }
+}`;
+
+const ADD_MEMBER_MUTATION = `
+mutation ($request: UserForAddChatRoomRequest!) {
+  addMemberForChatRoom(request: $request) { success message }
+}`;
+
+// --- STATE MANAGEMENT ---
 let currentPage = 0;
-const pageSize = 10;
 let hasNext = true;
 let isLoading = false;
 
-if (!chatRoomId) {
-    alert("Thiếu chatRoomId");
-}
+let addMemberPage = 0;
+let addMemberHasNext = true;
+let addMemberLoading = false;
+let currentKeyword = "";
 
+let memberPage = 0;
+let memberHasNext = true;
+let memberLoading = false;
+let isViewingMembers = false;
+
+let mediaPage = 0;
+let mediaHasNext = true;
+let mediaLoading = false;
+
+// --- UTILS ---
 async function graphqlRequest(query, variables = {}) {
     const res = await fetch(GRAPHQL_URL, {
         method: "POST",
@@ -47,621 +106,58 @@ async function graphqlRequest(query, variables = {}) {
     return await res.json();
 }
 
-const MESSAGES_QUERY = `
-query ($chatRoomId: Int!, $page: Int!, $size: Int!) {
-  messages(chatRoomId: $chatRoomId, page: $page, size: $size) {
-    data {
-      id
-      text
-      createdAt
-      messageMedias
-      user {
-        id
-        userFullName
-        avatarUrl
-      }
-      isMine
-    }
-    pageInfo {
-      page
-      size
-      hasNext
-    }
-  }
-}
-`;
-
-async function loadMessages() {
-    if (!hasNext || isLoading) return;
-    isLoading = true;
-
-    const oldScrollHeight = document.body.scrollHeight;
-
-    const result = await graphqlRequest(MESSAGES_QUERY, {
-        chatRoomId: Number(chatRoomId),
-        page: currentPage,
-        size: pageSize
-    });
-
-    if (result.errors) { return; }
-
-    const messages = result.data.messages.data;
-    hasNext = result.data.messages.pageInfo.hasNext;
-
-    messages.forEach(msg => {
-        appendMessageToUI(msg, true);
-    });
-
-    if (currentPage === 0) {
-        window.scrollTo(0, document.body.scrollHeight);
-    } else {
-        const newScrollHeight = document.body.scrollHeight;
-        window.scrollTo(0, newScrollHeight - oldScrollHeight);
-    }
-
-    currentPage++;
-    isLoading = false;
-}
-
-window.addEventListener("scroll", () => {
-    if (window.scrollY < 50 && !isLoading && hasNext) {
-        loadMessages();
-    }
-});
-
 function formatTime(iso) {
     return new Date(iso).toLocaleString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit"
+        hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit"
     });
 }
 
 function renderMessageMedias(medias) {
     if (!medias || medias.length === 0) return "";
-
     return `
         <div class="media-list">
-            ${medias.map(url => `
-                <img
-                    src="${url}"
-                    class="message-image"
-                    onclick="window.open('${url}', '_blank')"
-                 alt=""/>
-            `).join("")}
-        </div>
-    `;
+            ${medias.map(url => `<img src="${url}" class="message-image" onclick="window.open('${url}', '_blank')" alt=""/>`).join("")}
+        </div>`;
 }
 
-const USER_FOR_ADD_QUERY = `
-query ($chatRoomId: ID!, $keyword: String!, $page: Int!, $size: Int!) {
-  userForAddRoomChat(
-    chatRoomId: $chatRoomId
-    keyword: $keyword
-    page: $page
-    size: $size
-  ) {
-    data {
-      userId
-      isFollowing
-      inRoom
-      userForChatRoom {
-        id
-        userFullName
-        avatarUrl
-      }
-    }
-    pageInfo {
-      page
-      size
-      hasNext
-    }
-  }
-}
-`;
+// --- TIN NHẮN CHAT ---
+async function loadMessages() {
+    if (!hasNext || isLoading) return;
+    isLoading = true;
+    loadingEl.style.display = "block";
 
-const ADD_MEMBER_MUTATION = `
-mutation ($request: UserForAddChatRoomRequest!) {
-  addMemberForChatRoom(request: $request) {
-    success
-    message
-  }
-}
-`;
+    const oldScrollHeight = msgContainer.scrollHeight;
 
-let addMemberPage = 0;
-let addMemberHasNext = true;
-let addMemberLoading = false;
-let currentKeyword = "";
-
-async function searchUserForAdd() {
-    const keyword = document.getElementById("searchUserInput").value.trim();
-    if (!keyword) return;
-
-    isViewingMembers = false;
-
-    currentKeyword = keyword;
-    addMemberPage = 0;
-    addMemberHasNext = true;
-    document.getElementById("addMemberContainer").innerHTML = "";
-
-    await loadUserForAdd(currentKeyword);
-}
-
-async function loadUserForAdd(keyword) {
-    if (!addMemberHasNext || addMemberLoading) return;
-
-    addMemberLoading = true;
-    document.getElementById("addMemberLoading").style.display = "block";
-
-    const res = await graphqlRequest(USER_FOR_ADD_QUERY, {
+    const result = await graphqlRequest(MESSAGES_QUERY, {
         chatRoomId: Number(chatRoomId),
-        keyword,
-        page: addMemberPage,
+        page: currentPage,
         size: 10
     });
 
-    if (res.errors) {
-        console.error("GraphQL Errors:", res.errors);
-        addMemberLoading = false;
-        document.getElementById("addMemberLoading").style.display = "none";
-        return;
-    }
+    if (!result.errors) {
+        const messages = result.data.messages.data;
+        hasNext = result.data.messages.pageInfo.hasNext;
 
-    const response = res.data.userForAddRoomChat;
-    renderUserForAdd(response.data);
+        messages.forEach(msg => appendMessageToUI(msg, true));
 
-    addMemberHasNext = response.pageInfo.hasNext;
-    addMemberPage++;
-
-    addMemberLoading = false;
-    document.getElementById("addMemberLoading").style.display = "none";
-}
-
-function renderUserForAdd(users) {
-    const container = document.getElementById("addMemberContainer");
-
-    users.forEach(u => {
-        const avatar = u.userForChatRoom.avatarUrl || "/icon/default-avatar.png";
-        const div = document.createElement("div");
-        div.className = "add-user-item";
-        div.style.cssText = `display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; gap:10px;`;
-
-        div.innerHTML = `
-            <div class="user-info" style="display:flex; gap:10px; align-items:center; cursor:pointer;">
-                <img src="${avatar}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" alt="">
-                <div>
-                    <div style="font-weight:600">${u.userForChatRoom.userFullName}</div>
-                    <div class="follow-status" style="font-size:12px; color:#666">
-                        ${u.isFollowing ? "Đang theo dõi" : "Chưa theo dõi"}
-                    </div>
-                </div>
-            </div>
-
-            <div class="action-box" style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
-                ${!u.isFollowing ? `
-                    <button class="follow-btn" style="padding:6px 10px; border:1px solid #007bff; background:#fff; color:#007bff; border-radius:6px; cursor:pointer">
-                        Theo dõi
-                    </button>` : ''
-        }
-
-                <div class="add-action-wrapper">
-                    ${u.inRoom ? `
-                        <span style="color:#28a745; font-size:13px; font-weight:500;">
-                           <i class="fa fa-check"></i> Đã tham gia
-                        </span>` : `
-                        <button class="add-btn" style="padding:6px 10px; border:none; border-radius:6px; background:#007bff; color:#fff; cursor:pointer">
-                            Thêm
-                        </button>`
-        }
-                </div>
-            </div>
-        `;
-
-        div.querySelector(".user-info").addEventListener("click", () => {
-            window.location.href = `user.html?id=${u.userId}`;
-        });
-
-        const followBtn = div.querySelector(".follow-btn");
-        if (followBtn) {
-            followBtn.addEventListener("click", e => {
-                e.stopPropagation();
-                followUser(u.userId, followBtn, div.querySelector(".follow-status"));
-            });
-        }
-
-        const addBtn = div.querySelector(".add-btn");
-        if (addBtn) {
-            addBtn.addEventListener("click", e => {
-                e.stopPropagation();
-                addMember(u.userId, addBtn, div.querySelector(".add-action-wrapper"));
-            });
-        }
-
-        container.appendChild(div);
-    });
-}
-
-const addMemberPanel = document.querySelector(".add-member-panel");
-
-addMemberPanel.addEventListener("scroll", () => {
-    const nearBottom =
-        addMemberPanel.scrollTop +
-        addMemberPanel.clientHeight >=
-        addMemberPanel.scrollHeight - 80;
-
-    if (!nearBottom) return;
-
-    if (isViewingMembers) {
-        loadMembers();
-    } else {
-        loadUserForAdd(currentKeyword);
-    }
-});
-
-async function addMember(memberId, btn) {
-    btn.disabled = true;
-    btn.innerText = "Đang thêm...";
-
-    const res = await graphqlRequest(ADD_MEMBER_MUTATION, {
-        request: {
-            memberId,
-            chatRoomId: Number(chatRoomId)
-        }
-    });
-
-    if (res.errors || !res.data.addMemberForChatRoom.success) {
-        alert(res.errors?.[0]?.message || "Thêm thất bại");
-        btn.disabled = false;
-        btn.innerText = "Thêm";
-        return;
-    }
-
-    btn.innerText = "Đã thêm";
-    btn.style.background = "#28a745";
-}
-
-document.getElementById("searchUserBtn")
-    .addEventListener("click", searchUserForAdd);
-
-document.getElementById("searchUserInput")
-    .addEventListener("keypress", e => {
-        if (e.key === "Enter") searchUserForAdd();
-    });
-
-async function followUser(userId, btn, statusTextEl) {
-    btn.disabled = true;
-    btn.innerText = "Đang theo dõi...";
-
-    try {
-        const res = await fetch(`${URL_BASE}/follow?userId=${userId}`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        });
-
-        const result = await res.json();
-
-        if (!res.ok || !result.success) {
-            throw new Error(result.message || "Follow thất bại");
-        }
-
-        btn.remove();
-        statusTextEl.innerText = "Đang theo dõi";
-    } catch (e) {
-        alert(e.message);
-        btn.disabled = false;
-        btn.innerText = "Theo dõi";
-    }
-}
-
-const MEMBERS_QUERY = `
-query ($chatRoomId: ID!, $page: Int!, $size: Int!) {
-  members(chatRoomId: $chatRoomId, page: $page, size: $size) {
-    data {
-      userId
-      createdAt
-      user {
-        userFullName
-        avatarUrl
-      }
-    }
-    pageInfo {
-      page
-      size
-      hasNext
-    }
-  }
-}
-`;
-
-let memberPage = 0;
-let memberHasNext = true;
-let memberLoading = false;
-let isViewingMembers = false;
-
-async function loadMembers() {
-    if (!memberHasNext || memberLoading) return;
-
-    memberLoading = true;
-    document.getElementById("addMemberLoading").style.display = "block";
-
-    const res = await graphqlRequest(MEMBERS_QUERY, {
-        chatRoomId: Number(chatRoomId),
-        page: memberPage,
-        size: 10
-    });
-
-    if (res.errors) {
-        console.error(res.errors);
-        memberLoading = false;
-        document.getElementById("addMemberLoading").style.display = "none";
-        return;
-    }
-
-    const response = res.data.members;
-    renderMembers(response.data);
-
-    memberHasNext = response.pageInfo.hasNext;
-    memberPage++;
-
-    memberLoading = false;
-    document.getElementById("addMemberLoading").style.display = "none";
-}
-
-function renderMembers(members) {
-    const container = document.getElementById("addMemberContainer");
-
-    members.forEach(m => {
-        const avatar = m.user?.avatarUrl || "/icon/default-avatar.png";
-        const fullName = m.user?.userFullName || "Unknown";
-
-        const div = document.createElement("div");
-        div.className = "member-item";
-        div.style.cssText = `
-            display:flex;
-            align-items:center;
-            gap:10px;
-            padding:10px;
-            border-bottom:1px solid #eee;
-            cursor:pointer;
-        `;
-
-        div.innerHTML = `
-            <img src="${avatar}"
-                 style="width:40px;height:40px;border-radius:50%;object-fit:cover"  alt=""/>
-            <div>
-                <div style="font-weight:600">${fullName}</div>
-                <div style="font-size:12px;color:#666">
-                    Tham gia: ${formatTime(m.createdAt)}
-                </div>
-            </div>
-        `;
-
-        div.onclick = () => {
-            window.location.href = `user.html?id=${m.userId}`;
-        };
-
-        container.appendChild(div);
-    });
-}
-
-document.getElementById("toggleMembersBtn")
-    .addEventListener("click", () => {
-
-        isViewingMembers = true;
-
-        // reset state
-        memberPage = 0;
-        memberHasNext = true;
-
-        // clear list cũ
-        document.getElementById("addMemberContainer").innerHTML = "";
-
-        loadMembers();
-    });
-
-const MEDIA_QUERY = `
-query ($chatRoomId: ID!, $page: Int!, $size: Int!) {
-  messageMedias(chatRoomId: $chatRoomId, page: $page, size: $size) {
-    data {
-      id
-      url
-      user {
-        userFullName
-        avatarUrl
-      }
-    }
-    pageInfo {
-      page
-      size
-      hasNext
-    }
-  }
-}
-`;
-
-let mediaPage = 0;
-let mediaHasNext = true;
-let mediaLoading = false;
-let isMediaVisible = false;
-
-async function loadChatMedia() {
-    if (!mediaHasNext || mediaLoading) return;
-
-    mediaLoading = true;
-    document.getElementById("mediaLoading").style.display = "block";
-
-    try {
-        const res = await graphqlRequest(MEDIA_QUERY, {
-            chatRoomId: chatRoomId, // chatRoomId lấy từ URL params đã có ở code cũ
-            page: mediaPage,
-            size: 12 // Lấy mỗi lần 12 ảnh cho đẹp lưới
-        });
-
-        if (res.errors) {
-            console.error("Lỗi lấy media:", res.errors);
-            return;
-        }
-
-        const response = res.data.messageMedias;
-        renderMediaItems(response.data);
-
-        mediaHasNext = response.pageInfo.hasNext;
-        mediaPage++;
-    } catch (error) {
-        console.error("Lỗi kết nối:", error);
-    } finally {
-        mediaLoading = false;
-        document.getElementById("mediaLoading").style.display = "none";
-    }
-}
-
-function renderMediaItems(medias) {
-    const container = document.getElementById("mediaContainer");
-
-    medias.forEach(item => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "media-item-wrapper";
-        wrapper.title = `Gửi bởi: ${item.user.userFullName}`;
-
-        // Kiểm tra xem là ảnh hay video dựa vào đuôi file (đơn giản)
-        const isVideo = item.url.match(/\.(mp4|webm|ogg)$/i);
-
-        if (isVideo) {
-            wrapper.innerHTML = `<video src="${item.url}" style="width:100%; height:100%; object-fit:cover;"></video>`;
+        if (currentPage === 0) {
+            msgContainer.scrollTop = msgContainer.scrollHeight;
         } else {
-            wrapper.innerHTML = `<img src="${item.url}" alt="media" loading="lazy">`;
+            msgContainer.scrollTop = msgContainer.scrollHeight - oldScrollHeight;
         }
-
-        wrapper.onclick = () => window.open(item.url, '_blank');
-        container.appendChild(wrapper);
-    });
+        currentPage++;
+    }
+    isLoading = false;
+    loadingEl.style.display = "none";
 }
 
-// Lắng nghe sự kiện nút bấm
-document.getElementById("viewMediaBtn").addEventListener("click", () => {
-    const container = document.getElementById("mediaContainer");
-    isMediaVisible = !isMediaVisible;
-
-    if (isMediaVisible) {
-        // Nếu lần đầu mở hoặc container trống thì tải dữ liệu
-        if (container.innerHTML === "") {
-            loadChatMedia();
-        }
-        container.style.display = "grid";
-    } else {
-        container.style.display = "none";
+msgContainer.addEventListener("scroll", () => {
+    if (msgContainer.scrollTop < 50 && !isLoading && hasNext) {
+        loadMessages();
     }
 });
-
-document.querySelector(".media-view").addEventListener("scroll", (e) => {
-    const el = e.target;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 20) {
-        loadChatMedia();
-    }
-});
-
-const sendBtn = document.getElementById("sendBtn");
-const messageInput = document.getElementById("messageInput");
-const mediaInput = document.getElementById("mediaInput");
-const previewContainer = document.getElementById("previewContainer");
-let selectedFiles = [];
-
-mediaInput.addEventListener("change", () => {
-    previewContainer.innerHTML = "";
-    selectedFiles = [];
-
-    [...mediaInput.files].forEach(file => {
-        selectedFiles.push(file);
-
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        previewContainer.appendChild(img);
-    });
-});
-
-sendBtn.addEventListener("click", sendMessage);
-messageInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") sendMessage();
-});
-
-async function sendMessage() {
-    const text = messageInput.value.trim();
-    if (!text && selectedFiles.length === 0) return;
-
-    const formData = new FormData();
-    formData.append("chatRoomId", chatRoomId);
-    formData.append("message", text);
-    selectedFiles.forEach(f => formData.append("medias", f));
-
-    sendBtn.disabled = true;
-
-    try {
-        const res = await fetch(`${URL_BASE}/chat/send-in-zoom`, {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${accessToken}` },
-            body: formData
-        });
-
-        const result = await res.json();
-
-        if (res.ok && result.success) {
-            messageInput.value = "";
-            mediaInput.value = "";
-            previewContainer.innerHTML = "";
-            selectedFiles = [];
-
-        } else {
-            throw new Error(result.message || "Gửi thất bại");
-        }
-    } catch (e) {
-        alert(e.message);
-    } finally {
-        sendBtn.disabled = false;
-    }
-}
-window.sendMessage=sendMessage
-
-function goBack() {
-    window.location.href = "chat-room.html";
-}
-
-let stompClient = null;
-function connectWebSocket() {
-    const socket = new SockJS(`${URL_BASE}/ws`);
-    stompClient = Stomp.over(socket);
-
-    const headers = {
-        'Authorization': `Bearer ${accessToken}`
-    };
-
-    console.log("Attempting to connect STOMP...");
-
-    stompClient.connect(headers, (frame) => {
-        console.log('<<< CONNECTED: ' + frame);
-
-        stompClient.subscribe(`/queue/message${chatRoomId}`, (messageOutput) => {
-            console.log("Received message from WS:", messageOutput.body);
-            const receivedMessage = JSON.parse(messageOutput.body);
-            handleIncomingMessage(receivedMessage);
-        });
-    }, (error) => {
-        console.error('STOMP ERROR CALLBACK:', error);
-    });
-}
-
-function handleIncomingMessage(msg) {
-    const existingMsg = document.getElementById(`msg-${msg.id}`);
-    if (existingMsg) return;
-
-    appendMessageToUI(msg);
-}
 
 function appendMessageToUI(msg, isInitialLoad = false) {
-    const container = document.getElementById("messagesContainer");
     if (document.getElementById(`msg-${msg.id}`)) return;
 
     const div = document.createElement("div");
@@ -684,13 +180,294 @@ function appendMessageToUI(msg, isInitialLoad = false) {
     `;
 
     if (isInitialLoad) {
-        container.prepend(div);
+        msgContainer.prepend(div);
     } else {
-        container.appendChild(div);
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        msgContainer.appendChild(div);
+        msgContainer.scrollTo({ top: msgContainer.scrollHeight, behavior: 'smooth' });
     }
 }
 
-connectWebSocket();
+// --- THÀNH VIÊN ---
+async function loadMembers() {
+    if (!memberHasNext || memberLoading) return;
+    memberLoading = true;
+    document.getElementById("addMemberLoading").style.display = "block";
+
+    const res = await graphqlRequest(MEMBERS_QUERY, {
+        chatRoomId: Number(chatRoomId),
+        page: memberPage,
+        size: 10
+    });
+
+    if (!res.errors) {
+        const response = res.data.members;
+        renderMembersUI(response.data);
+        memberHasNext = response.pageInfo.hasNext;
+        memberPage++;
+    }
+    memberLoading = false;
+    document.getElementById("addMemberLoading").style.display = "none";
+}
+
+function renderMembersUI(members) {
+    const container = document.getElementById("addMemberContainer");
+    members.forEach(m => {
+        const avatar = m.user?.avatarUrl || "/icon/default-avatar.png";
+        const div = document.createElement("div");
+        div.style.cssText = `display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #eee; cursor:pointer;`;
+        div.innerHTML = `
+            <img src="${avatar}" style="width:35px;height:35px;border-radius:50%;object-fit:cover" alt="">
+            <div>
+                <div style="font-weight:600; font-size:14px;">${m.user?.userFullName || "User"}</div>
+                <div style="font-size:11px;color:#888">${formatTime(m.createdAt)}</div>
+            </div>`;
+        div.onclick = () => window.location.href = `user.html?id=${m.userId}`;
+        container.appendChild(div);
+    });
+}
+
+// --- TÌM KIẾM NGƯỜI DÙNG ---
+async function searchUserForAdd() {
+    const keyword = document.getElementById("searchUserInput").value.trim();
+    if (!keyword) return;
+    isViewingMembers = false;
+    currentKeyword = keyword;
+    addMemberPage = 0;
+    addMemberHasNext = true;
+    document.getElementById("addMemberContainer").innerHTML = "";
+    await loadUserForAdd(keyword);
+}
+
+async function loadUserForAdd(keyword) {
+    if (!addMemberHasNext || addMemberLoading) return;
+    addMemberLoading = true;
+    document.getElementById("addMemberLoading").style.display = "block";
+
+    const res = await graphqlRequest(USER_FOR_ADD_QUERY, {
+        chatRoomId: Number(chatRoomId),
+        keyword,
+        page: addMemberPage,
+        size: 10
+    });
+
+    if (!res.errors) {
+        const response = res.data.userForAddRoomChat;
+        renderUserForAddUI(response.data);
+        addMemberHasNext = response.pageInfo.hasNext;
+        addMemberPage++;
+    }
+    addMemberLoading = false;
+    document.getElementById("addMemberLoading").style.display = "none";
+}
+
+function renderUserForAddUI(users) {
+    const container = document.getElementById("addMemberContainer");
+    users.forEach(u => {
+        const avatar = u.userForChatRoom.avatarUrl || "/icon/default-avatar.png";
+        const div = document.createElement("div");
+        div.className = "add-user-item";
+        div.style.cssText = `display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; gap:10px;`;
+
+        div.innerHTML = `
+            <div style="display:flex; gap:10px; align-items:center; cursor:pointer;" onclick="window.location.href='user.html?id=${u.userId}'">
+                <img src="${avatar}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;" alt="">
+                <div>
+                    <div style="font-weight:600; font-size:14px;">${u.userForChatRoom.userFullName}</div>
+                    <div class="follow-status" style="font-size:11px; color:#999">
+                        ${u.isFollowing ? "Đang theo dõi" : "Chưa theo dõi"}
+                    </div>
+                </div>
+            </div>
+            <div class="action-group" style="display:flex; gap:8px; align-items:center;">
+                ${!u.isFollowing ? `
+                    <button class="follow-btn" style="padding:4px 8px; border:1px solid #007bff; border-radius:4px; background:white; color:#007bff; cursor:pointer; font-size:12px;">Theo dõi</button>
+                ` : ''}
+                
+                <div class="add-action-wrapper">
+                    ${u.inRoom ? `<small style="color:green">Đã vào</small>` :
+            `<button class="add-btn" style="padding:4px 10px; border:none; border-radius:4px; background:#007bff; color:#fff; cursor:pointer; font-size:12px;">Thêm</button>`}
+                </div>
+            </div>`;
+
+        // Xử lý sự kiện cho nút Theo dõi
+        const followBtn = div.querySelector(".follow-btn");
+        if (followBtn) {
+            followBtn.onclick = (e) => {
+                e.stopPropagation();
+                followUser(u.userId, followBtn, div.querySelector(".follow-status"));
+            };
+        }
+
+        // Xử lý sự kiện cho nút Thêm vào phòng
+        const addBtn = div.querySelector(".add-btn");
+        if(addBtn) addBtn.onclick = (e) => {
+            e.stopPropagation();
+            addMember(u.userId, addBtn);
+        }
+
+        container.appendChild(div);
+    });
+}
+
+async function followUser(userId, btn, statusTextEl) {
+    btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = "...";
+
+    try {
+        const res = await fetch(`${URL_BASE}/follow?userId=${userId}`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            }
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+            btn.remove(); // Theo dõi xong thì xóa nút
+            if (statusTextEl) statusTextEl.innerText = "Đang theo dõi";
+        } else {
+            alert(result.message || "Theo dõi thất bại");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    } catch (e) {
+        console.error("Lỗi follow:", e);
+        alert("Lỗi kết nối server");
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+}
+
+async function addMember(memberId, btn) {
+    btn.disabled = true;
+    btn.innerText = "...";
+    const res = await graphqlRequest(ADD_MEMBER_MUTATION, {
+        request: { memberId, chatRoomId: Number(chatRoomId) }
+    });
+    if (res.data?.addMemberForChatRoom.success) {
+        btn.parentElement.innerHTML = `<small style="color:green">Đã thêm</small>`;
+    } else {
+        alert("Lỗi: " + res.data.addMemberForChatRoom.message);
+        btn.disabled = false;
+        btn.innerText = "Thêm";
+    }
+}
+
+// --- FILE PHƯƠNG TIỆN ---
+async function loadChatMedia() {
+    if (!mediaHasNext || mediaLoading) return;
+    mediaLoading = true;
+    document.getElementById("mediaLoading").style.display = "block";
+
+    const res = await graphqlRequest(MEDIA_QUERY, {
+        chatRoomId: chatRoomId, page: mediaPage, size: 12
+    });
+
+    if (!res.errors) {
+        const response = res.data.messageMedias;
+        const container = document.getElementById("mediaContainer");
+        response.data.forEach(item => {
+            const wrapper = document.createElement("div");
+            wrapper.className = "media-item-wrapper";
+            const isVideo = item.url.match(/\.(mp4|webm|ogg)$/i);
+            wrapper.innerHTML = isVideo ? `<video src="${item.url}"></video>` : `<img src="${item.url}" loading="lazy" alt="">`;
+            wrapper.onclick = () => window.open(item.url, '_blank');
+            container.appendChild(wrapper);
+        });
+        mediaHasNext = response.pageInfo.hasNext;
+        mediaPage++;
+    }
+    mediaLoading = false;
+    document.getElementById("mediaLoading").style.display = "none";
+}
+
+// --- SIDEBAR SCROLL EVENT (Infinite Scroll cho Sidebar) ---
+sidebarContent.addEventListener("scroll", () => {
+    const nearBottom = sidebarContent.scrollTop + sidebarContent.clientHeight >= sidebarContent.scrollHeight - 50;
+    if (!nearBottom) return;
+
+    const currentType = document.getElementById('rightSidebar').dataset.current;
+    if (currentType === 'members') {
+        if (isViewingMembers) loadMembers();
+        else loadUserForAdd(currentKeyword);
+    } else if (currentType === 'media') {
+        loadChatMedia();
+    }
+});
+
+// --- GỬI TIN NHẮN ---
+let selectedFiles = [];
+mediaInput.addEventListener("change", () => {
+    previewContainer.innerHTML = "";
+    selectedFiles = [...mediaInput.files];
+    selectedFiles.forEach(file => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        previewContainer.appendChild(img);
+    });
+});
+
+async function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text && selectedFiles.length === 0) return;
+
+    const formData = new FormData();
+    formData.append("chatRoomId", chatRoomId);
+    formData.append("message", text);
+    selectedFiles.forEach(f => formData.append("medias", f));
+
+    sendBtn.disabled = true;
+    try {
+        const res = await fetch(`${URL_BASE}/chat/send-in-zoom`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${accessToken}` },
+            body: formData
+        });
+        const result = await res.json();
+        if (result.success) {
+            messageInput.value = "";
+            mediaInput.value = "";
+            previewContainer.innerHTML = "";
+            selectedFiles = [];
+        }
+    } catch (e) { alert("Lỗi gửi tin"); }
+    finally { sendBtn.disabled = false; }
+}
+
+// --- WEB SOCKET ---
+function connectWebSocket() {
+    const socket = new SockJS(`${URL_BASE}/ws`);
+    const stompClient = Stomp.over(socket);
+    stompClient.connect({ 'Authorization': `Bearer ${accessToken}` }, () => {
+        stompClient.subscribe(`/queue/message${chatRoomId}`, (output) => {
+            appendMessageToUI(JSON.parse(output.body));
+        });
+    });
+}
+
+// --- INITIALIZE & EVENT LISTENERS ---
+document.getElementById("toggleMembersBtn").addEventListener("click", () => {
+    isViewingMembers = true;
+    memberPage = 0;
+    memberHasNext = true;
+    document.getElementById("addMemberContainer").innerHTML = "";
+    loadMembers();
+});
+
+document.getElementById("viewMediaBtn").addEventListener("click", () => {
+    if (document.getElementById("mediaContainer").innerHTML === "") {
+        mediaPage = 0;
+        mediaHasNext = true;
+        loadChatMedia();
+    }
+});
+
+document.getElementById("searchUserBtn").onclick = searchUserForAdd;
+document.getElementById("searchUserInput").onkeypress = (e) => { if (e.key === "Enter") searchUserForAdd(); };
+sendBtn.onclick = sendMessage;
+messageInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
 
 loadMessages();
+connectWebSocket();
