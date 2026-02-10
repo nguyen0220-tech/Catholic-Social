@@ -57,6 +57,7 @@ type UserProfileDTO{
     mutualFollowers:[FollowerDTO]
     user:UserInfo!
     moments(page:Int, size:Int):MomentConnection
+    hasRoom:ChatRoom
 }
 
 type IntroDTO{

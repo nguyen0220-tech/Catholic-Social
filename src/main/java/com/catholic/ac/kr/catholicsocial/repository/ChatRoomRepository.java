@@ -1,5 +1,6 @@
 package com.catholic.ac.kr.catholicsocial.repository;
 
+import com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO;
 import com.catholic.ac.kr.catholicsocial.entity.model.ChatRoom;
 import com.catholic.ac.kr.catholicsocial.status.ChatRoomType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,12 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             """)
     Optional<ChatRoom> findExistingRoom(Long userId1, Long userId2, ChatRoomType type);
 
+    @Query("""
+            SELECT new com.catholic.ac.kr.catholicsocial.entity.dto.ChatRoomDTO(r.id)
+            FROM ChatRoom r
+            JOIN ChatRoomMember m1 ON m1.chatRoom = r
+            JOIN ChatRoomMember m2 ON m2.chatRoom = r
+            WHERE m1.user.id = :userId AND m2.user.id = :viewerId AND r.type = :type
+            """)
+    Optional<ChatRoomDTO> findHasRoom(Long userId, Long viewerId, ChatRoomType type);
 }

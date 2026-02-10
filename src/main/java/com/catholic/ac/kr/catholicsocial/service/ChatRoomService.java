@@ -47,6 +47,12 @@ public class ChatRoomService {
     private final LogChatRoomRepository logChatRoomRepository;
     private final HelperService helperService;
 
+    public ChatRoomDTO getChatRoomWithViewer(Long userId, Long viewerId) {
+        Optional<ChatRoomDTO> roomDTO = chatRoomRepository.findHasRoom(userId, viewerId, ChatRoomType.ONE_TO_ONE);
+
+        return roomDTO.orElse(null);
+    }
+
     public Map<Long, ChatRoom> getAllChatRoomWithUsers(List<Long> recipientIds, Long currentUserId) {
         List<Object[]> chatRooms = chatRoomMemberRepository
                 .findAllByRecipientIdsAndUserId(recipientIds, currentUserId, ChatRoomType.ONE_TO_ONE);

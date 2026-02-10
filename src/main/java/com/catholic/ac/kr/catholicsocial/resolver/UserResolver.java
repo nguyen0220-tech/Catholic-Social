@@ -40,6 +40,7 @@ public class UserResolver {
     private final SavedService savedService;
     private final IntroVideoService introVideoService;
     private final BatchLoaderHandler batchLoaderHandler;
+    private final ChatRoomService chatRoomService;
 
     @QueryMapping
     public UserProfileDTO profile(@Argument Long userId) {
@@ -316,5 +317,12 @@ public class UserResolver {
                         m -> m,
                         m -> map.getOrDefault(m.getId(), List.of())
                 ));
+    }
+
+    @SchemaMapping(typeName = "UserProfileDTO",field = "hasRoom")
+    public ChatRoomDTO hasRoom(
+            UserProfileDTO profile,
+            @AuthenticationPrincipal  CustomUserDetails me) {
+        return chatRoomService.getChatRoomWithViewer(profile.getId(), me.getUser().getId());
     }
 }

@@ -86,6 +86,7 @@ public class MessageService {
         RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO(
                 messageDTO.getChatRoomId(),
                 (messageDTO.getText().isBlank()) ? "[Ảnh]" : messageDTO.getText(),
+                room.getRoomName() != null ? room.getRoomName() : "[Tin nhắn mới]",
                 messageDTO.getCreatedAt());
 
         socketService.sendNewMessage(messageDTO); //to member in room

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class RoomUpdateDTO {
     private Long chatRoomId;
     private String lastMessagePreview;
+    private String roomName;
 
     private LocalDateTime lastMessageAt;
 }

@@ -358,7 +358,20 @@
     </div>
 </div>
 
-
+<div id="directMessageModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Gửi tin nhắn đến <span id="dmRecipientName"></span></h3>
+        <input type="hidden" id="dmRecipientId">
+        <textarea id="dmText" placeholder="Nhập tin nhắn..." style="width: 100%; height: 80px; margin-top:10px;"></textarea>
+        <div style="margin-top: 10px;">
+            <input type="file" id="dmMedias" multiple>
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeDirectMessageModal()">Hủy</button>
+            <button id="btnSendDM" onclick="submitDirectMessage()" style="background: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px;">Gửi</button>
+        </div>
+    </div>
+</div>
 
 <script type="module" src="auth-utils.js"></script>
 <script type="module" src="user.js"></script>

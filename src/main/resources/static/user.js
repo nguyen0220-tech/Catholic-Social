@@ -41,6 +41,9 @@ query ($userId: ID!) {
       fullName
       avatarUrl
     }
+    hasRoom{
+      chatRoomId
+    }
     moments(page: 0, size: 10) {
       content {
         id
@@ -156,83 +159,52 @@ async function loadProfile() {
     renderProfile(profile);
     renderMoments(profile.moments.content);
 }
-
 function renderProfile(profile) {
     const isMe = userId === Number(currentUserId);
 
+    let messageBtn = "";
     let followBtn = "";
     let blockBtn = "";
     let infoBtn = "";
 
     if (!isMe) {
-        if (profile.isBlocked) {
-            blockBtn = `
-                <button class="btn unblock" onclick="unblockUser(${userId})">
-                    Unblock
-                </button>
-            `;
-        } else {
-            blockBtn = `
-                <button class="btn block" onclick="blockUser(${userId})">
-                    Block
+        if (!profile.isBlocked) {
+            window.currentProfileData = profile;
+            messageBtn = `
+                <button class="btn message" onclick="handleMessageAction()">
+                    Nhắn tin
                 </button>
             `;
         }
 
-        if (!profile.isBlocked) {
+        if (profile.isBlocked) {
+            blockBtn = `<button class="btn unblock" onclick="unblockUser(${userId})">Unblock</button>`;
+        } else {
+            blockBtn = `<button class="btn block" onclick="blockUser(${userId})">Block</button>`;
             if (profile.isFollowing) {
-                followBtn = `
-                    <button class="btn unfollow" onclick="unfollowUser(${userId})">
-                        Unfollow
-                    </button>
-                `;
+                followBtn = `<button class="btn unfollow" onclick="unfollowUser(${userId})">Unfollow</button>`;
             } else {
-                followBtn = `
-                    <button class="btn follow" onclick="followUser(${userId})">
-                        Follow
-                    </button>
-                `;
+                followBtn = `<button class="btn follow" onclick="followUser(${userId})">Follow</button>`;
             }
         }
-        infoBtn = `
-            <button class="btn info" onclick="showAccountInfo(${userId})">
-                Giới thiệu tài khoản này
-            </button>
-        `;
+        infoBtn = `<button class="btn info" onclick="showAccountInfo(${userId})">Giới thiệu tài khoản này</button>`;
     }
 
     document.getElementById("profile").innerHTML = `
     <div class="profile-header">
         <img src="${profile.user.avatarUrl}" class="profile-avatar" alt="">
-    
         <div class="profile-info">
             <h2>${profile.user.fullName}</h2>
-            
-                ${profile.bio ? `
-                <p class="profile-bio">
-                    ${escapeHtml(profile.bio)}
-                </p>
-                ` : ""}
+            ${profile.bio ? `<p class="profile-bio">${escapeHtml(profile.bio)}</p>` : ""}
             ${!isMe ? renderMutualFollowers(profile) : ""}
             <div class="profile-meta-row">
                 <div class="profile-stats">
-                    <div class="stat">
-                        <b>${profile.numOfMoments}</b>
-                        <span>Moments</span>
-                    </div>
-    
-                    <div class="stat" onclick="goToFollowers(${userId})">
-                        <b>${profile.numOfFollowers}</b>
-                        <span>Followers</span>
-                    </div>
-    
-                    <div class="stat" onclick="goToFollowing(${userId})">
-                        <b>${profile.numOfFollowing}</b>
-                        <span>Following</span>
-                    </div>
+                    <div class="stat"><b>${profile.numOfMoments}</b><span>Moments</span></div>
+                    <div class="stat" onclick="goToFollowers(${userId})"><b>${profile.numOfFollowers}</b><span>Followers</span></div>
+                    <div class="stat" onclick="goToFollowing(${userId})"><b>${profile.numOfFollowing}</b><span>Following</span></div>
                 </div>
-    
                 <div class="profile-actions">
+                    ${messageBtn} 
                     ${followBtn}
                     ${blockBtn}
                     ${infoBtn}
@@ -242,6 +214,76 @@ function renderProfile(profile) {
     </div>
     `;
 }
+
+function handleMessageAction() {
+    const profile = window.currentProfileData;
+
+    if (!profile) return;
+
+    if (profile.hasRoom && profile.hasRoom.chatRoomId) {
+        window.location.href = `message.html?chatRoomId=${profile.hasRoom.chatRoomId}`;
+    } else {
+        document.getElementById("dmRecipientId").value = profile.id;
+        document.getElementById("dmRecipientName").innerText = profile.user.fullName;
+        document.getElementById("directMessageModal").classList.remove("hidden");
+    }
+}
+
+function closeDirectMessageModal() {
+    document.getElementById("directMessageModal").classList.add("hidden");
+    document.getElementById("dmText").value = "";
+    document.getElementById("dmMedias").value = "";
+}
+
+async function submitDirectMessage() {
+    const recipientId = document.getElementById("dmRecipientId").value;
+    const message = document.getElementById("dmText").value.trim();
+    const mediaFiles = document.getElementById("dmMedias").files;
+    const btn = document.getElementById("btnSendDM");
+
+    if (!message && mediaFiles.length === 0) {
+        alert("Vui lòng nhập nội dung hoặc chọn ảnh!");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Đang gửi...";
+
+    const formData = new FormData();
+    formData.append("recipientId", recipientId);
+    formData.append("message", message);
+    for (let i = 0; i < mediaFiles.length; i++) {
+        formData.append("medias", mediaFiles[i]);
+    }
+
+    try {
+        const response = await fetch(`${URL_BASE}/chat/send-direct`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            window.location.href = `message.html?chatRoomId=${result.data.chatRoomId}`;
+        } else {
+            alert("Lỗi: " + (result.message || "Không thể gửi tin nhắn"));
+        }
+    } catch (error) {
+        console.error("Error sending direct message:", error);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Gửi";
+        closeDirectMessageModal();
+    }
+}
+
+window.handleMessageAction = handleMessageAction;
+window.closeDirectMessageModal = closeDirectMessageModal;
+window.submitDirectMessage = submitDirectMessage;
 
 function escapeHtml(text) {
     const div = document.createElement("div");
