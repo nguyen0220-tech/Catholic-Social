@@ -1,32 +1,38 @@
 package com.catholic.ac.kr.catholicsocial.security.systemservice;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Component;
+import com.resend.Resend;
+import com.resend.services.emails.model.CreateEmailOptions;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-@Component
-@RequiredArgsConstructor
+@Service
+@Slf4j
 public class SendEmailService {
-    private final JavaMailSender mailSender;
+    private final Resend resend;
 
+    public SendEmailService(@Value("${resend.api.key}") String apiKey) {
+        this.resend = new Resend(apiKey);
+    }
+
+    /*
+        No verify domain
+        test
+        => from: onboarding@resend.dev,  to:teemee202@gmail.com
+     */
     public void sendEmail(String to, String subject, String body) {
+        CreateEmailOptions request = CreateEmailOptions.builder()
+                .from("onboarding@resend.dev")
+                .to("teemee202@gmail.com")
+                .subject(subject)
+                .html(body)
+                .build();
+
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
-
-            mimeMessageHelper.setFrom("teemee202@gmail.com");
-            mimeMessageHelper.setTo(to);
-            mimeMessageHelper.setSubject(subject);
-            mimeMessageHelper.setText(body, true);
-
-            mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Error sending email", e);
+            resend.emails().send(request);
+            log.info("Send email successful to: {} ", to);
+        } catch (Exception e) {
+            log.error("Send email failed: {}", e.getMessage());
         }
-
     }
 }
