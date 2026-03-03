@@ -578,7 +578,7 @@ const userAvatar = localStorage.getItem("userAvatar");
 if (userId && userName) {
     profileLink.innerHTML = `
         <a href="user.html?id=${userId}">
-            <img src="${userAvatar || '/icon/default-avatar.png'}" alt="avatar">
+            <img src="${userAvatar}" alt="avatar">
             <span>${userName}</span>
         </a>
     `;

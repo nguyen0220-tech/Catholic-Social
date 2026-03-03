@@ -264,6 +264,15 @@ public class UserService {
                 "Update avatar success", avatarUrl);
     }
 
+    public ApiResponse<Void> deleteAvatar(Long userId) {
+        User user = EntityUtils.getOrThrow(userRepository.findById(userId), "User");
+
+        user.getUserInfo().setAvatarUrl(null);
+
+        userRepository.save(user);
+        return null;
+    }
+
     public ApiResponse<List<UserFollowDTO>> findUserFollow(Long userId, String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 

@@ -1,6 +1,5 @@
 package com.catholic.ac.kr.catholicsocial.service.auth;
 
-import com.catholic.ac.kr.catholicsocial.service.hepler.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.entity.dto.TokenResponseDTO;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LoginRequest;
 import com.catholic.ac.kr.catholicsocial.entity.dto.request.LogoutRequest;
@@ -16,6 +15,7 @@ import com.catholic.ac.kr.catholicsocial.security.systemservice.RefreshTokenUtil
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.JwtUtil;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenService;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
+import com.catholic.ac.kr.catholicsocial.service.hepler.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -171,14 +171,7 @@ public class AuthService {
                             ipAddress)
                     .getData();
 
-            TokenResponseDTO tokenResponseDTO = new TokenResponseDTO();
-
-            tokenResponseDTO.setUserId(user.getId());
-            tokenResponseDTO.setUserName(user.getUserInfo().getFirstName() + " " + user.getUserInfo().getLastName());
-            tokenResponseDTO.setUserAvatar(user.getUserInfo().getAvatarUrl());
-            tokenResponseDTO.setAccessToken(accessToken);
-            tokenResponseDTO.setRefreshToken(refreshToken.getRefreshToken());
-
+            TokenResponseDTO tokenResponseDTO = getTokenResponseDTO(user, accessToken, refreshToken);
 
             loginFailCounts.remove(request.getUsername());
             loginFailTimes.remove(user.getUsername());
@@ -212,6 +205,18 @@ public class AuthService {
                 return ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                         "Login failed");
         }
+    }
+
+    private static TokenResponseDTO getTokenResponseDTO(User user, String accessToken, RefreshToken refreshToken) {
+        TokenResponseDTO tokenResponseDTO = new TokenResponseDTO();
+
+        tokenResponseDTO.setUserId(user.getId());
+        tokenResponseDTO.setUserName(user.getUserInfo().getFirstName() + " " + user.getUserInfo().getLastName());
+        tokenResponseDTO.setUserAvatar(user.getUserInfo().getAvatarUrl() != null ?
+                user.getUserInfo().getAvatarUrl() : "/icon/default-avatar.png");
+        tokenResponseDTO.setAccessToken(accessToken);
+        tokenResponseDTO.setRefreshToken(refreshToken.getRefreshToken());
+        return tokenResponseDTO;
     }
 
     public ApiResponse<String> logout(LogoutRequest request) {

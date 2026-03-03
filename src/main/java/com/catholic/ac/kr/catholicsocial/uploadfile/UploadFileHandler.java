@@ -27,7 +27,7 @@ public class UploadFileHandler {
                             "public_id", "user_id" + "_" + LocalDateTime.now(), //when delete file
                             "overwrite", true));
 
-            return result.get("url").toString();
+            return result.get("secure_url").toString();
         } catch (Exception e) {
             throw new RuntimeException("Upload fail: ", e);
         }

@@ -7,7 +7,6 @@ import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import com.catholic.ac.kr.catholicsocial.mapper.ConvertHandler;
 import com.catholic.ac.kr.catholicsocial.resolver.batchloader.BatchLoaderHandler;
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsForBatchMapping;
 import com.catholic.ac.kr.catholicsocial.service.*;
 import com.catholic.ac.kr.catholicsocial.status.NotifyType;
 import com.catholic.ac.kr.catholicsocial.wrapper.GraphqlResponse;
@@ -27,8 +26,6 @@ public class NotificationResolver {
     private final NotificationService notificationService;
     private final UserService userService;
     private final MomentService momentService;
-    private final UserDetailsForBatchMapping userDetailsForBatchMapping;
-    private final FollowService followService;
     private final CommentService commentService;
     private final BatchLoaderHandler batchLoaderHandler;
 

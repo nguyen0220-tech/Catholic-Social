@@ -85,6 +85,11 @@ public class UserController {
         return ResponseEntity.ok(userService.uploadAvatar(useDetails.getUser().getId(), file));
     }
 
+    @PutMapping("delete-avatar")
+    public ApiResponse<Void> deleteAvatar(@AuthenticationPrincipal CustomUserDetails useDetails) {
+            return userService.deleteAvatar(useDetails.getUser().getId());
+    }
+
     @GetMapping("find-follow")
     public ResponseEntity<ApiResponse<List<UserFollowDTO>>> getUserFollow(
             @AuthenticationPrincipal CustomUserDetails useDetails,
