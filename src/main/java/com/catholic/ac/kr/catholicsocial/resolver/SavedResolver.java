@@ -31,21 +31,21 @@ public class SavedResolver {
             @AuthenticationPrincipal CustomUserDetails me,
             @Argument int page,
             @Argument int size) {
-        return savedService.getAllByUserId(me.getUser().getId(), page, size);
+        return savedService.getAllByUserId(me.getUserId(), page, size);
     }
 
     @MutationMapping
     public GraphqlResponse<String> createSaved(
             @AuthenticationPrincipal CustomUserDetails me,
             @Argument Long momentId) {
-        return savedService.save(me.getUser().getId(), momentId);
+        return savedService.save(me.getUserId(), momentId);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteSaved(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long momentId){
-        return savedService.delete(useDetails.getUser().getId(), momentId);
+        return savedService.delete(useDetails.getUserId(), momentId);
     }
 
     @BatchMapping(typeName = "SavedDTO", field = "heartCount")

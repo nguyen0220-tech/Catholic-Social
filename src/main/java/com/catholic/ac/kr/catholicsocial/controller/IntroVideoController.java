@@ -20,21 +20,21 @@ public class IntroVideoController {
     public ResponseEntity<ApiResponse<IntroVideoDTO>> uploadIntro(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @ModelAttribute IntroVideoRequest introFile) {
-        return ResponseEntity.ok(introVideoService.uploadIntro(useDetails.getUser().getId(), introFile));
+        return ResponseEntity.ok(introVideoService.uploadIntro(useDetails.getUserId(), introFile));
     }
 
     @PutMapping("/remove/{introId}")
     public ResponseEntity<ApiResponse<String>> removeIntro(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @PathVariable Long introId) {
-        return ResponseEntity.ok(introVideoService.removeIntro(useDetails.getUser().getId(), introId));
+        return ResponseEntity.ok(introVideoService.removeIntro(useDetails.getUserId(), introId));
     }
 
     @PutMapping("/restore/{introId}")
     public ResponseEntity<ApiResponse<String>> restoreIntro(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @PathVariable Long introId) {
-        return ResponseEntity.ok(introVideoService.restoreIntro(useDetails.getUser().getId(), introId));
+        return ResponseEntity.ok(introVideoService.restoreIntro(useDetails.getUserId(), introId));
     }
 
 }

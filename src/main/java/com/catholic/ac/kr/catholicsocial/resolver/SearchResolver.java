@@ -24,21 +24,21 @@ public class SearchResolver {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
-        return searchService.getAllByUser(useDetails.getUser().getId(), page, size);
+        return searchService.getAllByUser(useDetails.getUserId(), page, size);
     }
 
     @MutationMapping
     public GraphqlResponse<String> createSearch(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument SearchRequest request) {
-        return searchService.createSearch(useDetails.getUser().getId(), request);
+        return searchService.createSearch(useDetails.getUserId(), request);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteSearch(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long searchId) {
-        return searchService.deleteSearch(useDetails.getUser().getId(), searchId);
+        return searchService.deleteSearch(useDetails.getUserId(), searchId);
     }
 
 }

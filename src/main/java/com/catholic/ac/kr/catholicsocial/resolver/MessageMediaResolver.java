@@ -30,7 +30,7 @@ public class MessageMediaResolver {
             @Argument int page,
             @Argument int size
     ) {
-        return messageMediaService.getAllMediaByChatRoom(userDetails.getUser().getId(), chatRoomId, page, size);
+        return messageMediaService.getAllMediaByChatRoom(userDetails.getUserId(), chatRoomId, page, size);
     }
 
     @BatchMapping(typeName = "MessageMedia", field = "user")

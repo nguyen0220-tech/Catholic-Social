@@ -1,39 +1,41 @@
 package com.catholic.ac.kr.catholicsocial.security.userdetails;
 
-import com.catholic.ac.kr.catholicsocial.entity.model.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.List;
 
-@Getter
+
+// use request API
 public class CustomUserDetails implements UserDetails {
-    private final User user;
+    @Getter
+    private final Long userId;
+    private final String username;
+    private final List<GrantedAuthority> authorities;
 
-    public CustomUserDetails(User user) {
-        this.user = user;
+    public CustomUserDetails(Long userId, String username, List<GrantedAuthority> authorities) {
+        this.userId = userId;
+        this.username = username;
+        this.authorities = authorities;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(
-                        role.getName()))
-                .collect(Collectors.toList());
+        return authorities;
     }
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return username;
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return  null;
     }
+
 
     @Override
     public boolean isAccountNonExpired() {

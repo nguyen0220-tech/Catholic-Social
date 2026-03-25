@@ -68,26 +68,26 @@ public class UserController {
 
     @GetMapping("profile")
     public ResponseEntity<ApiResponse<ProfileDTO>> getUserProfile(@AuthenticationPrincipal CustomUserDetails useDetails) {
-        return ResponseEntity.ok(userService.getUserProfile(useDetails.getUser().getId()));
+        return ResponseEntity.ok(userService.getUserProfile(useDetails.getUserId()));
     }
 
     @PutMapping("update-profile")
     public ResponseEntity<ApiResponse<String>> updateUserProfile(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Valid @RequestBody ProfileDTO profileDTO) {
-        return ResponseEntity.ok(userService.updateProfile(useDetails.getUser().getId(), profileDTO));
+        return ResponseEntity.ok(userService.updateProfile(useDetails.getUserId(), profileDTO));
     }
 
     @PostMapping("upload-avatar")
     public ResponseEntity<ApiResponse<String>> uploadAvatar(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam("file") MultipartFile file){
-        return ResponseEntity.ok(userService.uploadAvatar(useDetails.getUser().getId(), file));
+        return ResponseEntity.ok(userService.uploadAvatar(useDetails.getUserId(), file));
     }
 
     @PutMapping("delete-avatar")
     public ApiResponse<Void> deleteAvatar(@AuthenticationPrincipal CustomUserDetails useDetails) {
-            return userService.deleteAvatar(useDetails.getUser().getId());
+            return userService.deleteAvatar(useDetails.getUserId());
     }
 
     @GetMapping("find-follow")
@@ -96,11 +96,11 @@ public class UserController {
             @RequestParam String keyword,
             @RequestParam int page,
             @RequestParam int size) {
-        return ResponseEntity.ok(userService.findUserFollow(useDetails.getUser().getId(),keyword, page, size));
+        return ResponseEntity.ok(userService.findUserFollow(useDetails.getUserId(),keyword, page, size));
     }
 
     @GetMapping("suggestion")
     public ResponseEntity<ApiResponse<List<UserSuggestions>>> getUserSuggestions(@AuthenticationPrincipal CustomUserDetails useDetails) {
-        return ResponseEntity.ok(userService.findUserSuggestions(useDetails.getUser().getId()));
+        return ResponseEntity.ok(userService.findUserSuggestions(useDetails.getUserId()));
     }
 }

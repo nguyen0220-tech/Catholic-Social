@@ -39,7 +39,7 @@ public class MessageResolver {
             @Argument Long chatRoomId,
             @Argument int page,
             @Argument int size) {
-        return messageService.getMessages(useDetails.getUser().getId(), chatRoomId, page, size);
+        return messageService.getMessages(useDetails.getUserId(), chatRoomId, page, size);
     }
 
 
@@ -75,8 +75,11 @@ public class MessageResolver {
     public Boolean isMine(MessageDTO messages, Principal principal) {
         CustomUserDetails useDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
-        Long myId = useDetails.getUser().getId();
+        Long myId = useDetails.getUserId();
 
-        return myId.equals(messages.getSenderId());
+        Boolean rs = myId.equals(messages.getSenderId());
+        System.out.println("check isMine:"+rs);
+        System.out.println("userId: "+useDetails.getUserId());
+        return rs;
     }
 }

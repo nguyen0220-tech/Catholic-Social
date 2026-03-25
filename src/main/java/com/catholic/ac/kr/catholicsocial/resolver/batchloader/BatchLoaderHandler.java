@@ -57,7 +57,7 @@ public class BatchLoaderHandler {
     public <T> Map<T, Boolean> batchLoadFollow(List<T> source, Function<T, Long> userIdExtractor, Principal principal) {
         CustomUserDetails userDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
-        Long myId = userDetails.getUser().getId();
+        Long myId = userDetails.getUserId();
 
         List<Long> userIds = source.stream()
                 .map(userIdExtractor)

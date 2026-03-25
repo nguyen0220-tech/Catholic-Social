@@ -23,7 +23,7 @@ public class MessageController {
     public ApiResponse<MessageDTO> sendMessageInRoom(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ModelAttribute MessageForRoomChatRequest request) {
-        return messageService.sendMessageInRoom(userDetails.getUser().getId(), request);
+        return messageService.sendMessageInRoom(userDetails.getUserId(), request);
     }
 
     @PostMapping("send-direct")
@@ -31,6 +31,6 @@ public class MessageController {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @ModelAttribute MessageRequest request
     ) {
-        return messageService.sendDirectMessage(useDetails.getUser().getId(), request);
+        return messageService.sendDirectMessage(useDetails.getUserId(), request);
     }
 }

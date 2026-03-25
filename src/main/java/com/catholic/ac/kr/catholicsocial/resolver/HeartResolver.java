@@ -34,19 +34,19 @@ public class HeartResolver {
             @Argument Long momentId,
             @Argument int page,
             @Argument int size) {
-        return heartService.getHeartsByMomentId(me.getUser().getId(), momentId, page, size);
+        return heartService.getHeartsByMomentId(me.getUserId(), momentId, page, size);
     }
 
     @MutationMapping
     public GraphqlResponse<String> addHeart(@AuthenticationPrincipal CustomUserDetails useDetails, @Argument Long momentId) {
-        return heartService.addHeart(useDetails.getUser().getId(), momentId);
+        return heartService.addHeart(useDetails.getUserId(), momentId);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteHeart(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long momentId) {
-        return heartService.deleteHeart(useDetails.getUser().getId(), momentId);
+        return heartService.deleteHeart(useDetails.getUserId(), momentId);
     }
 
     @SchemaMapping(typeName = "HeartDTO", field = "moment")

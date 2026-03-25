@@ -14,7 +14,7 @@ import com.catholic.ac.kr.catholicsocial.repository.VerificationTokenRepository;
 import com.catholic.ac.kr.catholicsocial.security.systemservice.RefreshTokenUtil;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.JwtUtil;
 import com.catholic.ac.kr.catholicsocial.security.tokencommon.VerificationTokenService;
-import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
+import com.catholic.ac.kr.catholicsocial.security.userdetails.UserDetailsImpl;
 import com.catholic.ac.kr.catholicsocial.service.hepler.EntityUtils;
 import com.catholic.ac.kr.catholicsocial.wrapper.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -154,11 +154,11 @@ public class AuthService {
                     )
             );
 
-            CustomUserDetails useDetails = (CustomUserDetails) authentication.getPrincipal();
+            UserDetailsImpl useDetails = (UserDetailsImpl) authentication.getPrincipal();
 
             Map<String, Object> claims = new HashMap<>();
 
-            claims.put("id", user.getId());
+            claims.put("userId", user.getId());
             claims.put("username", user.getUsername());
             claims.put("roles", user.getRoles().stream().map(Role::getName).toList());
 
@@ -175,6 +175,9 @@ public class AuthService {
 
             loginFailCounts.remove(request.getUsername());
             loginFailTimes.remove(user.getUsername());
+
+            System.out.println("userId: " + useDetails.getUserId());
+            System.out.println("username: " + useDetails.getUsername());
 
             return ApiResponse.success(HttpStatus.OK.value(), HttpStatus.OK.getReasonPhrase(),
                     "Login success", tokenResponseDTO);

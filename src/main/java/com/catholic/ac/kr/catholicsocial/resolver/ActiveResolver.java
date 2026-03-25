@@ -42,7 +42,7 @@ public class ActiveResolver {
             @Argument int page,
             @Argument int size) {
         System.out.println("current user: " + useDetails.getUsername());
-        return activeService.getAllByUserId(useDetails.getUser().getId(), page, size);
+        return activeService.getAllByUserId(useDetails.getUserId(), page, size);
     }
 
     @QueryMapping
@@ -51,7 +51,7 @@ public class ActiveResolver {
             @Argument ActiveType type,
             @Argument int page,
             @Argument int size){
-        return activeService.getAndFilterAllByUserId(useDetails.getUser().getId(), type, page, size);
+        return activeService.getAndFilterAllByUserId(useDetails.getUserId(), type, page, size);
     }
 
     @BatchMapping(typeName = "ActiveDTO", field = "user")

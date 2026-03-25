@@ -39,12 +39,12 @@ public class ChatRoomResolver {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
-        return chatRoomService.getChatRooms(useDetails.getUser().getId(), page, size);
+        return chatRoomService.getChatRooms(useDetails.getUserId(), page, size);
     }
 
     @QueryMapping
     public List<UserRecentMessageDTO> usersRecentMessage(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return chatRoomService.getUsersRecentMessage(userDetails.getUser().getId());
+        return chatRoomService.getUsersRecentMessage(userDetails.getUserId());
     }
 
     @BatchMapping(typeName = "UserRecentMessage", field = "user")
@@ -65,7 +65,7 @@ public class ChatRoomResolver {
                 .toList();
 
         Map<Long, ChatRoom> map = chatRoomService
-                .getAllChatRoomWithUsers(userIds, userDetails.getUser().getId());
+                .getAllChatRoomWithUsers(userIds, userDetails.getUserId());
 
         Map<UserRecentMessageDTO, ChatRoomDTO> result = new HashMap<>();
 
@@ -87,7 +87,7 @@ public class ChatRoomResolver {
             @Argument int page,
             @Argument int size
     ) {
-        return chatRoomService.getUsersForCreateRoom(userDetails.getUser().getId(), keyword, page, size);
+        return chatRoomService.getUsersForCreateRoom(userDetails.getUserId(), keyword, page, size);
     }
 
     @BatchMapping(typeName = "UserForCreateChatRoom", field = "user")
@@ -113,7 +113,7 @@ public class ChatRoomResolver {
                 .toList();
 
         Map<Long, ChatRoom> map = chatRoomService
-                .getAllChatRoomWithUsers(userIds, userDetails.getUser().getId());
+                .getAllChatRoomWithUsers(userIds, userDetails.getUserId());
 
         Map<UserForCreateRoomChatDTO, ChatRoomDTO> result = new HashMap<>();
 
@@ -133,7 +133,7 @@ public class ChatRoomResolver {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Argument GroupChatRequest request
     ) {
-        return chatRoomService.createGroupChat(userDetails.getUser().getId(), request);
+        return chatRoomService.createGroupChat(userDetails.getUserId(), request);
     }
 
     @MutationMapping
@@ -141,7 +141,7 @@ public class ChatRoomResolver {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument UpdateChatRoomRequest request
     ) {
-        return chatRoomService.updateChatRoom(useDetails.getUser().getId(), request);
+        return chatRoomService.updateChatRoom(useDetails.getUserId(), request);
     }
 
     @BatchMapping(typeName = "ChatRoom", field = "detail")
@@ -170,7 +170,7 @@ public class ChatRoomResolver {
     public Map<ChatRoomDTO, List<UserGQLDTO>> members(List<ChatRoomDTO> rooms, Principal principal) {
         CustomUserDetails useDetails = userDetailsForBatchMapping.getCustomUserDetails(principal);
 
-        Long currentUserId = useDetails.getUser().getId();
+        Long currentUserId = useDetails.getUserId();
 
         List<Long> roomIds = rooms.stream()
                 .map(ChatRoomDTO::getChatRoomId)
@@ -205,7 +205,7 @@ public class ChatRoomResolver {
             @Argument int page,
             @Argument int size
     ) {
-        return chatRoomService.getUserForAddRoomChat(userDetails.getUser().getId(), chatRoomId, keyword, page, size);
+        return chatRoomService.getUserForAddRoomChat(userDetails.getUserId(), chatRoomId, keyword, page, size);
     }
 
 
@@ -226,7 +226,7 @@ public class ChatRoomResolver {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Argument AddMemberRequest request
     ) {
-        return chatRoomService.addMemberToChatRoom(userDetails.getUser().getId(), request);
+        return chatRoomService.addMemberToChatRoom(userDetails.getUserId(), request);
     }
 
     // ====Members of Chat Room
@@ -237,7 +237,7 @@ public class ChatRoomResolver {
             @Argument int page,
             @Argument int size
     ) {
-        return chatRoomService.getMembersOfChatRoom(userDetails.getUser().getId(), chatRoomId, page, size);
+        return chatRoomService.getMembersOfChatRoom(userDetails.getUserId(), chatRoomId, page, size);
     }
 
     @BatchMapping(typeName = "MemberOfChatRoom", field = "user")
@@ -251,7 +251,7 @@ public class ChatRoomResolver {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Argument Long chatRoomId
     ) {
-        return chatRoomService.leaveChatRoom(userDetails.getUser().getId(), chatRoomId);
+        return chatRoomService.leaveChatRoom(userDetails.getUserId(), chatRoomId);
     }
 
 

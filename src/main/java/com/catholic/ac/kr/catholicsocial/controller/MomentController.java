@@ -25,7 +25,9 @@ public class MomentController {
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
             @RequestParam int page,
             @RequestParam int size) {
-        return ResponseEntity.ok(momentService.getAllMoments(customUserDetails.getUser().getId(), page, size));
+        System.out.println("userId controller: " + customUserDetails.getUserId());
+        System.out.println("username controller: " + customUserDetails.getUsername());
+        return ResponseEntity.ok(momentService.getAllMoments(customUserDetails.getUserId(), page, size));
     }
 
     @GetMapping
@@ -33,7 +35,7 @@ public class MomentController {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestParam int page,
             @RequestParam int size) {
-        return ResponseEntity.ok(momentService.getAllMomentsByUserId(useDetails.getUser().getId(), page, size));
+        return ResponseEntity.ok(momentService.getAllMomentsByUserId(useDetails.getUserId(), page, size));
     }
 
     @PostMapping
@@ -41,7 +43,7 @@ public class MomentController {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Valid @ModelAttribute MomentRequest request) {
 
-        ApiResponse<String> response = momentService.uploadMoment(useDetails.getUser().getId(), request);
+        ApiResponse<String> response = momentService.uploadMoment(useDetails.getUserId(), request);
 
         return ResponseEntity.status(response.getStatus()).body(response);
     }
@@ -50,13 +52,13 @@ public class MomentController {
     public ResponseEntity<ApiResponse<String>> updateMoment(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @RequestBody MomentUpdateRequest request) {
-        return ResponseEntity.ok(momentService.updateMoment(useDetails.getUser().getId(), request));
+        return ResponseEntity.ok(momentService.updateMoment(useDetails.getUserId(), request));
     }
 
     @DeleteMapping("{momentId}")
     public ResponseEntity<ApiResponse<String>> deleteMoment(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @PathVariable Long momentId) {
-        return ResponseEntity.ok(momentService.deleteMoment(useDetails.getUser().getId(), momentId));
+        return ResponseEntity.ok(momentService.deleteMoment(useDetails.getUserId(), momentId));
     }
 }

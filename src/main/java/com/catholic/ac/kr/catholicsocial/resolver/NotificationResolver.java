@@ -34,26 +34,26 @@ public class NotificationResolver {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
-        return notificationService.getAllNotifications(useDetails.getUser().getId(), page, size);
+        return notificationService.getAllNotifications(useDetails.getUserId(), page, size);
     }
 
     @QueryMapping
     public int unreadCount(@AuthenticationPrincipal CustomUserDetails useDetails) {
-        return notificationService.getCountNotifications(useDetails.getUser().getId());
+        return notificationService.getCountNotifications(useDetails.getUserId());
     }
 
     @MutationMapping
     public GraphqlResponse<String> maskAsRead(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long notificationId) {
-        return notificationService.maskAsRead(useDetails.getUser().getId(), notificationId);
+        return notificationService.maskAsRead(useDetails.getUserId(), notificationId);
     }
 
     @MutationMapping
     public GraphqlResponse<String> deleteNotification(
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long notificationId) {
-        return notificationService.deleteNotification(useDetails.getUser().getId(), notificationId);
+        return notificationService.deleteNotification(useDetails.getUserId(), notificationId);
     }
 
     @BatchMapping(typeName = "NotificationDTO", field = "actor")

@@ -79,7 +79,7 @@ public class UserResolver {
 
         Long userId = user.getId();
 
-        return followService.getFollowers(userId, me.getUser().getId(), page, size);
+        return followService.getFollowers(userId, me.getUserId(), page, size);
     }
 
     @SchemaMapping
@@ -91,7 +91,7 @@ public class UserResolver {
     ) {
         Long userId = user.getId();
 
-        return followService.getFollowing(userId, me.getUser().getId(), page, size);
+        return followService.getFollowing(userId, me.getUserId(), page, size);
     }
 
     @BatchMapping
@@ -110,7 +110,7 @@ public class UserResolver {
                 .map(FollowerDTO::getUserId)
                 .toList();
 
-        Set<Long> userFollowIds = new HashSet<>(followService.getUserIdsFollowing(me.getUser().getId(), userIds));
+        Set<Long> userFollowIds = new HashSet<>(followService.getUserIdsFollowing(me.getUserId(), userIds));
 
         return followers.stream()
                 .collect(Collectors.toMap(
@@ -134,7 +134,7 @@ public class UserResolver {
             @AuthenticationPrincipal CustomUserDetails me) {
         if (me == null) return false;
 
-        return followService.isFollowing(me.getUser().getId(), user.getId());
+        return followService.isFollowing(me.getUserId(), user.getId());
     }
 
     @SchemaMapping(typeName = "UserProfileDTO", field = "isBlocked")
@@ -143,7 +143,7 @@ public class UserResolver {
             @AuthenticationPrincipal CustomUserDetails me) {
         if (me == null) return false;
 
-        return followService.isBlocked(me.getUser().getId(), user.getId());
+        return followService.isBlocked(me.getUserId(), user.getId());
     }
 
     @SchemaMapping
@@ -159,7 +159,7 @@ public class UserResolver {
     public List<FollowerDTO> mutualFollowers(
             UserProfileDTO user,
             @AuthenticationPrincipal CustomUserDetails me) {
-        return followService.getMutualFollowers(user.getId(), me.getUser().getId());
+        return followService.getMutualFollowers(user.getId(), me.getUserId());
     }
 
     @SchemaMapping(typeName = "UserProfileDTO", field = "user")
@@ -219,7 +219,7 @@ public class UserResolver {
     @BatchMapping(typeName = "MomentUserDTO", field = "saved")
     public Map<MomentUserDTO, Boolean> saved(List<MomentUserDTO> moments, Principal principal) {
         CustomUserDetails me = userDetailsForBatchMapping.getCustomUserDetails(principal);
-        Long myId = me.getUser().getId();
+        Long myId = me.getUserId();
 
         List<Long> momentIds = moments.stream()
                 .map(MomentUserDTO::getId)
@@ -261,7 +261,7 @@ public class UserResolver {
         List<Comment> comments = commentService.getCommentsByMomentIds(momentIds);
 
         List<Long> myBlockedUserIds = me == null ?
-                List.of() : followService.getUserIdsBlocked(me.getUser().getId()); //ds userId mà currentId đang đăng nhập chặn
+                List.of() : followService.getUserIdsBlocked(me.getUserId()); //ds userId mà currentId đang đăng nhập chặn
 
         Set<Long> setBlocked = new HashSet<>(myBlockedUserIds);
         List<Comment> rs = comments.stream() //loại những comment của user bị chặn
@@ -269,7 +269,7 @@ public class UserResolver {
                 .toList();
 
         if (me != null)
-            System.out.println(("my id: " + me.getUser().getId()));
+            System.out.println(("my id: " + me.getUserId()));
         System.out.println("myBlockedUserIds: " + myBlockedUserIds);
         System.out.println("userIds un-block" + rs.stream().map(Comment::getUser).map(User::getId).toList());
 
@@ -299,7 +299,7 @@ public class UserResolver {
         List<Heart> hearts = heartService.getAllByMomentIds(momentId);
 
         List<Long> myBlockedUserIds = me == null ?
-                List.of() : followService.getUserIdsBlocked(me.getUser().getId());
+                List.of() : followService.getUserIdsBlocked(me.getUserId());
 
         Set<Long> setBlocked = new HashSet<>(myBlockedUserIds);
         List<Heart> rs = hearts.stream()
@@ -323,6 +323,6 @@ public class UserResolver {
     public ChatRoomDTO hasRoom(
             UserProfileDTO profile,
             @AuthenticationPrincipal  CustomUserDetails me) {
-        return chatRoomService.getChatRoomWithViewer(profile.getId(), me.getUser().getId());
+        return chatRoomService.getChatRoomWithViewer(profile.getId(), me.getUserId());
     }
 }

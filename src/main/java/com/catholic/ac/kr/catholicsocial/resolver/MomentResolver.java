@@ -56,7 +56,7 @@ public class MomentResolver {
 
         Long momentId = detail.getId();
 
-        return heartService.checkHeart(me.getUser().getId(), momentId);
+        return heartService.checkHeart(me.getUserId(), momentId);
     }
 
     @SchemaMapping(typeName = "MomentDetail", field = "isFollowing")
@@ -66,7 +66,7 @@ public class MomentResolver {
 
         Long actorId = detail.getActorId();
 
-        return followService.isFollowing(me.getUser().getId(), actorId);
+        return followService.isFollowing(me.getUserId(), actorId);
     }
 
     @SchemaMapping(typeName = "MomentDetail",field = "mySelf")
@@ -74,7 +74,7 @@ public class MomentResolver {
             @AuthenticationPrincipal CustomUserDetails me,
             MomentDetailDTO detail) {
 
-        Long meId = me.getUser().getId();
+        Long meId = me.getUserId();
         Long actorId = detail.getActorId();
 
         return meId.equals(actorId);

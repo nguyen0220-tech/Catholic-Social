@@ -1,7 +1,7 @@
 package com.catholic.ac.kr.catholicsocial.security.tokencommon;
 
-import com.catholic.ac.kr.catholicsocial.entity.model.User;
-import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+//import com.catholic.ac.kr.catholicsocial.repository.UserRepository;
+
 import com.catholic.ac.kr.catholicsocial.security.userdetails.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,18 +10,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-    private final UserRepository userRepository;
+    //    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
     @Override
@@ -45,10 +46,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         String username = jwtUtil.extractUsername(token);
+        List<GrantedAuthority> authorities = jwtUtil.extractAuthorities(token);
+        Long userId = jwtUtil.extractUserId(token);
+
+        CustomUserDetails userDetails = new CustomUserDetails(userId, username, authorities);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            /* . every request: call DB
+
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("user not foud: " + username));
+
+            System.out.println("call db");
 
             if (user != null) {
                 CustomUserDetails useDetails = new CustomUserDetails(user);
@@ -61,6 +71,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
+             */
+
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    authorities
+            );
+
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+            System.out.println("no call DB");
         }
 
         filterChain.doFilter(request, response);

@@ -35,7 +35,7 @@ public class CommentResolver {
             @Argument int page,
             @Argument int size,
             @Argument Long momentId) {
-        return commentService.getCommentsByMomentId(me.getUser().getId(), momentId, page, size);
+        return commentService.getCommentsByMomentId(me.getUserId(), momentId, page, size);
     }
 
     @MutationMapping
@@ -43,7 +43,7 @@ public class CommentResolver {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument Long momentId,
             @Argument CommentRequest request) {
-        return commentService.createComment(useDetails.getUser().getId(), momentId, request);
+        return commentService.createComment(useDetails.getUserId(), momentId, request);
     }
 
     @SchemaMapping(typeName = "CommentDTO", field = "moment")

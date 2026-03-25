@@ -28,7 +28,7 @@ public class IntroVideoResolver {
             @AuthenticationPrincipal CustomUserDetails useDetails,
             @Argument int page,
             @Argument int size) {
-        return introVideoService.getIntrosCanRestore(useDetails.getUser().getId(), page, size);
+        return introVideoService.getIntrosCanRestore(useDetails.getUserId(), page, size);
     }
 
     @BatchMapping(typeName = "IntroDetail", field = "content")

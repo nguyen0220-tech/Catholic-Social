@@ -14,14 +14,15 @@ import java.time.LocalDateTime;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 public class UserInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id",unique = true)
+    @JoinColumn(name = "user_id", unique = true)
     private User user;
 
     @Column(nullable = false)
@@ -32,10 +33,10 @@ public class UserInfo {
 
     private String bio;
 
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String phone;
 
     private String address;
@@ -56,4 +57,8 @@ public class UserInfo {
         this.createdAt = LocalDateTime.now();
     }
 
+    @PreUpdate
+    protected void update() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
