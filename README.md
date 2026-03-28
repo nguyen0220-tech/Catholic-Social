@@ -1,4 +1,5 @@
 # Mini Social – Activity Feed (Instagram-like)
+(Demo: https://catholic-social.onrender.com/auth.html)
 
 This project focuses on solving common backend challenges such as:
 - Activity aggregation
