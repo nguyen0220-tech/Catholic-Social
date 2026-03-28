@@ -23,6 +23,8 @@ This project focuses on solving common backend challenges such as:
 - JWT & OAuth2 Authentication
 - GraphQL Batch Loader & DTO Projection (N+1 problem prevention)
 
+## 🛡️ Security Flow
+Login → JWT 발급 → Authorization Header → API 인증
 
 ## Project Structure
 
@@ -32,8 +34,8 @@ backend
  ├── controller        # REST Controller
  ├── custom            # Custom annotations & helpers
  ├── entity           
- │   ├── dto           # JPA entities
- │   └── model         # Data Transfer Objects
+ │   ├── dto           # Data Transfer Objects
+ │   └── model         # JPA entities
  ├── exception         # @RestControllerAdvice
  ├── interceptor       # Rate limiting, request interception
  ├── mapper            # Mapping entity <-> DTO
